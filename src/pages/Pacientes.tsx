@@ -11,8 +11,10 @@ import {
   Calendar,
   ChevronRight,
   FileText,
+  Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
 
 interface Patient {
   id: string;
@@ -25,9 +27,14 @@ interface Patient {
   lastVisit: string;
   nextVisit: string;
   status: "active" | "inactive" | "completed";
+  consultReason?: string;
+  referredBy?: string;
+  perinatalHistory?: string;
+  psychomotorDev?: string;
+  observations?: string;
 }
 
-const mockPatients: Patient[] = [
+const initialPatients: Patient[] = [
   {
     id: "1",
     name: "María García Pérez",
@@ -39,6 +46,11 @@ const mockPatients: Patient[] = [
     lastVisit: "02/02/2026",
     nextVisit: "09/02/2026",
     status: "active",
+    consultReason: "Dificultades en la pronunciación de fonemas",
+    referredBy: "Pediatra Dr. González",
+    perinatalHistory: "Parto normal, sin complicaciones",
+    psychomotorDev: "Dentro de parámetros normales",
+    observations: "Paciente colaborador, buena disposición para las actividades.",
   },
   {
     id: "2",
@@ -93,8 +105,12 @@ const mockPatients: Patient[] = [
 export default function Pacientes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
 
-  const filteredPatients = mockPatients.filter(
+  const filteredPatients = patients.filter(
     (patient) =>
       patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.rut.includes(searchQuery) ||
@@ -119,6 +135,69 @@ export default function Pacientes() {
     );
   };
 
+  const handleCreatePatient = () => {
+    setFormMode("create");
+    setEditingPatient(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditPatient = () => {
+    if (selectedPatient) {
+      setFormMode("edit");
+      setEditingPatient(selectedPatient);
+      setIsFormOpen(true);
+    }
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (formMode === "create") {
+      const newPatient: Patient = {
+        id: Date.now().toString(),
+        name: data.name,
+        rut: data.rut,
+        age: new Date().getFullYear() - new Date(data.birthDate).getFullYear(),
+        phone: data.phone,
+        email: data.email,
+        diagnosis: data.diagnosis,
+        lastVisit: "-",
+        nextVisit: "-",
+        status: data.status,
+        consultReason: data.consultReason,
+        referredBy: data.referredBy,
+        perinatalHistory: data.perinatalHistory,
+        psychomotorDev: data.psychomotorDev,
+        observations: data.observations,
+      };
+      setPatients([...patients, newPatient]);
+    } else if (editingPatient) {
+      setPatients(
+        patients.map((p) =>
+          p.id === editingPatient.id
+            ? {
+                ...p,
+                name: data.name,
+                rut: data.rut,
+                phone: data.phone,
+                email: data.email,
+                diagnosis: data.diagnosis,
+                status: data.status,
+                consultReason: data.consultReason,
+                referredBy: data.referredBy,
+                perinatalHistory: data.perinatalHistory,
+                psychomotorDev: data.psychomotorDev,
+                observations: data.observations,
+              }
+            : p
+        )
+      );
+      setSelectedPatient((prev) =>
+        prev?.id === editingPatient.id
+          ? { ...prev, ...data }
+          : prev
+      );
+    }
+  };
+
   return (
     <AppLayout>
       <div className="flex h-screen">
@@ -130,7 +209,7 @@ export default function Pacientes() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold text-card-foreground">Pacientes</h1>
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
+              <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleCreatePatient}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nuevo Paciente
               </Button>
@@ -200,7 +279,8 @@ export default function Pacientes() {
                     <FileText className="h-4 w-4 mr-2" />
                     Ver Tests
                   </Button>
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                  <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleEditPatient}>
+                    <Edit className="h-4 w-4 mr-2" />
                     Editar
                   </Button>
                 </div>
@@ -266,29 +346,28 @@ export default function Pacientes() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Motivo de Consulta</p>
                       <p className="text-card-foreground">
-                        Dificultades en la pronunciación de fonemas
+                        {selectedPatient.consultReason || "No registrado"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Derivado por</p>
-                      <p className="text-card-foreground">Pediatra Dr. González</p>
+                      <p className="text-card-foreground">{selectedPatient.referredBy || "No registrado"}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Antecedentes Perinatales</p>
-                      <p className="text-card-foreground">Parto normal, sin complicaciones</p>
+                      <p className="text-card-foreground">{selectedPatient.perinatalHistory || "No registrado"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Desarrollo Psicomotor</p>
-                      <p className="text-card-foreground">Dentro de parámetros normales</p>
+                      <p className="text-card-foreground">{selectedPatient.psychomotorDev || "No registrado"}</p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Observaciones</p>
                     <p className="text-card-foreground">
-                      Paciente colaborador, buena disposición para las actividades. 
-                      Se recomienda continuar con terapia semanal.
+                      {selectedPatient.observations || "No registrado"}
                     </p>
                   </div>
                 </div>
@@ -297,6 +376,30 @@ export default function Pacientes() {
           </div>
         )}
       </div>
+
+      <PatientFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        mode={formMode}
+        initialData={
+          editingPatient
+            ? {
+                name: editingPatient.name,
+                rut: editingPatient.rut,
+                phone: editingPatient.phone,
+                email: editingPatient.email,
+                diagnosis: editingPatient.diagnosis,
+                status: editingPatient.status,
+                consultReason: editingPatient.consultReason,
+                referredBy: editingPatient.referredBy,
+                perinatalHistory: editingPatient.perinatalHistory,
+                psychomotorDev: editingPatient.psychomotorDev,
+                observations: editingPatient.observations,
+              }
+            : undefined
+        }
+      />
     </AppLayout>
   );
 }

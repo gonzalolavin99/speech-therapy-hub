@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/select";
 import {
   Search,
-  Filter,
   Download,
   CheckCircle,
   Clock,
@@ -19,20 +18,31 @@ import {
   DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PaymentFormDialog } from "@/components/forms/PaymentFormDialog";
 
 interface Payment {
   id: string;
   patientName: string;
+  patientId: string;
   sessionDate: string;
   paymentDate: string | null;
   amount: number;
   status: "paid" | "pending" | "overdue";
 }
 
-const mockPayments: Payment[] = [
+const mockPatients = [
+  { id: "1", name: "María García Pérez" },
+  { id: "2", name: "Juan Pablo Rodríguez" },
+  { id: "3", name: "Ana María López" },
+  { id: "4", name: "Carlos Andrés Martínez" },
+  { id: "5", name: "Laura Fernanda Silva" },
+];
+
+const initialPayments: Payment[] = [
   {
     id: "1",
     patientName: "María García",
+    patientId: "1",
     sessionDate: "02/02/2026",
     paymentDate: "02/02/2026",
     amount: 35000,
@@ -41,6 +51,7 @@ const mockPayments: Payment[] = [
   {
     id: "2",
     patientName: "Juan Rodríguez",
+    patientId: "2",
     sessionDate: "01/02/2026",
     paymentDate: null,
     amount: 35000,
@@ -49,6 +60,7 @@ const mockPayments: Payment[] = [
   {
     id: "3",
     patientName: "Ana López",
+    patientId: "3",
     sessionDate: "30/01/2026",
     paymentDate: "30/01/2026",
     amount: 35000,
@@ -57,6 +69,7 @@ const mockPayments: Payment[] = [
   {
     id: "4",
     patientName: "Carlos Martínez",
+    patientId: "4",
     sessionDate: "28/01/2026",
     paymentDate: null,
     amount: 35000,
@@ -65,6 +78,7 @@ const mockPayments: Payment[] = [
   {
     id: "5",
     patientName: "Laura Silva",
+    patientId: "5",
     sessionDate: "25/01/2026",
     paymentDate: "25/01/2026",
     amount: 35000,
@@ -73,6 +87,7 @@ const mockPayments: Payment[] = [
   {
     id: "6",
     patientName: "María García",
+    patientId: "1",
     sessionDate: "26/01/2026",
     paymentDate: "26/01/2026",
     amount: 35000,
@@ -81,6 +96,7 @@ const mockPayments: Payment[] = [
   {
     id: "7",
     patientName: "Juan Rodríguez",
+    patientId: "2",
     sessionDate: "24/01/2026",
     paymentDate: null,
     amount: 35000,
@@ -92,8 +108,12 @@ export default function Pagos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("febrero");
+  const [payments, setPayments] = useState<Payment[]>(initialPayments);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "register">("create");
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
-  const filteredPayments = mockPayments.filter((payment) => {
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch = payment.patientName
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -136,12 +156,42 @@ export default function Pagos() {
     }).format(amount);
   };
 
-  const totalPaid = mockPayments
+  const totalPaid = payments
     .filter((p) => p.status === "paid")
     .reduce((acc, p) => acc + p.amount, 0);
-  const totalPending = mockPayments
+  const totalPending = payments
     .filter((p) => p.status === "pending" || p.status === "overdue")
     .reduce((acc, p) => acc + p.amount, 0);
+
+  const handleRegisterPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setFormMode("register");
+    setIsFormOpen(true);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (formMode === "register" && selectedPayment) {
+      setPayments(
+        payments.map((p) =>
+          p.id === selectedPayment.id
+            ? { ...p, status: "paid" as const, paymentDate: data.paymentDate }
+            : p
+        )
+      );
+    } else {
+      const patient = mockPatients.find((p) => p.id === data.patientId);
+      const newPayment: Payment = {
+        id: Date.now().toString(),
+        patientName: patient?.name || "Paciente",
+        patientId: data.patientId,
+        sessionDate: new Date(data.sessionDate).toLocaleDateString("es-CL"),
+        paymentDate: data.status === "paid" ? data.paymentDate : null,
+        amount: data.amount,
+        status: data.status,
+      };
+      setPayments([newPayment, ...payments]);
+    }
+  };
 
   return (
     <AppLayout>
@@ -184,7 +234,7 @@ export default function Pagos() {
                   {formatCurrency(totalPending)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {mockPayments.filter((p) => p.status !== "paid").length} sesiones
+                  {payments.filter((p) => p.status !== "paid").length} sesiones
                 </p>
               </div>
               <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
@@ -197,10 +247,10 @@ export default function Pagos() {
               <div>
                 <p className="text-sm text-muted-foreground">Sesiones del Mes</p>
                 <p className="text-2xl font-bold text-card-foreground mt-1">
-                  {mockPayments.length}
+                  {payments.length}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {mockPayments.filter((p) => p.status === "paid").length} pagadas
+                  {payments.filter((p) => p.status === "paid").length} pagadas
                 </p>
               </div>
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -290,7 +340,11 @@ export default function Pagos() {
                   <td className="p-4">{getStatusBadge(payment.status)}</td>
                   <td className="p-4">
                     {payment.status !== "paid" && (
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleRegisterPayment(payment)}
+                      >
                         Registrar Pago
                       </Button>
                     )}
@@ -301,6 +355,24 @@ export default function Pagos() {
           </table>
         </div>
       </div>
+
+      <PaymentFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        patients={mockPatients}
+        mode={formMode}
+        initialData={
+          selectedPayment
+            ? {
+                patientId: selectedPayment.patientId,
+                sessionDate: selectedPayment.sessionDate,
+                amount: selectedPayment.amount,
+                status: "paid",
+              }
+            : undefined
+        }
+      />
     </AppLayout>
   );
 }

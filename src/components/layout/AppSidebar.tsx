@@ -9,6 +9,8 @@ import {
   Mic2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { ReminderPanel } from "@/components/reminders/ReminderPanel";
 
 const navigation = [
   { name: "Calendario", href: "/", icon: Calendar },
@@ -30,9 +32,13 @@ export function AppSidebar() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
             <Mic2 className="h-5 w-5 text-primary-foreground" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-semibold text-sidebar-foreground">FonoApp</h1>
             <p className="text-xs text-muted-foreground">Gestión Clínica</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <ReminderPanel />
+            <ThemeSwitcher />
           </div>
         </div>
 
