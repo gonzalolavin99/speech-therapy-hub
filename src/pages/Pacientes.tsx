@@ -1,0 +1,302 @@
+import { useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Search,
+  Plus,
+  User,
+  Phone,
+  Mail,
+  Calendar,
+  ChevronRight,
+  FileText,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Patient {
+  id: string;
+  name: string;
+  rut: string;
+  age: number;
+  phone: string;
+  email: string;
+  diagnosis: string;
+  lastVisit: string;
+  nextVisit: string;
+  status: "active" | "inactive" | "completed";
+}
+
+const mockPatients: Patient[] = [
+  {
+    id: "1",
+    name: "María García Pérez",
+    rut: "12.345.678-9",
+    age: 7,
+    phone: "+56 9 1234 5678",
+    email: "maria.garcia@email.com",
+    diagnosis: "Trastorno Fonológico",
+    lastVisit: "02/02/2026",
+    nextVisit: "09/02/2026",
+    status: "active",
+  },
+  {
+    id: "2",
+    name: "Juan Pablo Rodríguez",
+    rut: "11.222.333-4",
+    age: 5,
+    phone: "+56 9 8765 4321",
+    email: "jp.rodriguez@email.com",
+    diagnosis: "Retraso del Lenguaje",
+    lastVisit: "01/02/2026",
+    nextVisit: "08/02/2026",
+    status: "active",
+  },
+  {
+    id: "3",
+    name: "Ana María López",
+    rut: "15.666.777-8",
+    age: 8,
+    phone: "+56 9 5555 6666",
+    email: "ana.lopez@email.com",
+    diagnosis: "Disfemia",
+    lastVisit: "28/01/2026",
+    nextVisit: "11/02/2026",
+    status: "active",
+  },
+  {
+    id: "4",
+    name: "Carlos Andrés Martínez",
+    rut: "14.555.666-7",
+    age: 6,
+    phone: "+56 9 7777 8888",
+    email: "carlos.m@email.com",
+    diagnosis: "Trastorno del Espectro Autista",
+    lastVisit: "25/01/2026",
+    nextVisit: "15/02/2026",
+    status: "active",
+  },
+  {
+    id: "5",
+    name: "Laura Fernanda Silva",
+    rut: "16.888.999-0",
+    age: 4,
+    phone: "+56 9 9999 0000",
+    email: "laura.silva@email.com",
+    diagnosis: "Trastorno Específico del Lenguaje",
+    lastVisit: "30/01/2026",
+    nextVisit: "06/02/2026",
+    status: "active",
+  },
+];
+
+export default function Pacientes() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+  const filteredPatients = mockPatients.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.rut.includes(searchQuery) ||
+      patient.diagnosis.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusBadge = (status: Patient["status"]) => {
+    const styles = {
+      active: "bg-success/10 text-success",
+      inactive: "bg-muted text-muted-foreground",
+      completed: "bg-info/10 text-info",
+    };
+    const labels = {
+      active: "Activo",
+      inactive: "Inactivo",
+      completed: "Completado",
+    };
+    return (
+      <span className={cn("px-2 py-1 rounded-full text-xs font-medium", styles[status])}>
+        {labels[status]}
+      </span>
+    );
+  };
+
+  return (
+    <AppLayout>
+      <div className="flex h-screen">
+        {/* Patient List */}
+        <div className={cn(
+          "border-r bg-card transition-all duration-300",
+          selectedPatient ? "w-96" : "flex-1"
+        )}>
+          <div className="p-6 border-b">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold text-card-foreground">Pacientes</h1>
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Paciente
+              </Button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, RUT o diagnóstico..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-auto" style={{ height: "calc(100vh - 140px)" }}>
+            {filteredPatients.map((patient) => (
+              <div
+                key={patient.id}
+                onClick={() => setSelectedPatient(patient)}
+                className={cn(
+                  "p-4 border-b cursor-pointer transition-colors hover:bg-muted/50",
+                  selectedPatient?.id === patient.id && "bg-primary/5 border-l-2 border-l-primary"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-card-foreground">{patient.name}</p>
+                      <p className="text-sm text-muted-foreground">{patient.rut}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">{patient.diagnosis}</p>
+                  {getStatusBadge(patient.status)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Patient Detail */}
+        {selectedPatient && (
+          <div className="flex-1 overflow-auto">
+            <div className="p-8">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground">
+                      {selectedPatient.name}
+                    </h2>
+                    <p className="text-muted-foreground">{selectedPatient.rut}</p>
+                    {getStatusBadge(selectedPatient.status)}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Ver Tests
+                  </Button>
+                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                    Editar
+                  </Button>
+                </div>
+              </div>
+
+              {/* Info Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="bg-card rounded-xl border p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm">Edad</span>
+                  </div>
+                  <p className="text-lg font-semibold text-card-foreground">
+                    {selectedPatient.age} años
+                  </p>
+                </div>
+                <div className="bg-card rounded-xl border p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <Phone className="h-4 w-4" />
+                    <span className="text-sm">Teléfono</span>
+                  </div>
+                  <p className="text-lg font-semibold text-card-foreground">
+                    {selectedPatient.phone}
+                  </p>
+                </div>
+                <div className="bg-card rounded-xl border p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="text-sm">Email</span>
+                  </div>
+                  <p className="text-sm font-semibold text-card-foreground truncate">
+                    {selectedPatient.email}
+                  </p>
+                </div>
+                <div className="bg-card rounded-xl border p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm">Próxima Cita</span>
+                  </div>
+                  <p className="text-lg font-semibold text-primary">
+                    {selectedPatient.nextVisit}
+                  </p>
+                </div>
+              </div>
+
+              {/* Diagnosis Section */}
+              <div className="bg-card rounded-xl border p-6 mb-6">
+                <h3 className="text-lg font-semibold text-card-foreground mb-4">
+                  Diagnóstico Fonoaudiológico
+                </h3>
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                  <p className="text-primary font-medium">{selectedPatient.diagnosis}</p>
+                </div>
+              </div>
+
+              {/* Anamnesis Section */}
+              <div className="bg-card rounded-xl border p-6">
+                <h3 className="text-lg font-semibold text-card-foreground mb-4">
+                  Ficha de Anamnesis
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Motivo de Consulta</p>
+                      <p className="text-card-foreground">
+                        Dificultades en la pronunciación de fonemas
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Derivado por</p>
+                      <p className="text-card-foreground">Pediatra Dr. González</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Antecedentes Perinatales</p>
+                      <p className="text-card-foreground">Parto normal, sin complicaciones</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Desarrollo Psicomotor</p>
+                      <p className="text-card-foreground">Dentro de parámetros normales</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Observaciones</p>
+                    <p className="text-card-foreground">
+                      Paciente colaborador, buena disposición para las actividades. 
+                      Se recomienda continuar con terapia semanal.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppLayout>
+  );
+}
