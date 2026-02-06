@@ -1,12 +1,13 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, FileText, Clock, User, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { TestFormDialog } from "@/components/forms/TestFormDialog";
 
 const availableTests = [
   {
-    id: "mbgr",
+    id: "mbgr" as const,
     name: "MBGR",
     fullName: "Protocolo de Evaluación Miofuncional Orofacial MBGR",
     description:
@@ -15,7 +16,7 @@ const availableTests = [
     categories: ["Motricidad Orofacial", "Deglución", "Respiración"],
   },
   {
-    id: "tar",
+    id: "tar" as const,
     name: "TAR",
     fullName: "Test de Articulación a la Repetición",
     description: "Evaluación de la producción articulatoria mediante repetición",
@@ -23,7 +24,7 @@ const availableTests = [
     categories: ["Articulación", "Fonología"],
   },
   {
-    id: "teprosif",
+    id: "teprosif" as const,
     name: "TEPROSIF-R",
     fullName: "Test para Evaluar Procesos de Simplificación Fonológica",
     description:
@@ -33,7 +34,24 @@ const availableTests = [
   },
 ];
 
-const recentTests = [
+const mockPatients = [
+  { id: "1", name: "María García Pérez" },
+  { id: "2", name: "Juan Pablo Rodríguez" },
+  { id: "3", name: "Ana María López" },
+  { id: "4", name: "Carlos Andrés Martínez" },
+  { id: "5", name: "Laura Fernanda Silva" },
+];
+
+interface TestResult {
+  id: string;
+  testName: string;
+  patientName: string;
+  date: string;
+  status: string;
+  score: string;
+}
+
+const initialTests: TestResult[] = [
   {
     id: "1",
     testName: "TEPROSIF-R",
@@ -61,6 +79,35 @@ const recentTests = [
 ];
 
 export default function Tests() {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedTestType, setSelectedTestType] = useState<"mbgr" | "tar" | "teprosif">("mbgr");
+  const [tests, setTests] = useState<TestResult[]>(initialTests);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleApplyTest = (testId: "mbgr" | "tar" | "teprosif") => {
+    setSelectedTestType(testId);
+    setIsFormOpen(true);
+  };
+
+  const handleTestSubmit = (data: any) => {
+    const patient = mockPatients.find((p) => p.id === data.patientId);
+    const newTest: TestResult = {
+      id: Date.now().toString(),
+      testName: selectedTestType.toUpperCase(),
+      patientName: patient?.name || "Paciente",
+      date: new Date(data.evaluationDate).toLocaleDateString("es-CL"),
+      status: "completed",
+      score: "Pendiente análisis",
+    };
+    setTests([newTest, ...tests]);
+  };
+
+  const filteredTests = tests.filter(
+    (test) =>
+      test.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      test.testName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <AppLayout>
       <div className="p-8 space-y-8">
@@ -112,7 +159,10 @@ export default function Tests() {
                     </span>
                   ))}
                 </div>
-                <Button className="w-full mt-4 bg-primary hover:bg-primary/90">
+                <Button 
+                  className="w-full mt-4 bg-primary hover:bg-primary/90"
+                  onClick={() => handleApplyTest(test.id)}
+                >
                   Aplicar Test
                 </Button>
               </div>
@@ -128,7 +178,12 @@ export default function Tests() {
             </h2>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar tests..." className="pl-10" />
+              <Input 
+                placeholder="Buscar tests..." 
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
           <div className="bg-card rounded-xl border overflow-hidden">
@@ -153,7 +208,7 @@ export default function Tests() {
                 </tr>
               </thead>
               <tbody>
-                {recentTests.map((test) => (
+                {filteredTests.map((test) => (
                   <tr key={test.id} className="border-b last:border-b-0 hover:bg-muted/30">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
@@ -189,6 +244,14 @@ export default function Tests() {
           </div>
         </div>
       </div>
+
+      <TestFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleTestSubmit}
+        patients={mockPatients}
+        testType={selectedTestType}
+      />
     </AppLayout>
   );
 }

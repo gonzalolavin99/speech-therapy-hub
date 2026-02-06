@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PlanningFormDialog } from "@/components/forms/PlanningFormDialog";
 
 interface Planning {
   id: string;
@@ -28,7 +29,15 @@ interface Planning {
   status: "active" | "completed" | "paused";
 }
 
-const mockPlannings: Planning[] = [
+const mockPatients = [
+  { id: "1", name: "María García Pérez" },
+  { id: "2", name: "Juan Pablo Rodríguez" },
+  { id: "3", name: "Ana María López" },
+  { id: "4", name: "Carlos Andrés Martínez" },
+  { id: "5", name: "Laura Fernanda Silva" },
+];
+
+const initialPlannings: Planning[] = [
   {
     id: "1",
     patientName: "María García",
@@ -73,8 +82,10 @@ const mockPlannings: Planning[] = [
 export default function Planificaciones() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [plannings, setPlannings] = useState<Planning[]>(initialPlannings);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const filteredPlannings = mockPlannings.filter(
+  const filteredPlannings = plannings.filter(
     (planning) =>
       planning.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       planning.interventionApproach.toLowerCase().includes(searchQuery.toLowerCase())
@@ -102,6 +113,24 @@ export default function Planificaciones() {
     return Math.round((completed / total) * 100);
   };
 
+  const handleFormSubmit = (data: any) => {
+    const patient = mockPatients.find((p) => p.id === data.patientId);
+    const newPlanning: Planning = {
+      id: Date.now().toString(),
+      patientName: patient?.name || "Paciente",
+      patientId: data.patientId,
+      interventionApproach: data.interventionApproach,
+      method: data.method,
+      modality: data.modality,
+      generalObjective: data.generalObjective,
+      totalSessions: data.totalSessions,
+      completedSessions: 0,
+      frequency: data.frequency,
+      status: "active",
+    };
+    setPlannings([newPlanning, ...plannings]);
+  };
+
   return (
     <AppLayout>
       <div className="p-8 space-y-8">
@@ -113,7 +142,7 @@ export default function Planificaciones() {
               Gestiona las planificaciones de intervención de tus pacientes
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Planificación
           </Button>
@@ -229,6 +258,14 @@ export default function Planificaciones() {
           ))}
         </div>
       </div>
+
+      <PlanningFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        patients={mockPatients}
+        mode="create"
+      />
     </AppLayout>
   );
 }
