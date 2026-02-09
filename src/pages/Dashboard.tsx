@@ -9,7 +9,9 @@ import { usePlannings } from "@/hooks/usePlannings";
 import { usePayments } from "@/hooks/usePayments";
 import { useSessions, SessionFormData } from "@/hooks/useSessions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { SessionFormDialog } from "@/components/forms/SessionFormDialog";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -19,6 +21,7 @@ export default function Dashboard() {
   const { plannings } = usePlannings();
   const { payments } = usePayments();
   const { sessions, createSession } = useSessions();
+  const { isConnected: isGoogleConnected, createEvent } = useGoogleCalendar();
 
   const patientOptions = patients.map(p => ({ id: p.id, name: p.name }));
 
@@ -27,7 +30,7 @@ export default function Dashboard() {
   const completedSessions = plannings.reduce((acc, p) => acc + p.completed_sessions, 0);
   const paidPayments = payments.filter(p => p.status === 'paid').length;
 
-  const handleCreateSession = (data: any) => {
+  const handleCreateSession = async (data: any) => {
     const startDateTime = `${data.date}T${data.start_time}:00`;
     const endDateTime = `${data.date}T${data.end_time}:00`;
     
@@ -39,7 +42,24 @@ export default function Dashboard() {
       end_time: endDateTime,
       notes: data.notes || null,
     };
-    createSession.mutate(sessionData);
+    
+    createSession.mutate(sessionData, {
+      onSuccess: async () => {
+        // Sync to Google Calendar if connected
+        if (isGoogleConnected) {
+          const success = await createEvent({
+            title: data.title,
+            description: data.notes || `Cita con paciente - ${data.session_type}`,
+            startTime: startDateTime,
+            endTime: endDateTime,
+          });
+          
+          if (success) {
+            toast.success('Cita sincronizada con Google Calendar');
+          }
+        }
+      }
+    });
   };
 
   const getGreeting = () => {

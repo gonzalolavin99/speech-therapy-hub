@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MapPin, Building, Save, Loader2 } from "lucide-react";
+import { User, Mail, Phone, MapPin, Building, Save, Loader2, Calendar, Link, Unlink } from "lucide-react";
 import { useProfile, ProfileFormData } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 
 export default function Perfil() {
   const { user } = useAuth();
   const { profile, isLoading, updateProfile } = useProfile();
+  const { isConnected: isGoogleConnected, isLoading: isGoogleLoading, connect: connectGoogle, disconnect: disconnectGoogle } = useGoogleCalendar();
   const [formData, setFormData] = useState<Partial<ProfileFormData>>({});
 
   useEffect(() => {
@@ -191,6 +193,45 @@ export default function Perfil() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Google Calendar Integration */}
+        <div className="bg-card rounded-xl border p-8 mb-8">
+          <h3 className="text-lg font-semibold text-card-foreground mb-4">
+            <Calendar className="h-5 w-5 inline mr-2" />
+            Integración con Google Calendar
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Sincroniza automáticamente tus citas con Google Calendar para verlas en tu teléfono o computador.
+          </p>
+          
+          {isGoogleLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verificando conexión...</span>
+            </div>
+          ) : isGoogleConnected ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-success">
+                <div className="h-2 w-2 rounded-full bg-success" />
+                <span className="text-sm font-medium">Google Calendar conectado</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={disconnectGoogle}
+                className="text-destructive hover:text-destructive"
+              >
+                <Unlink className="h-4 w-4 mr-2" />
+                Desconectar
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={connectGoogle} variant="outline">
+              <Link className="h-4 w-4 mr-2" />
+              Conectar Google Calendar
+            </Button>
+          )}
         </div>
 
         {/* Session Settings */}
