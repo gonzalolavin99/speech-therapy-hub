@@ -14,84 +14,26 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlanningFormDialog } from "@/components/forms/PlanningFormDialog";
-
-interface Planning {
-  id: string;
-  patientName: string;
-  patientId: string;
-  interventionApproach: string;
-  method: string;
-  modality: "individual" | "grupal";
-  generalObjective: string;
-  totalSessions: number;
-  completedSessions: number;
-  frequency: string;
-  status: "active" | "completed" | "paused";
-}
-
-const mockPatients = [
-  { id: "1", name: "María García Pérez" },
-  { id: "2", name: "Juan Pablo Rodríguez" },
-  { id: "3", name: "Ana María López" },
-  { id: "4", name: "Carlos Andrés Martínez" },
-  { id: "5", name: "Laura Fernanda Silva" },
-];
-
-const initialPlannings: Planning[] = [
-  {
-    id: "1",
-    patientName: "María García",
-    patientId: "1",
-    interventionApproach: "Enfoque Fonológico",
-    method: "Ciclos",
-    modality: "individual",
-    generalObjective: "Mejorar la producción de fonemas velares /k/ y /g/",
-    totalSessions: 12,
-    completedSessions: 5,
-    frequency: "2 veces por semana",
-    status: "active",
-  },
-  {
-    id: "2",
-    patientName: "Juan Rodríguez",
-    patientId: "2",
-    interventionApproach: "Enfoque Pragmático",
-    method: "Interaccionista",
-    modality: "individual",
-    generalObjective: "Desarrollar habilidades comunicativas funcionales",
-    totalSessions: 16,
-    completedSessions: 8,
-    frequency: "2 veces por semana",
-    status: "active",
-  },
-  {
-    id: "3",
-    patientName: "Ana López",
-    patientId: "3",
-    interventionApproach: "Fluencia",
-    method: "Modelado",
-    modality: "individual",
-    generalObjective: "Reducir episodios de disfluencia",
-    totalSessions: 20,
-    completedSessions: 20,
-    frequency: "1 vez por semana",
-    status: "completed",
-  },
-];
+import { usePlannings, PlanningFormData } from "@/hooks/usePlannings";
+import { usePatients } from "@/hooks/usePatients";
 
 export default function Planificaciones() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [plannings, setPlannings] = useState<Planning[]>(initialPlannings);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const { plannings, isLoading, createPlanning } = usePlannings();
+  const { patients } = usePatients();
+
+  const patientOptions = patients.map((p) => ({ id: p.id, name: p.name }));
 
   const filteredPlannings = plannings.filter(
     (planning) =>
-      planning.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      planning.interventionApproach.toLowerCase().includes(searchQuery.toLowerCase())
+      (planning.patient_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      planning.intervention_approach.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusBadge = (status: Planning["status"]) => {
+  const getStatusBadge = (status: any) => {
     const styles = {
       active: "bg-success/10 text-success",
       completed: "bg-info/10 text-info",
@@ -114,21 +56,17 @@ export default function Planificaciones() {
   };
 
   const handleFormSubmit = (data: any) => {
-    const patient = mockPatients.find((p) => p.id === data.patientId);
-    const newPlanning: Planning = {
-      id: Date.now().toString(),
-      patientName: patient?.name || "Paciente",
-      patientId: data.patientId,
-      interventionApproach: data.interventionApproach,
+    const planningData: PlanningFormData = {
+      patient_id: data.patientId,
+      intervention_approach: data.interventionApproach,
       method: data.method,
-      modality: data.modality,
-      generalObjective: data.generalObjective,
-      totalSessions: data.totalSessions,
-      completedSessions: 0,
+      modality: data.modality === "grupal" ? "group" : "individual",
+      general_objective: data.generalObjective,
+      total_sessions: parseInt(data.totalSessions),
       frequency: data.frequency,
       status: "active",
     };
-    setPlannings([newPlanning, ...plannings]);
+    createPlanning.mutate(planningData);
   };
 
   return (
@@ -180,10 +118,10 @@ export default function Planificaciones() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-card-foreground">
-                        {planning.patientName}
+                        {planning.patient_name}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {planning.interventionApproach} - {planning.method}
+                        {planning.intervention_approach} - {planning.method}
                       </p>
                     </div>
                   </div>
@@ -191,15 +129,15 @@ export default function Planificaciones() {
                     {getStatusBadge(planning.status)}
                     <div className="text-right">
                       <p className="text-sm font-medium text-card-foreground">
-                        {planning.completedSessions}/{planning.totalSessions} sesiones
+                        {planning.completed_sessions}/{planning.total_sessions} sesiones
                       </p>
                       <div className="w-24 h-2 bg-muted rounded-full mt-1">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{
                             width: `${getProgress(
-                              planning.completedSessions,
-                              planning.totalSessions
+                              planning.completed_sessions,
+                              planning.total_sessions
                             )}%`,
                           }}
                         />
@@ -223,7 +161,7 @@ export default function Planificaciones() {
                         <Target className="h-4 w-4" />
                         <span className="text-sm font-medium">Objetivo General</span>
                       </div>
-                      <p className="text-card-foreground">{planning.generalObjective}</p>
+                      <p className="text-card-foreground">{planning.general_objective}</p>
                     </div>
                     <div>
                       <div className="flex items-center gap-2 text-muted-foreground mb-2">
@@ -263,7 +201,7 @@ export default function Planificaciones() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSubmit={handleFormSubmit}
-        patients={mockPatients}
+        patients={patientOptions}
         mode="create"
       />
     </AppLayout>

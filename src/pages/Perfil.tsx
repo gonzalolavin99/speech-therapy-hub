@@ -1,11 +1,55 @@
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MapPin, Building, Save } from "lucide-react";
+import { User, Mail, Phone, MapPin, Building, Save, Loader2 } from "lucide-react";
+import { useProfile, ProfileFormData } from "@/hooks/useProfile";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Perfil() {
+  const { user } = useAuth();
+  const { profile, isLoading, updateProfile } = useProfile();
+  const [formData, setFormData] = useState<Partial<ProfileFormData>>({});
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name,
+        rut: profile.rut,
+        phone: profile.phone,
+        address: profile.address,
+        city: profile.city,
+        institution: profile.institution,
+        specialties: profile.specialties,
+        bio: profile.bio,
+        sis_registration: profile.sis_registration,
+        session_duration: profile.session_duration,
+        session_price: profile.session_price,
+        evaluation_price: profile.evaluation_price,
+      });
+    }
+  }, [profile]);
+
+  const handleChange = (field: keyof ProfileFormData, value: string | number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    updateProfile.mutate(formData);
+  };
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="p-8 max-w-4xl">
@@ -25,15 +69,15 @@ export default function Perfil() {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-card-foreground">
-                Dra. Carolina Fernández
+                {formData.full_name || "Sin nombre"}
               </h2>
-              <p className="text-muted-foreground">Fonoaudióloga</p>
+              <p className="text-muted-foreground">Fonoaudiólogo(a)</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Registro SIS: 12345-6
+                {formData.sis_registration ? `Registro SIS: ${formData.sis_registration}` : "Sin registro SIS"}
               </p>
-              <Button variant="outline" size="sm" className="mt-3">
-                Cambiar Foto
-              </Button>
+              <p className="text-xs text-muted-foreground mt-1">
+                {user?.email}
+              </p>
             </div>
           </div>
 
@@ -44,7 +88,8 @@ export default function Perfil() {
                 <Label htmlFor="name">Nombre Completo</Label>
                 <Input
                   id="name"
-                  defaultValue="Carolina Fernández López"
+                  value={formData.full_name || ""}
+                  onChange={(e) => handleChange("full_name", e.target.value)}
                   className="bg-background"
                 />
               </div>
@@ -52,7 +97,8 @@ export default function Perfil() {
                 <Label htmlFor="rut">RUT</Label>
                 <Input
                   id="rut"
-                  defaultValue="12.345.678-9"
+                  value={formData.rut || ""}
+                  onChange={(e) => handleChange("rut", e.target.value)}
                   className="bg-background"
                 />
               </div>
@@ -67,7 +113,8 @@ export default function Perfil() {
                 <Input
                   id="email"
                   type="email"
-                  defaultValue="carolina.fernandez@email.com"
+                  value={user?.email || ""}
+                  disabled
                   className="bg-background"
                 />
               </div>
@@ -78,7 +125,8 @@ export default function Perfil() {
                 </Label>
                 <Input
                   id="phone"
-                  defaultValue="+56 9 1234 5678"
+                  value={formData.phone || ""}
+                  onChange={(e) => handleChange("phone", e.target.value)}
                   className="bg-background"
                 />
               </div>
@@ -92,13 +140,19 @@ export default function Perfil() {
                 </Label>
                 <Input
                   id="address"
-                  defaultValue="Av. Providencia 1234, Of. 567"
+                  value={formData.address || ""}
+                  onChange={(e) => handleChange("address", e.target.value)}
                   className="bg-background"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="city">Ciudad</Label>
-                <Input id="city" defaultValue="Santiago" className="bg-background" />
+                <Input 
+                  id="city" 
+                  value={formData.city || ""} 
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  className="bg-background" 
+                />
               </div>
             </div>
 
@@ -109,7 +163,8 @@ export default function Perfil() {
               </Label>
               <Input
                 id="institution"
-                defaultValue="Centro de Fonoaudiología Integral"
+                value={formData.institution || ""}
+                onChange={(e) => handleChange("institution", e.target.value)}
                 className="bg-background"
               />
             </div>
@@ -118,7 +173,8 @@ export default function Perfil() {
               <Label htmlFor="specialties">Especialidades</Label>
               <Textarea
                 id="specialties"
-                defaultValue="Trastornos del Lenguaje Infantil, Motricidad Orofacial, Disfemia"
+                value={formData.specialties || ""}
+                onChange={(e) => handleChange("specialties", e.target.value)}
                 className="bg-background resize-none"
                 rows={3}
               />
@@ -128,7 +184,8 @@ export default function Perfil() {
               <Label htmlFor="bio">Biografía Profesional</Label>
               <Textarea
                 id="bio"
-                defaultValue="Fonoaudióloga con más de 10 años de experiencia en atención pediátrica. Especialista en trastornos del lenguaje y habla. Formación en Chile y España."
+                value={formData.bio || ""}
+                onChange={(e) => handleChange("bio", e.target.value)}
                 className="bg-background resize-none"
                 rows={4}
               />
@@ -147,7 +204,8 @@ export default function Perfil() {
               <Input
                 id="sessionDuration"
                 type="number"
-                defaultValue="45"
+                value={formData.session_duration || 45}
+                onChange={(e) => handleChange("session_duration", parseInt(e.target.value))}
                 className="bg-background"
               />
             </div>
@@ -156,7 +214,8 @@ export default function Perfil() {
               <Input
                 id="sessionPrice"
                 type="number"
-                defaultValue="35000"
+                value={formData.session_price || 35000}
+                onChange={(e) => handleChange("session_price", parseInt(e.target.value))}
                 className="bg-background"
               />
             </div>
@@ -165,7 +224,8 @@ export default function Perfil() {
               <Input
                 id="evaluationPrice"
                 type="number"
-                defaultValue="50000"
+                value={formData.evaluation_price || 50000}
+                onChange={(e) => handleChange("evaluation_price", parseInt(e.target.value))}
                 className="bg-background"
               />
             </div>
@@ -174,8 +234,16 @@ export default function Perfil() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button className="bg-primary hover:bg-primary/90">
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={handleSave}
+            disabled={updateProfile.isPending}
+          >
+            {updateProfile.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Guardar Cambios
           </Button>
         </div>

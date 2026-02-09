@@ -4,57 +4,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface Appointment {
+export interface CalendarSession {
   id: string;
-  patientName: string;
-  time: string;
-  duration: number;
-  type: string;
-  date: Date;
+  patient_name?: string;
+  start_time: string;
+  end_time: string;
+  session_type: 'evaluation' | 'therapy' | 'followup';
+  title: string;
 }
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    patientName: "María García",
-    time: "09:00",
-    duration: 45,
-    type: "Evaluación",
-    date: new Date(),
-  },
-  {
-    id: "2",
-    patientName: "Juan Pérez",
-    time: "10:00",
-    duration: 45,
-    type: "Terapia",
-    date: new Date(),
-  },
-  {
-    id: "3",
-    patientName: "Ana Rodríguez",
-    time: "11:30",
-    duration: 45,
-    type: "Seguimiento",
-    date: addDays(new Date(), 1),
-  },
-  {
-    id: "4",
-    patientName: "Carlos López",
-    time: "14:00",
-    duration: 45,
-    type: "Terapia",
-    date: addDays(new Date(), 2),
-  },
-  {
-    id: "5",
-    patientName: "Laura Martínez",
-    time: "16:00",
-    duration: 45,
-    type: "Evaluación",
-    date: addDays(new Date(), 3),
-  },
-];
 
 const timeSlots = [
   "08:00",
@@ -73,27 +30,45 @@ const timeSlots = [
 interface WeeklyCalendarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
+  sessions?: CalendarSession[];
 }
 
-export function WeeklyCalendar({ currentDate, onDateChange }: WeeklyCalendarProps) {
+export function WeeklyCalendar({ currentDate, onDateChange, sessions = [] }: WeeklyCalendarProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const getAppointmentsForDay = (date: Date) => {
-    return mockAppointments.filter((apt) => isSameDay(apt.date, date));
+  const getSessionsForDay = (date: Date) => {
+    return sessions.filter((session) => {
+      const sessionDate = new Date(session.start_time);
+      return isSameDay(sessionDate, date);
+    });
   };
 
-  const getAppointmentStyle = (type: string) => {
+  const getSessionTime = (session: CalendarSession) => {
+    const date = new Date(session.start_time);
+    return format(date, "HH:00");
+  };
+
+  const getSessionStyle = (type: string) => {
     switch (type) {
-      case "Evaluación":
+      case "evaluation":
         return "bg-info/10 border-info text-info";
-      case "Terapia":
+      case "therapy":
         return "bg-primary/10 border-primary text-primary";
-      case "Seguimiento":
+      case "followup":
         return "bg-success/10 border-success text-success";
       default:
         return "bg-muted border-muted-foreground text-muted-foreground";
     }
+  };
+
+  const getSessionTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      evaluation: "Evaluación",
+      therapy: "Terapia",
+      followup: "Seguimiento",
+    };
+    return labels[type] || type;
   };
 
   return (
@@ -167,8 +142,8 @@ export function WeeklyCalendar({ currentDate, onDateChange }: WeeklyCalendarProp
                   {time}
                 </div>
                 {weekDays.map((day, dayIndex) => {
-                  const dayAppointments = getAppointmentsForDay(day).filter(
-                    (apt) => apt.time === time
+                  const daySessions = getSessionsForDay(day).filter(
+                    (session) => getSessionTime(session) === time
                   );
                   return (
                     <div
@@ -178,16 +153,16 @@ export function WeeklyCalendar({ currentDate, onDateChange }: WeeklyCalendarProp
                         isSameDay(day, new Date()) && "bg-primary/5"
                       )}
                     >
-                      {dayAppointments.map((apt) => (
+                      {daySessions.map((session) => (
                         <div
-                          key={apt.id}
+                          key={session.id}
                           className={cn(
                             "rounded-lg border-l-2 px-2 py-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity",
-                            getAppointmentStyle(apt.type)
+                            getSessionStyle(session.session_type)
                           )}
                         >
-                          <p className="font-medium truncate">{apt.patientName}</p>
-                          <p className="opacity-75">{apt.type}</p>
+                          <p className="font-medium truncate">{session.patient_name || session.title}</p>
+                          <p className="opacity-75">{getSessionTypeLabel(session.session_type)}</p>
                         </div>
                       ))}
                     </div>

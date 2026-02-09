@@ -12,109 +12,26 @@ import {
   ChevronRight,
   FileText,
   Edit,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
-
-interface Patient {
-  id: string;
-  name: string;
-  rut: string;
-  age: number;
-  phone: string;
-  email: string;
-  diagnosis: string;
-  lastVisit: string;
-  nextVisit: string;
-  status: "active" | "inactive" | "completed";
-  consultReason?: string;
-  referredBy?: string;
-  perinatalHistory?: string;
-  psychomotorDev?: string;
-  observations?: string;
-}
-
-const initialPatients: Patient[] = [
-  {
-    id: "1",
-    name: "María García Pérez",
-    rut: "12.345.678-9",
-    age: 7,
-    phone: "+56 9 1234 5678",
-    email: "maria.garcia@email.com",
-    diagnosis: "Trastorno Fonológico",
-    lastVisit: "02/02/2026",
-    nextVisit: "09/02/2026",
-    status: "active",
-    consultReason: "Dificultades en la pronunciación de fonemas",
-    referredBy: "Pediatra Dr. González",
-    perinatalHistory: "Parto normal, sin complicaciones",
-    psychomotorDev: "Dentro de parámetros normales",
-    observations: "Paciente colaborador, buena disposición para las actividades.",
-  },
-  {
-    id: "2",
-    name: "Juan Pablo Rodríguez",
-    rut: "11.222.333-4",
-    age: 5,
-    phone: "+56 9 8765 4321",
-    email: "jp.rodriguez@email.com",
-    diagnosis: "Retraso del Lenguaje",
-    lastVisit: "01/02/2026",
-    nextVisit: "08/02/2026",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Ana María López",
-    rut: "15.666.777-8",
-    age: 8,
-    phone: "+56 9 5555 6666",
-    email: "ana.lopez@email.com",
-    diagnosis: "Disfemia",
-    lastVisit: "28/01/2026",
-    nextVisit: "11/02/2026",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Carlos Andrés Martínez",
-    rut: "14.555.666-7",
-    age: 6,
-    phone: "+56 9 7777 8888",
-    email: "carlos.m@email.com",
-    diagnosis: "Trastorno del Espectro Autista",
-    lastVisit: "25/01/2026",
-    nextVisit: "15/02/2026",
-    status: "active",
-  },
-  {
-    id: "5",
-    name: "Laura Fernanda Silva",
-    rut: "16.888.999-0",
-    age: 4,
-    phone: "+56 9 9999 0000",
-    email: "laura.silva@email.com",
-    diagnosis: "Trastorno Específico del Lenguaje",
-    lastVisit: "30/01/2026",
-    nextVisit: "06/02/2026",
-    status: "active",
-  },
-];
+import { usePatients, Patient, PatientFormData } from "@/hooks/usePatients";
 
 export default function Pacientes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+
+  const { patients, isLoading, createPatient, updatePatient } = usePatients();
 
   const filteredPatients = patients.filter(
     (patient) =>
       patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.rut.includes(searchQuery) ||
-      patient.diagnosis.toLowerCase().includes(searchQuery.toLowerCase())
+      (patient.diagnosis?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
 
   const getStatusBadge = (status: Patient["status"]) => {
@@ -150,51 +67,27 @@ export default function Pacientes() {
   };
 
   const handleFormSubmit = (data: any) => {
+    const patientData: PatientFormData = {
+      name: data.name,
+      rut: data.rut,
+      birth_date: data.birthDate || null,
+      age: data.birthDate ? new Date().getFullYear() - new Date(data.birthDate).getFullYear() : null,
+      phone: data.phone || null,
+      email: data.email || null,
+      diagnosis: data.diagnosis || null,
+      status: data.status || 'active',
+      consult_reason: data.consultReason || null,
+      referred_by: data.referredBy || null,
+      perinatal_history: data.perinatalHistory || null,
+      psychomotor_dev: data.psychomotorDev || null,
+      observations: data.observations || null,
+    };
+
     if (formMode === "create") {
-      const newPatient: Patient = {
-        id: Date.now().toString(),
-        name: data.name,
-        rut: data.rut,
-        age: new Date().getFullYear() - new Date(data.birthDate).getFullYear(),
-        phone: data.phone,
-        email: data.email,
-        diagnosis: data.diagnosis,
-        lastVisit: "-",
-        nextVisit: "-",
-        status: data.status,
-        consultReason: data.consultReason,
-        referredBy: data.referredBy,
-        perinatalHistory: data.perinatalHistory,
-        psychomotorDev: data.psychomotorDev,
-        observations: data.observations,
-      };
-      setPatients([...patients, newPatient]);
+      createPatient.mutate(patientData);
     } else if (editingPatient) {
-      setPatients(
-        patients.map((p) =>
-          p.id === editingPatient.id
-            ? {
-                ...p,
-                name: data.name,
-                rut: data.rut,
-                phone: data.phone,
-                email: data.email,
-                diagnosis: data.diagnosis,
-                status: data.status,
-                consultReason: data.consultReason,
-                referredBy: data.referredBy,
-                perinatalHistory: data.perinatalHistory,
-                psychomotorDev: data.psychomotorDev,
-                observations: data.observations,
-              }
-            : p
-        )
-      );
-      setSelectedPatient((prev) =>
-        prev?.id === editingPatient.id
-          ? { ...prev, ...data }
-          : prev
-      );
+      updatePatient.mutate({ id: editingPatient.id, ...patientData });
+      setSelectedPatient(null);
     }
   };
 
@@ -321,7 +214,7 @@ export default function Pacientes() {
                     <span className="text-sm">Próxima Cita</span>
                   </div>
                   <p className="text-lg font-semibold text-primary">
-                    {selectedPatient.nextVisit}
+                    -
                   </p>
                 </div>
               </div>
@@ -346,22 +239,22 @@ export default function Pacientes() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Motivo de Consulta</p>
                       <p className="text-card-foreground">
-                        {selectedPatient.consultReason || "No registrado"}
+                        {selectedPatient.consult_reason || "No registrado"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Derivado por</p>
-                      <p className="text-card-foreground">{selectedPatient.referredBy || "No registrado"}</p>
+                      <p className="text-card-foreground">{selectedPatient.referred_by || "No registrado"}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Antecedentes Perinatales</p>
-                      <p className="text-card-foreground">{selectedPatient.perinatalHistory || "No registrado"}</p>
+                      <p className="text-card-foreground">{selectedPatient.perinatal_history || "No registrado"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Desarrollo Psicomotor</p>
-                      <p className="text-card-foreground">{selectedPatient.psychomotorDev || "No registrado"}</p>
+                      <p className="text-card-foreground">{selectedPatient.psychomotor_dev || "No registrado"}</p>
                     </div>
                   </div>
                   <div>
@@ -391,10 +284,10 @@ export default function Pacientes() {
                 email: editingPatient.email,
                 diagnosis: editingPatient.diagnosis,
                 status: editingPatient.status,
-                consultReason: editingPatient.consultReason,
-                referredBy: editingPatient.referredBy,
-                perinatalHistory: editingPatient.perinatalHistory,
-                psychomotorDev: editingPatient.psychomotorDev,
+                consultReason: editingPatient.consult_reason,
+                referredBy: editingPatient.referred_by,
+                perinatalHistory: editingPatient.perinatal_history,
+                psychomotorDev: editingPatient.psychomotor_dev,
                 observations: editingPatient.observations,
               }
             : undefined

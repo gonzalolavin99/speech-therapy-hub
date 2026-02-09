@@ -7,10 +7,13 @@ import {
   CreditCard,
   User,
   Mic2,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ReminderPanel } from "@/components/reminders/ReminderPanel";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Calendario", href: "/", icon: Calendar },
@@ -23,6 +26,7 @@ const navigation = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border">
@@ -33,7 +37,7 @@ export function AppSidebar() {
             <Mic2 className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold text-sidebar-foreground">FonoApp</h1>
+            <h1 className="text-lg font-semibold text-sidebar-foreground">TherapyHub</h1>
             <p className="text-xs text-muted-foreground">Gestión Clínica</p>
           </div>
           <div className="flex items-center gap-1">
@@ -65,20 +69,29 @@ export function AppSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-sidebar-border p-4">
+        <div className="border-t border-sidebar-border p-4 space-y-3">
           <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent px-3 py-2">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
               <User className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                Fonoaudióloga
+                {user?.email?.split('@')[0] || 'Usuario'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                Plan Profesional
+                {user?.email || 'Plan Profesional'}
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground hover:text-destructive"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Cerrar Sesión
+          </Button>
         </div>
       </div>
     </aside>

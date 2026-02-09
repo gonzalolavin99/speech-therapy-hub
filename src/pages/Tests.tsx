@@ -2,8 +2,24 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Search, FileText, Clock, User, ChevronRight } from "lucide-react";
-import { TestFormDialog } from "@/components/forms/TestFormDialog";
+import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
+import { usePatients } from "@/hooks/usePatients";
+import { MBGRTest, TARTest, TEPROSIFTest } from "@/components/tests";
 
 const availableTests = [
   {
@@ -17,7 +33,7 @@ const availableTests = [
   },
   {
     id: "tar" as const,
-    name: "TAR",
+    name: "TAR Abreviado",
     fullName: "Test de Articulación a la Repetición",
     description: "Evaluación de la producción articulatoria mediante repetición",
     duration: "15-20 min",
@@ -34,78 +50,53 @@ const availableTests = [
   },
 ];
 
-const mockPatients = [
-  { id: "1", name: "María García Pérez" },
-  { id: "2", name: "Juan Pablo Rodríguez" },
-  { id: "3", name: "Ana María López" },
-  { id: "4", name: "Carlos Andrés Martínez" },
-  { id: "5", name: "Laura Fernanda Silva" },
-];
-
-interface TestResult {
-  id: string;
-  testName: string;
-  patientName: string;
-  date: string;
-  status: string;
-  score: string;
-}
-
-const initialTests: TestResult[] = [
-  {
-    id: "1",
-    testName: "TEPROSIF-R",
-    patientName: "María García",
-    date: "02/02/2026",
-    status: "completed",
-    score: "85%",
-  },
-  {
-    id: "2",
-    testName: "MBGR",
-    patientName: "Juan Rodríguez",
-    date: "01/02/2026",
-    status: "completed",
-    score: "Leve alteración",
-  },
-  {
-    id: "3",
-    testName: "TAR",
-    patientName: "Ana López",
-    date: "30/01/2026",
-    status: "completed",
-    score: "Normal",
-  },
-];
-
 export default function Tests() {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedTestType, setSelectedTestType] = useState<"mbgr" | "tar" | "teprosif">("mbgr");
-  const [tests, setTests] = useState<TestResult[]>(initialTests);
+  const [activeTest, setActiveTest] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<string>("");
+  const [showPatientSelect, setShowPatientSelect] = useState(false);
+  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { testResults, createTestResult } = useTestResults();
+  const { patients } = usePatients();
+
+  const selectedPatientData = patients.find(p => p.id === selectedPatient);
+
   const handleApplyTest = (testId: "mbgr" | "tar" | "teprosif") => {
-    setSelectedTestType(testId);
-    setIsFormOpen(true);
+    setPendingTestType(testId);
+    setShowPatientSelect(true);
   };
 
-  const handleTestSubmit = (data: any) => {
-    const patient = mockPatients.find((p) => p.id === data.patientId);
-    const newTest: TestResult = {
-      id: Date.now().toString(),
-      testName: selectedTestType.toUpperCase(),
-      patientName: patient?.name || "Paciente",
-      date: new Date(data.evaluationDate).toLocaleDateString("es-CL"),
+  const handlePatientSelected = () => {
+    if (selectedPatient && pendingTestType) {
+      setShowPatientSelect(false);
+      setActiveTest(pendingTestType);
+    }
+  };
+
+  const handleTestComplete = (results: any) => {
+    const testData: TestResultFormData = {
+      patient_id: selectedPatient,
+      test_type: activeTest!,
+      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'tar' ? 'TAR' : 'TEPROSIF-R',
+      evaluation_date: new Date().toISOString().split('T')[0],
       status: "completed",
-      score: "Pendiente análisis",
+      score: JSON.stringify(results),
     };
-    setTests([newTest, ...tests]);
+    createTestResult.mutate(testData);
+    setActiveTest(null);
+    setSelectedPatient("");
   };
 
-  const filteredTests = tests.filter(
+  const handleTestCancel = () => {
+    setActiveTest(null);
+    setSelectedPatient("");
+  };
+
+  const filteredTests = testResults.filter(
     (test) =>
-      test.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      test.testName.toLowerCase().includes(searchQuery.toLowerCase())
+      (test.patient_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      test.test_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -216,17 +207,17 @@ export default function Tests() {
                           <FileText className="h-4 w-4 text-primary" />
                         </div>
                         <span className="font-medium text-card-foreground">
-                          {test.testName}
+                          {test.test_name}
                         </span>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-card-foreground">{test.patientName}</span>
+                        <span className="text-card-foreground">{test.patient_name}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-muted-foreground">{test.date}</td>
+                    <td className="p-4 text-muted-foreground">{test.evaluation_date}</td>
                     <td className="p-4">
                       <span className="px-2 py-1 bg-success/10 text-success rounded-full text-sm">
                         {test.score}
@@ -245,13 +236,80 @@ export default function Tests() {
         </div>
       </div>
 
-      <TestFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        onSubmit={handleTestSubmit}
-        patients={mockPatients}
-        testType={selectedTestType}
-      />
+      {/* Patient Selection Dialog */}
+      <Dialog open={showPatientSelect} onOpenChange={setShowPatientSelect}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Seleccionar Paciente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Paciente</Label>
+              <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar paciente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowPatientSelect(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handlePatientSelected} disabled={!selectedPatient}>
+                Iniciar Test
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Interactive Test Components */}
+      <Dialog open={activeTest === 'mbgr'} onOpenChange={() => activeTest === 'mbgr' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Protocolo MBGR</DialogTitle>
+          </DialogHeader>
+          <MBGRTest
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results, score) => handleTestComplete({ results, score })}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'tar'} onOpenChange={() => activeTest === 'tar' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>TAR Abreviado</DialogTitle>
+          </DialogHeader>
+          <TARTest
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'teprosif'} onOpenChange={() => activeTest === 'teprosif' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>TEPROSIF-R</DialogTitle>
+          </DialogHeader>
+          <TEPROSIFTest
+            patientName={selectedPatientData?.name || ''}
+            patientAge=""
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
