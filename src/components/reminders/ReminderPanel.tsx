@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Send, MessageCircle, Mail, Check, Clock, X } from "lucide-react";
+import { Bell, Send, MessageCircle, Mail, Check, Clock, X, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,78 +20,36 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-interface Reminder {
-  id: string;
-  patientName: string;
-  patientPhone: string;
-  patientEmail: string;
-  sessionDate: string;
-  sessionTime: string;
-  status: "pending" | "sent" | "confirmed" | "declined";
-  method: "whatsapp" | "email" | "manual";
-}
-
-const mockReminders: Reminder[] = [
-  {
-    id: "1",
-    patientName: "María García",
-    patientPhone: "+56912345678",
-    patientEmail: "maria@email.com",
-    sessionDate: "2026-02-09",
-    sessionTime: "10:00",
-    status: "pending",
-    method: "whatsapp",
-  },
-  {
-    id: "2",
-    patientName: "Juan Rodríguez",
-    patientPhone: "+56987654321",
-    patientEmail: "juan@email.com",
-    sessionDate: "2026-02-08",
-    sessionTime: "11:30",
-    status: "sent",
-    method: "email",
-  },
-  {
-    id: "3",
-    patientName: "Ana López",
-    patientPhone: "+56955556666",
-    patientEmail: "ana@email.com",
-    sessionDate: "2026-02-11",
-    sessionTime: "15:00",
-    status: "confirmed",
-    method: "whatsapp",
-  },
-];
+import { useReminders, Reminder, ReminderFormData } from "@/hooks/useReminders";
+import { usePatients } from "@/hooks/usePatients";
 
 export function ReminderPanel() {
-  const [reminders, setReminders] = useState<Reminder[]>(mockReminders);
+  const { reminders, isLoading, createReminder, updateReminder, deleteReminder, markAsSent } = useReminders();
+  const { patients } = usePatients();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [newReminder, setNewReminder] = useState<{
-    patientName: string;
-    patientPhone: string;
-    patientEmail: string;
+    contact: string;
     sessionDate: string;
     sessionTime: string;
-    method: "whatsapp" | "email" | "manual";
+    method: "whatsapp" | "email" | "sms";
     message: string;
   }>({
-    patientName: "",
-    patientPhone: "",
-    patientEmail: "",
+    contact: "",
     sessionDate: "",
     sessionTime: "",
-    method: "whatsapp" as const,
+    method: "whatsapp",
     message: "Hola {nombre}, te recordamos tu cita de fonoaudiología el día {fecha} a las {hora}. ¿Confirmas tu asistencia?",
   });
+
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   const getStatusBadge = (status: Reminder["status"]) => {
     const config = {
       pending: { icon: Clock, label: "Pendiente", className: "bg-warning/10 text-warning" },
       sent: { icon: Send, label: "Enviado", className: "bg-info/10 text-info" },
       confirmed: { icon: Check, label: "Confirmado", className: "bg-success/10 text-success" },
-      declined: { icon: X, label: "No asistirá", className: "bg-destructive/10 text-destructive" },
+      failed: { icon: X, label: "Fallido", className: "bg-destructive/10 text-destructive" },
     };
     const { icon: Icon, label, className } = config[status];
     return (
@@ -104,66 +62,65 @@ export function ReminderPanel() {
 
   const sendWhatsAppReminder = (reminder: Reminder) => {
     const message = encodeURIComponent(
-      `Hola ${reminder.patientName}, te recordamos tu cita de fonoaudiología el día ${reminder.sessionDate} a las ${reminder.sessionTime}. ¿Confirmas tu asistencia? Responde SÍ o NO.`
+      `Hola ${reminder.patient_name}, te recordamos tu cita de fonoaudiología el día ${reminder.session_date} a las ${reminder.session_time}. ¿Confirmas tu asistencia? Responde SÍ o NO.`
     );
-    const phone = reminder.patientPhone.replace(/\D/g, "");
+    const phone = reminder.contact.replace(/\D/g, "");
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
     
-    setReminders((prev) =>
-      prev.map((r) => (r.id === reminder.id ? { ...r, status: "sent" } : r))
-    );
-    toast.success("Mensaje de WhatsApp abierto");
+    markAsSent.mutate(reminder.id);
   };
 
-  const copyEmailTemplate = (reminder: Reminder) => {
-    const subject = `Recordatorio de cita - ${reminder.sessionDate}`;
-    const body = `Estimado/a ${reminder.patientName},\n\nLe recordamos su cita de fonoaudiología programada para el día ${reminder.sessionDate} a las ${reminder.sessionTime}.\n\nPor favor confirme su asistencia respondiendo a este correo.\n\nSaludos cordiales,\nFonoApp`;
-    
-    navigator.clipboard.writeText(body);
-    toast.success("Plantilla copiada al portapapeles");
-    
-    setReminders((prev) =>
-      prev.map((r) => (r.id === reminder.id ? { ...r, status: "sent" } : r))
+  const sendEmailReminder = (reminder: Reminder) => {
+    const subject = encodeURIComponent(`Recordatorio de cita - ${reminder.session_date}`);
+    const body = encodeURIComponent(
+      `Estimado/a ${reminder.patient_name},\n\nLe recordamos su cita de fonoaudiología programada para el día ${reminder.session_date} a las ${reminder.session_time}.\n\nPor favor confirme su asistencia respondiendo a este correo.\n\nSaludos cordiales,\nFonoApp`
     );
+    window.open(`mailto:${reminder.contact}?subject=${subject}&body=${body}`, "_blank");
+    
+    markAsSent.mutate(reminder.id);
   };
 
   const markAsConfirmed = (id: string) => {
-    setReminders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "confirmed" } : r))
-    );
-    toast.success("Cita confirmada");
+    updateReminder.mutate({ id, status: "confirmed" });
   };
 
-  const markAsDeclined = (id: string) => {
-    setReminders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "declined" } : r))
-    );
-    toast.info("Cita marcada como no asistirá");
+  const markAsFailed = (id: string) => {
+    updateReminder.mutate({ id, status: "failed" });
+  };
+
+  const handleDeleteReminder = (id: string) => {
+    deleteReminder.mutate(id);
   };
 
   const handleCreateReminder = () => {
-    const newRem: Reminder = {
-      id: Date.now().toString(),
-      patientName: newReminder.patientName,
-      patientPhone: newReminder.patientPhone,
-      patientEmail: newReminder.patientEmail,
-      sessionDate: newReminder.sessionDate,
-      sessionTime: newReminder.sessionTime,
-      status: "pending",
+    if (!selectedPatient) {
+      toast.error("Selecciona un paciente");
+      return;
+    }
+
+    const reminderData: ReminderFormData = {
+      patient_id: selectedPatient.id,
+      patient_name: selectedPatient.name,
       method: newReminder.method,
+      contact: newReminder.contact || (newReminder.method === "email" ? selectedPatient.email || "" : selectedPatient.phone || ""),
+      session_date: newReminder.sessionDate,
+      session_time: newReminder.sessionTime,
+      message: newReminder.message,
     };
-    setReminders((prev) => [newRem, ...prev]);
-    setIsDialogOpen(false);
-    setNewReminder({
-      patientName: "",
-      patientPhone: "",
-      patientEmail: "",
-      sessionDate: "",
-      sessionTime: "",
-      method: "whatsapp",
-      message: "Hola {nombre}, te recordamos tu cita de fonoaudiología el día {fecha} a las {hora}. ¿Confirmas tu asistencia?",
+
+    createReminder.mutate(reminderData, {
+      onSuccess: () => {
+        setIsDialogOpen(false);
+        setSelectedPatientId("");
+        setNewReminder({
+          contact: "",
+          sessionDate: "",
+          sessionTime: "",
+          method: "whatsapp",
+          message: "Hola {nombre}, te recordamos tu cita de fonoaudiología el día {fecha} a las {hora}. ¿Confirmas tu asistencia?",
+        });
+      }
     });
-    toast.success("Recordatorio creado");
   };
 
   const pendingCount = reminders.filter((r) => r.status === "pending" || r.status === "sent").length;
@@ -194,21 +151,46 @@ export function ReminderPanel() {
             <h4 className="font-medium text-foreground">Nuevo Recordatorio</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="patientName">Nombre del Paciente</Label>
-                <Input
-                  id="patientName"
-                  value={newReminder.patientName}
-                  onChange={(e) => setNewReminder({ ...newReminder, patientName: e.target.value })}
-                  placeholder="Nombre completo"
-                />
+                <Label htmlFor="patient">Paciente</Label>
+                <Select
+                  value={selectedPatientId}
+                  onValueChange={(value) => {
+                    setSelectedPatientId(value);
+                    const patient = patients.find(p => p.id === value);
+                    if (patient) {
+                      setNewReminder(prev => ({
+                        ...prev,
+                        contact: prev.method === "email" ? patient.email || "" : patient.phone || ""
+                      }));
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map((patient) => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="method">Método de Envío</Label>
                 <Select
                   value={newReminder.method}
-                  onValueChange={(value: "whatsapp" | "email" | "manual") =>
-                    setNewReminder({ ...newReminder, method: value })
-                  }
+                  onValueChange={(value: "whatsapp" | "email" | "sms") => {
+                    setNewReminder({ ...newReminder, method: value });
+                    if (selectedPatient) {
+                      setNewReminder(prev => ({
+                        ...prev,
+                        method: value,
+                        contact: value === "email" ? selectedPatient.email || "" : selectedPatient.phone || ""
+                      }));
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -216,33 +198,23 @@ export function ReminderPanel() {
                   <SelectContent>
                     <SelectItem value="whatsapp">WhatsApp</SelectItem>
                     <SelectItem value="email">Correo Electrónico</SelectItem>
-                    <SelectItem value="manual">Recordatorio Manual</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
+                <Label htmlFor="contact">
+                  {newReminder.method === "email" ? "Email" : "Teléfono"}
+                </Label>
                 <Input
-                  id="phone"
-                  value={newReminder.patientPhone}
-                  onChange={(e) => setNewReminder({ ...newReminder, patientPhone: e.target.value })}
-                  placeholder="+56 9 1234 5678"
+                  id="contact"
+                  value={newReminder.contact}
+                  onChange={(e) => setNewReminder({ ...newReminder, contact: e.target.value })}
+                  placeholder={newReminder.method === "email" ? "email@ejemplo.com" : "+56 9 1234 5678"}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newReminder.patientEmail}
-                  onChange={(e) => setNewReminder({ ...newReminder, patientEmail: e.target.value })}
-                  placeholder="email@ejemplo.com"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date">Fecha de Sesión</Label>
                 <Input
@@ -252,6 +224,8 @@ export function ReminderPanel() {
                   onChange={(e) => setNewReminder({ ...newReminder, sessionDate: e.target.value })}
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="time">Hora</Label>
                 <Input
@@ -261,6 +235,7 @@ export function ReminderPanel() {
                   onChange={(e) => setNewReminder({ ...newReminder, sessionTime: e.target.value })}
                 />
               </div>
+              <div className="space-y-2" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="message">Mensaje Personalizado</Label>
@@ -272,7 +247,14 @@ export function ReminderPanel() {
                 rows={3}
               />
             </div>
-            <Button onClick={handleCreateReminder} className="w-full">
+            <Button 
+              onClick={handleCreateReminder} 
+              className="w-full"
+              disabled={createReminder.isPending}
+            >
+              {createReminder.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
               Crear Recordatorio
             </Button>
           </div>
@@ -280,72 +262,90 @@ export function ReminderPanel() {
           {/* Reminders List */}
           <div className="space-y-3">
             <h4 className="font-medium text-foreground">Recordatorios Pendientes</h4>
-            {reminders.map((reminder) => (
-              <div
-                key={reminder.id}
-                className="bg-card border rounded-lg p-4 flex items-center justify-between"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <p className="font-medium text-card-foreground">{reminder.patientName}</p>
-                    {getStatusBadge(reminder.status)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {reminder.sessionDate} a las {reminder.sessionTime}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {reminder.method === "whatsapp" ? reminder.patientPhone : reminder.patientEmail}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {reminder.status === "pending" && (
-                    <>
-                      {reminder.method === "whatsapp" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendWhatsAppReminder(reminder)}
-                          className="gap-1"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          Enviar
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => copyEmailTemplate(reminder)}
-                          className="gap-1"
-                        >
-                          <Mail className="h-4 w-4" />
-                          Copiar
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  {(reminder.status === "pending" || reminder.status === "sent") && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markAsConfirmed(reminder.id)}
-                        className="text-success hover:text-success"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markAsDeclined(reminder.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ))}
+            ) : reminders.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No hay recordatorios pendientes
+              </p>
+            ) : (
+              reminders.map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="bg-card border rounded-lg p-4 flex items-center justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <p className="font-medium text-card-foreground">{reminder.patient_name}</p>
+                      {getStatusBadge(reminder.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {reminder.session_date} a las {reminder.session_time}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {reminder.contact}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {reminder.status === "pending" && (
+                      <>
+                        {reminder.method === "whatsapp" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendWhatsAppReminder(reminder)}
+                            className="gap-1"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Enviar
+                          </Button>
+                        ) : reminder.method === "email" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendEmailReminder(reminder)}
+                            className="gap-1"
+                          >
+                            <Mail className="h-4 w-4" />
+                            Enviar
+                          </Button>
+                        ) : null}
+                      </>
+                    )}
+                    {(reminder.status === "pending" || reminder.status === "sent") && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => markAsConfirmed(reminder.id)}
+                          className="text-success hover:text-success"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => markAsFailed(reminder.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteReminder(reminder.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </DialogContent>

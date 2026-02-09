@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, FileText, Clock, User, ChevronRight } from "lucide-react";
+import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, AlertCircle } from "lucide-react";
+import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
 import { MBGRTest, TARTest, TEPROSIFTest } from "@/components/tests";
@@ -50,12 +51,24 @@ const availableTests = [
   },
 ];
 
+interface TestResult {
+  id: string;
+  test_name: string;
+  test_type: string;
+  patient_name?: string;
+  evaluation_date: string;
+  score: string | null;
+  status: string;
+  results_data?: any;
+}
+
 export default function Tests() {
   const [activeTest, setActiveTest] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [showPatientSelect, setShowPatientSelect] = useState(false);
   const [pendingTestType, setPendingTestType] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
 
   const { testResults, createTestResult } = useTestResults();
   const { patients } = usePatients();
@@ -220,11 +233,15 @@ export default function Tests() {
                     <td className="p-4 text-muted-foreground">{test.evaluation_date}</td>
                     <td className="p-4">
                       <span className="px-2 py-1 bg-success/10 text-success rounded-full text-sm">
-                        {test.score}
+                        Completado
                       </span>
                     </td>
                     <td className="p-4">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedTestDetail(test as any)}
+                      >
                         Ver detalle
                       </Button>
                     </td>
@@ -270,7 +287,6 @@ export default function Tests() {
         </DialogContent>
       </Dialog>
 
-      {/* Interactive Test Components */}
       <Dialog open={activeTest === 'mbgr'} onOpenChange={() => activeTest === 'mbgr' && handleTestCancel()}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
@@ -308,6 +324,195 @@ export default function Tests() {
             onComplete={(results) => handleTestComplete(results)}
             onCancel={handleTestCancel}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedTestDetail} onOpenChange={() => setSelectedTestDetail(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalle del Test - {selectedTestDetail?.test_name}</DialogTitle>
+          </DialogHeader>
+          {selectedTestDetail && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Paciente</p>
+                  <p className="font-medium">{selectedTestDetail.patient_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Fecha</p>
+                  <p className="font-medium">{selectedTestDetail.evaluation_date}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tipo de Test</p>
+                  <p className="font-medium">{selectedTestDetail.test_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Estado</p>
+                  <span className="px-2 py-1 bg-success/10 text-success rounded-full text-sm">Completado</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground mb-3">Resultados Detallados</p>
+                <div className="space-y-4">
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(selectedTestDetail.score || '{}');
+                      
+                      if (selectedTestDetail.test_type === 'mbgr') {
+                        const { results, score } = parsed;
+                        return (
+                          <div className="space-y-3 bg-muted rounded-lg p-4 max-h-[400px] overflow-y-auto">
+                            <div className="flex items-center justify-between bg-primary/10 rounded-lg p-3">
+                              <span className="font-medium">Puntaje Total</span>
+                              <span className="text-lg font-bold text-primary">{score || 0} puntos</span>
+                            </div>
+                            {results && Object.entries(results).length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium">Respuestas:</p>
+                                <div className="grid gap-2">
+                                  {Object.entries(results).map(([key, value]) => (
+                                    <div key={key} className="flex justify-between text-sm bg-background rounded p-2">
+                                      <span className="text-muted-foreground">{key}</span>
+                                      <span className="font-medium">{String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      
+                      if (selectedTestDetail.test_type === 'tar') {
+                        const { palabras, frases, summary, sectionObservations } = parsed;
+                        const responseConfig: Record<string, { text: string; color: string; icon: React.ReactNode }> = {
+                          C: { text: 'Correcto', color: 'text-success', icon: <Check className="h-3 w-3" /> },
+                          S: { text: 'Sustitución', color: 'text-warning', icon: <RefreshCw className="h-3 w-3" /> },
+                          O: { text: 'Omisión', color: 'text-destructive', icon: <X className="h-3 w-3" /> },
+                          D: { text: 'Distorsión', color: 'text-blue-500', icon: <AlertCircle className="h-3 w-3" /> },
+                        };
+                        const getWordById = (id: string) => {
+                          for (const section of tarSections) {
+                            const item = section.items.find(i => i.id === id);
+                            if (item) return { word: item.word, section: section.name, column: item.column };
+                          }
+                          return null;
+                        };
+                        const groupedBySection: Record<string, { name: string; items: Array<{ id: string; word: string; column: string; response: string }> }> = {};
+                        if (palabras) {
+                          Object.entries(palabras).forEach(([id, data]: [string, any]) => {
+                            const wordInfo = getWordById(id);
+                            if (wordInfo) {
+                              if (!groupedBySection[wordInfo.section]) {
+                                groupedBySection[wordInfo.section] = { name: wordInfo.section, items: [] };
+                              }
+                              groupedBySection[wordInfo.section].items.push({ id, word: data.word || wordInfo.word, column: data.column || wordInfo.column, response: data.response });
+                            }
+                          });
+                        }
+                        return (
+                          <div className="space-y-4">
+                            {summary && (
+                              <div className="bg-primary/10 rounded-lg p-3">
+                                <p className="font-medium mb-2">Resumen General</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                                  <div className="flex items-center gap-1"><Check className="h-3 w-3 text-success" /> <span className="font-medium text-success">{summary.correct || 0}</span></div>
+                                  <div className="flex items-center gap-1"><RefreshCw className="h-3 w-3 text-warning" /> <span className="font-medium text-warning">{summary.substitutions || 0}</span></div>
+                                  <div className="flex items-center gap-1"><X className="h-3 w-3 text-destructive" /> <span className="font-medium text-destructive">{summary.omissions || 0}</span></div>
+                                  <div className="flex items-center gap-1"><AlertCircle className="h-3 w-3 text-blue-500" /> <span className="font-medium text-blue-500">{summary.distortions || 0}</span></div>
+                                </div>
+                              </div>
+                            )}
+                            {Object.keys(groupedBySection).length > 0 && (
+                              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                                {Object.values(groupedBySection).map((section) => (
+                                  <div key={section.name} className="border rounded-lg overflow-hidden">
+                                    <div className="bg-muted px-3 py-2 font-medium text-sm">{section.name}</div>
+                                    <div className="divide-y">
+                                      {section.items.map((item) => {
+                                        const config = responseConfig[item.response];
+                                        return (
+                                          <div key={item.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                                            <div><span className="font-medium">{item.word}</span><span className="text-xs text-muted-foreground ml-2 capitalize">({item.column})</span></div>
+                                            <span className={`flex items-center gap-1 text-xs font-medium ${config?.color || 'text-muted-foreground'}`}>{config?.icon}{config?.text || 'Sin respuesta'}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {frases && Object.keys(frases).length > 0 && (
+                              <div className="border rounded-lg overflow-hidden">
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">Repetición de Frases</div>
+                                <div className="divide-y">
+                                  {tarFrases.map((frase) => (
+                                    <div key={frase.id} className="px-3 py-2 text-sm">
+                                      <p className="text-muted-foreground text-xs mb-1">"{frase.text}"</p>
+                                      <p className="font-medium">{frases[frase.id] || '-'}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {sectionObservations && Object.keys(sectionObservations).filter(k => sectionObservations[k]).length > 0 && (
+                              <div className="border rounded-lg overflow-hidden">
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">Observaciones Clínicas</div>
+                                <div className="divide-y">
+                                  {Object.entries(sectionObservations).map(([section, obs]: [string, any]) => obs && (
+                                    <div key={section} className="px-3 py-2 text-sm"><span className="font-medium capitalize">{section}:</span><p className="text-muted-foreground mt-1">{obs}</p></div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      
+                      if (selectedTestDetail.test_type === 'teprosif') {
+                        const { responses, summary } = parsed;
+                        return (
+                          <div className="space-y-4 bg-muted rounded-lg p-4 max-h-[400px] overflow-y-auto">
+                            {summary && (
+                              <div className="bg-primary/10 rounded-lg p-3">
+                                <p className="font-medium mb-2">Resumen de Procesos</p>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div><span className="text-muted-foreground">Total PSF:</span> <span className="font-medium">{summary.totalPSF || 0}</span></div>
+                                  <div><span className="text-muted-foreground">Items evaluados:</span> <span className="font-medium">{summary.itemsEvaluated || 0}</span></div>
+                                </div>
+                              </div>
+                            )}
+                            {responses && Object.keys(responses).length > 0 && (
+                              <div>
+                                <p className="text-sm font-medium mb-2">Respuestas ({Object.keys(responses).length} items)</p>
+                                <div className="grid gap-1 text-xs max-h-[200px] overflow-y-auto">
+                                  {Object.entries(responses).map(([idx, data]: [string, any]) => (
+                                    <div key={idx} className="flex justify-between bg-background rounded p-2">
+                                      <span>{data.targetWord || `Item ${idx}`}</span>
+                                      <span className="text-muted-foreground">{data.childResponse || '-'}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      
+                      return <p className="text-muted-foreground">Test completado exitosamente</p>;
+                    } catch {
+                      return <p className="text-muted-foreground">Test completado exitosamente</p>;
+                    }
+                  })()}
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => setSelectedTestDetail(null)}>Cerrar</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>

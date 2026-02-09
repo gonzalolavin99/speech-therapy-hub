@@ -19,9 +19,10 @@ interface TARTestProps {
 }
 
 interface TARResults {
-  palabras: Record<string, { response: ResponseType; observation?: string }>;
+  palabras: Record<string, { response: ResponseType; observation?: string; word: string; column: string }>;
   frases: Record<string, string>;
   summary: TARSummary;
+  sectionObservations: Record<string, string>;
 }
 
 interface TARSummary {
@@ -50,18 +51,23 @@ const columnLabels: Record<string, string> = {
 export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'palabras' | 'frases'>('palabras');
-  const [palabrasResponses, setPalabrasResponses] = useState<Record<string, { response: ResponseType; observation?: string }>>({});
+  const [palabrasResponses, setPalabrasResponses] = useState<Record<string, { response: ResponseType; observation?: string; word: string; column: string }>>({});
   const [frasesResponses, setFrasesResponses] = useState<Record<string, string>>({});
+  const [sectionObservations, setSectionObservations] = useState<Record<string, string>>({});
 
   const currentSection = tarSections[currentSectionIndex];
   const totalSections = tarSections.length;
   const progress = ((currentSectionIndex + 1) / totalSections) * 100;
 
-  const handlePalabraResponse = (itemId: string, response: ResponseType) => {
+  const handlePalabraResponse = (itemId: string, response: ResponseType, word: string, column: string) => {
     setPalabrasResponses((prev) => ({
       ...prev,
-      [itemId]: { ...prev[itemId], response },
+      [itemId]: { ...prev[itemId], response, word, column },
     }));
+  };
+
+  const handleSectionObservation = (sectionId: string, value: string) => {
+    setSectionObservations((prev) => ({ ...prev, [sectionId]: value }));
   };
 
   const handleFraseResponse = (fraseId: string, value: string) => {
@@ -121,7 +127,7 @@ export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
 
   const handleFinish = () => {
     const summary = calculateSummary();
-    onComplete({ palabras: palabrasResponses, frases: frasesResponses, summary });
+    onComplete({ palabras: palabrasResponses, frases: frasesResponses, summary, sectionObservations });
   };
 
   return (
@@ -153,6 +159,28 @@ export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
             <Progress value={progress} className="h-2" />
           </div>
 
+          <div className="bg-muted/50 rounded-lg p-3 border mb-4">
+            <p className="font-medium mb-2 text-sm">Simbología de respuestas</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div className="flex items-center gap-2 p-2 rounded bg-success/10">
+                <Check className="h-3 w-3 text-success" />
+                <div><span className="font-medium text-success">Correcto</span><p className="text-muted-foreground">Fonema bien producido</p></div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded bg-warning/10">
+                <RefreshCw className="h-3 w-3 text-warning" />
+                <div><span className="font-medium text-warning">Sustitución</span><p className="text-muted-foreground">Reemplazó por otro</p></div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded bg-destructive/10">
+                <X className="h-3 w-3 text-destructive" />
+                <div><span className="font-medium text-destructive">Omisión</span><p className="text-muted-foreground">No lo produjo</p></div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded bg-blue-500/10">
+                <AlertCircle className="h-3 w-3 text-blue-500" />
+                <div><span className="font-medium text-blue-500">Distorsión</span><p className="text-muted-foreground">Producción imprecisa</p></div>
+              </div>
+            </div>
+          </div>
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -165,12 +193,12 @@ export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
                 {currentSection.items.map((item) => {
                   const currentResponse = palabrasResponses[item.id]?.response;
                   return (
-                    <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg border">
+                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border">
                       <div className="flex-1">
                         <p className="font-medium text-lg">{item.word}</p>
                         <p className="text-xs text-muted-foreground">{columnLabels[item.column]}</p>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="grid grid-cols-4 gap-1 sm:flex">
                         {(['C', 'S', 'O', 'D'] as ResponseType[]).map((type) => {
                           if (!type) return null;
                           const { label, icon, color } = responseLabels[type];
@@ -180,13 +208,13 @@ export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
                               variant="outline"
                               size="sm"
                               className={cn(
-                                "h-10 w-10 p-0",
+                                "h-auto py-2 px-2 flex flex-col items-center gap-1",
                                 currentResponse === type && color
                               )}
-                              onClick={() => handlePalabraResponse(item.id, type)}
-                              title={label}
+                              onClick={() => handlePalabraResponse(item.id, type, item.word, item.column)}
                             >
                               {icon}
+                              <span className="text-[10px] font-normal">{label.slice(0, 4)}</span>
                             </Button>
                           );
                         })}
@@ -194,6 +222,16 @@ export function TARTest({ patientName, onComplete, onCancel }: TARTestProps) {
                     </div>
                   );
                 })}
+              </div>
+              
+              <div className="mt-6 pt-4 border-t">
+                <Label className="text-sm font-medium">Observaciones de la sección</Label>
+                <textarea
+                  className="mt-2 w-full min-h-[80px] p-3 text-sm rounded-lg border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Anotar comportamiento, actitud, dificultades observadas..."
+                  value={sectionObservations[currentSection.id] || ''}
+                  onChange={(e) => handleSectionObservation(currentSection.id, e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
