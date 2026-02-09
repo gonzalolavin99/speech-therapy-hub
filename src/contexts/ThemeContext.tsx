@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type ColorTheme = "teal" | "sky" | "rose" | "lavender" | "mint";
+// Paleta Lux Navia
+// Nordic Blue: #67869A - Primary
+// Misty Blue: #C6D1D9 - Secondary  
+// Light Grey: #F1F1F1 - Background
+// Pale Blush: #F4EBE9 - Accent
+// Oak Wood: #E7E0D8 - Muted
+
+export type ColorTheme = "nordic" | "misty" | "blush" | "oak" | "ocean";
 
 interface ThemeContextType {
   colorTheme: ColorTheme;
@@ -10,60 +17,82 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const themeColors: Record<ColorTheme, { name: string; preview: string }> = {
-  teal: { name: "Verde Agua", preview: "hsl(174, 62%, 40%)" },
-  sky: { name: "Celeste Pastel", preview: "hsl(199, 89%, 65%)" },
-  rose: { name: "Rosa Suave", preview: "hsl(350, 80%, 72%)" },
-  lavender: { name: "Lavanda", preview: "hsl(270, 60%, 70%)" },
-  mint: { name: "Menta", preview: "hsl(158, 64%, 52%)" },
+  nordic: { name: "Nordic Blue", preview: "#67869A" },
+  misty: { name: "Misty Blue", preview: "#C6D1D9" },
+  blush: { name: "Pale Blush", preview: "#F4EBE9" },
+  oak: { name: "Oak Wood", preview: "#E7E0D8" },
+  ocean: { name: "Ocean Deep", preview: "#4A6B7C" },
 };
 
 const themeVariables: Record<ColorTheme, Record<string, string>> = {
-  teal: {
-    "--primary": "174 62% 40%",
-    "--ring": "174 62% 40%",
-    "--sidebar-primary": "174 62% 40%",
-    "--sidebar-ring": "174 62% 40%",
-    "--sidebar-background": "174 40% 97%",
-    "--sidebar-accent": "174 30% 92%",
+  nordic: {
+    // Nordic Blue #67869A como primario
+    "--primary": "204 22% 50%",
+    "--ring": "204 22% 50%",
+    "--sidebar-primary": "204 22% 50%",
+    "--sidebar-ring": "204 22% 50%",
+    "--sidebar-background": "204 18% 96%",
+    "--sidebar-accent": "204 18% 90%",
+    "--secondary": "204 18% 81%",
+    "--muted": "32 24% 88%",
+    "--accent": "11 28% 93%",
   },
-  sky: {
-    "--primary": "199 89% 65%",
-    "--ring": "199 89% 65%",
-    "--sidebar-primary": "199 89% 55%",
-    "--sidebar-ring": "199 89% 55%",
-    "--sidebar-background": "199 50% 97%",
-    "--sidebar-accent": "199 40% 92%",
+  misty: {
+    // Misty Blue #C6D1D9 como primario (más suave)
+    "--primary": "204 18% 63%",
+    "--ring": "204 18% 63%",
+    "--sidebar-primary": "204 18% 58%",
+    "--sidebar-ring": "204 18% 58%",
+    "--sidebar-background": "204 15% 96%",
+    "--sidebar-accent": "204 15% 90%",
+    "--secondary": "204 22% 75%",
+    "--muted": "32 20% 90%",
+    "--accent": "11 25% 94%",
   },
-  rose: {
-    "--primary": "350 80% 65%",
-    "--ring": "350 80% 65%",
-    "--sidebar-primary": "350 80% 60%",
-    "--sidebar-ring": "350 80% 60%",
-    "--sidebar-background": "350 50% 97%",
-    "--sidebar-accent": "350 40% 93%",
+  blush: {
+    // Pale Blush #F4EBE9 inspirado
+    "--primary": "11 35% 65%",
+    "--ring": "11 35% 65%",
+    "--sidebar-primary": "11 35% 60%",
+    "--sidebar-ring": "11 35% 60%",
+    "--sidebar-background": "11 28% 96%",
+    "--sidebar-accent": "11 25% 92%",
+    "--secondary": "11 20% 85%",
+    "--muted": "32 20% 88%",
+    "--accent": "204 18% 90%",
   },
-  lavender: {
-    "--primary": "270 60% 65%",
-    "--ring": "270 60% 65%",
-    "--sidebar-primary": "270 60% 58%",
-    "--sidebar-ring": "270 60% 58%",
-    "--sidebar-background": "270 40% 97%",
-    "--sidebar-accent": "270 35% 92%",
+  oak: {
+    // Oak Wood #E7E0D8 inspirado (cálido)
+    "--primary": "32 30% 55%",
+    "--ring": "32 30% 55%",
+    "--sidebar-primary": "32 30% 50%",
+    "--sidebar-ring": "32 30% 50%",
+    "--sidebar-background": "32 24% 96%",
+    "--sidebar-accent": "32 20% 90%",
+    "--secondary": "32 18% 82%",
+    "--muted": "32 15% 88%",
+    "--accent": "11 20% 92%",
   },
-  mint: {
-    "--primary": "158 64% 45%",
-    "--ring": "158 64% 45%",
-    "--sidebar-primary": "158 64% 40%",
-    "--sidebar-ring": "158 64% 40%",
-    "--sidebar-background": "158 40% 97%",
-    "--sidebar-accent": "158 35% 92%",
+  ocean: {
+    // Versión más oscura de Nordic Blue
+    "--primary": "204 25% 40%",
+    "--ring": "204 25% 40%",
+    "--sidebar-primary": "204 25% 35%",
+    "--sidebar-ring": "204 25% 35%",
+    "--sidebar-background": "204 20% 95%",
+    "--sidebar-accent": "204 18% 88%",
+    "--secondary": "204 18% 75%",
+    "--muted": "32 20% 88%",
+    "--accent": "11 25% 92%",
   },
 };
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     const saved = localStorage.getItem("color-theme") as ColorTheme;
-    return saved || "teal";
+    // Si el tema guardado no es válido, usar nordic como default
+    const validThemes: ColorTheme[] = ["nordic", "misty", "blush", "oak", "ocean"];
+    return validThemes.includes(saved) ? saved : "nordic";
   });
 
   useEffect(() => {

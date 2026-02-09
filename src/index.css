@@ -8,97 +8,111 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 180 20% 98%;
-    --foreground: 200 25% 15%;
+    /* Paleta Lux Navia - Tema Claro */
+    /* Light Grey #F1F1F1 */
+    --background: 0 0% 95%;
+    --foreground: 204 22% 25%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 200 25% 15%;
+    /* White with Pale Blush tint */
+    --card: 11 28% 98%;
+    --card-foreground: 204 22% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 25% 15%;
+    --popover-foreground: 204 22% 25%;
 
-    --primary: 174 62% 40%;
+    /* Nordic Blue #67869A */
+    --primary: 204 22% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 180 15% 94%;
-    --secondary-foreground: 200 25% 20%;
+    /* Misty Blue #C6D1D9 */
+    --secondary: 204 18% 81%;
+    --secondary-foreground: 204 22% 25%;
 
-    --muted: 180 10% 92%;
-    --muted-foreground: 200 10% 45%;
+    /* Oak Wood #E7E0D8 */
+    --muted: 32 24% 88%;
+    --muted-foreground: 204 15% 40%;
 
-    --accent: 15 85% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Pale Blush #F4EBE9 */
+    --accent: 11 28% 93%;
+    --accent-foreground: 204 22% 25%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 180 15% 88%;
-    --input: 180 15% 88%;
-    --ring: 174 62% 40%;
+    /* Misty Blue lighter */
+    --border: 204 18% 85%;
+    --input: 204 18% 85%;
+    --ring: 204 22% 50%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 174 40% 97%;
-    --sidebar-foreground: 200 25% 25%;
-    --sidebar-primary: 174 62% 40%;
+    /* Sidebar - Nordic Blue tones */
+    --sidebar-background: 204 18% 96%;
+    --sidebar-foreground: 204 22% 30%;
+    --sidebar-primary: 204 22% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 30% 92%;
-    --sidebar-accent-foreground: 200 25% 20%;
-    --sidebar-border: 180 20% 90%;
-    --sidebar-ring: 174 62% 40%;
+    --sidebar-accent: 204 18% 90%;
+    --sidebar-accent-foreground: 204 22% 25%;
+    --sidebar-border: 204 18% 88%;
+    --sidebar-ring: 204 22% 50%;
 
     /* Custom tokens */
     --success: 158 64% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
+    --info: 204 22% 50%;
     --info-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 200 25% 10%;
-    --foreground: 180 20% 95%;
+    /* Paleta Lux Navia - Tema Oscuro */
+    --background: 204 25% 10%;
+    --foreground: 204 18% 90%;
 
-    --card: 200 25% 12%;
-    --card-foreground: 180 20% 95%;
+    --card: 204 22% 14%;
+    --card-foreground: 204 18% 90%;
 
-    --popover: 200 25% 12%;
-    --popover-foreground: 180 20% 95%;
+    --popover: 204 22% 14%;
+    --popover-foreground: 204 18% 90%;
 
-    --primary: 174 62% 45%;
+    /* Nordic Blue más claro para oscuro */
+    --primary: 204 22% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 20% 18%;
-    --secondary-foreground: 180 20% 90%;
+    /* Misty Blue oscurecido */
+    --secondary: 204 18% 22%;
+    --secondary-foreground: 204 18% 85%;
 
-    --muted: 200 20% 20%;
-    --muted-foreground: 180 15% 60%;
+    /* Oak Wood oscurecido */
+    --muted: 32 15% 18%;
+    --muted-foreground: 204 15% 60%;
 
-    --accent: 15 85% 55%;
-    --accent-foreground: 0 0% 100%;
+    /* Pale Blush oscurecido */
+    --accent: 11 20% 20%;
+    --accent-foreground: 11 28% 90%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 20% 22%;
-    --input: 200 20% 22%;
-    --ring: 174 62% 45%;
+    --border: 204 18% 20%;
+    --input: 204 18% 20%;
+    --ring: 204 22% 55%;
 
-    --sidebar-background: 200 25% 8%;
-    --sidebar-foreground: 180 20% 90%;
-    --sidebar-primary: 174 62% 45%;
+    --sidebar-background: 204 25% 8%;
+    --sidebar-foreground: 204 18% 85%;
+    --sidebar-primary: 204 22% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 20% 15%;
-    --sidebar-accent-foreground: 180 20% 90%;
-    --sidebar-border: 200 20% 18%;
-    --sidebar-ring: 174 62% 45%;
+    --sidebar-accent: 204 18% 18%;
+    --sidebar-accent-foreground: 204 18% 85%;
+    --sidebar-border: 204 18% 18%;
+    --sidebar-ring: 204 22% 55%;
 
     --success: 158 64% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
-    --info: 199 89% 52%;
+    --info: 204 22% 55%;
     --info-foreground: 0 0% 100%;
   }
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WeeklyCalendar } from "@/components/calendar/WeeklyCalendar";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { ReminderWidget } from "@/components/dashboard/ReminderWidget";
 import { Users, Calendar, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePatients } from "@/hooks/usePatients";
@@ -9,6 +10,7 @@ import { usePlannings } from "@/hooks/usePlannings";
 import { usePayments } from "@/hooks/usePayments";
 import { useSessions, SessionFormData } from "@/hooks/useSessions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { SessionFormDialog } from "@/components/forms/SessionFormDialog";
 import { toast } from "sonner";
@@ -17,6 +19,7 @@ export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isSessionFormOpen, setIsSessionFormOpen] = useState(false);
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { patients } = usePatients();
   const { plannings } = usePlannings();
   const { payments } = usePayments();
@@ -69,7 +72,12 @@ export default function Dashboard() {
     return "Buenas noches";
   };
 
-  const userName = user?.email?.split('@')[0] || 'Usuario';
+  // Obtener nombre del usuario: primero del perfil profesional, luego user_metadata, luego email
+  const userName = profile?.full_name 
+    || user?.user_metadata?.full_name 
+    || user?.user_metadata?.name 
+    || user?.email?.split('@')[0] 
+    || 'Usuario';
 
   return (
     <AppLayout>
@@ -92,8 +100,8 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Stats Grid with Reminders */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatsCard
             title="Pacientes Activos"
             value={activePatients}
@@ -122,6 +130,7 @@ export default function Dashboard() {
             icon={Clock}
             variant="warning"
           />
+          <ReminderWidget />
         </div>
 
         {/* Calendar */}
