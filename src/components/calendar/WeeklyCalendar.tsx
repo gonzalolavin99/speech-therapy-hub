@@ -1,8 +1,13 @@
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface CalendarSession {
   id: string;
@@ -10,6 +15,7 @@ export interface CalendarSession {
   start_time: string;
   end_time: string;
   session_type: 'evaluation' | 'therapy' | 'followup';
+  status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   title: string;
 }
 
@@ -31,9 +37,11 @@ interface WeeklyCalendarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   sessions?: CalendarSession[];
+  onSessionClick?: (session: CalendarSession) => void;
+  onDeleteSession?: (sessionId: string) => void;
 }
 
-export function WeeklyCalendar({ currentDate, onDateChange, sessions = [] }: WeeklyCalendarProps) {
+export function WeeklyCalendar({ currentDate, onDateChange, sessions = [], onSessionClick, onDeleteSession }: WeeklyCalendarProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -49,16 +57,42 @@ export function WeeklyCalendar({ currentDate, onDateChange, sessions = [] }: Wee
     return format(date, "HH:00");
   };
 
-  const getSessionStyle = (type: string) => {
+  const getSessionStyle = (type: string, status?: string) => {
+    // Si está confirmada, usar borde más grueso y fondo más intenso
+    const confirmedExtra = status === 'confirmed' ? 'ring-2 ring-offset-1' : '';
+    const cancelledStyle = status === 'cancelled' ? 'opacity-50 line-through' : '';
+    
+    let baseStyle = '';
     switch (type) {
       case "evaluation":
-        return "bg-info/10 border-info text-info";
+        baseStyle = status === 'confirmed' 
+          ? "bg-info/20 border-info text-info ring-info"
+          : "bg-info/10 border-info text-info";
+        break;
       case "therapy":
-        return "bg-primary/10 border-primary text-primary";
+        baseStyle = status === 'confirmed'
+          ? "bg-primary/20 border-primary text-primary ring-primary"
+          : "bg-primary/10 border-primary text-primary";
+        break;
       case "followup":
-        return "bg-success/10 border-success text-success";
+        baseStyle = status === 'confirmed'
+          ? "bg-success/20 border-success text-success ring-success"
+          : "bg-success/10 border-success text-success";
+        break;
       default:
-        return "bg-muted border-muted-foreground text-muted-foreground";
+        baseStyle = "bg-muted border-muted-foreground text-muted-foreground";
+    }
+    return `${baseStyle} ${confirmedExtra} ${cancelledStyle}`;
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle2 className="h-3 w-3 text-success" />;
+      case 'cancelled':
+        return <XCircle className="h-3 w-3 text-destructive" />;
+      default:
+        return null;
     }
   };
 
@@ -154,16 +188,43 @@ export function WeeklyCalendar({ currentDate, onDateChange, sessions = [] }: Wee
                       )}
                     >
                       {daySessions.map((session) => (
-                        <div
-                          key={session.id}
-                          className={cn(
-                            "rounded-lg border-l-2 px-2 py-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity",
-                            getSessionStyle(session.session_type)
-                          )}
-                        >
-                          <p className="font-medium truncate">{session.patient_name || session.title}</p>
-                          <p className="opacity-75">{getSessionTypeLabel(session.session_type)}</p>
-                        </div>
+                        <Tooltip key={session.id}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={cn(
+                                "rounded-lg border-l-2 px-2 py-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity relative group",
+                                getSessionStyle(session.session_type, session.status)
+                              )}
+                              onClick={() => onSessionClick?.(session)}
+                            >
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(session.status)}
+                                <p className="font-medium truncate flex-1">{session.patient_name || session.title}</p>
+                              </div>
+                              <p className="opacity-75">{getSessionTypeLabel(session.session_type)}</p>
+                              {session.status === 'cancelled' && onDeleteSession && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteSession(session.id);
+                                  }}
+                                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{session.patient_name || session.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {session.status === 'confirmed' ? '✅ Confirmado' : 
+                               session.status === 'cancelled' ? '❌ Cancelado' : 
+                               session.status === 'completed' ? '✅ Completado' :
+                               '📅 Agendado'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
                       ))}
                     </div>
                   );

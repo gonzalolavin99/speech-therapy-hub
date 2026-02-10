@@ -78,6 +78,12 @@ export default function Pagos() {
     }).format(amount);
   };
 
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const totalPaid = payments
     .filter((p) => p.status === "paid")
     .reduce((acc, p) => acc + p.amount, 0);
@@ -247,9 +253,9 @@ export default function Pagos() {
                       {payment.patient_name}
                     </span>
                   </td>
-                  <td className="p-4 text-muted-foreground">{payment.session_date}</td>
+                  <td className="p-4 text-muted-foreground">{formatDate(payment.session_date)}</td>
                   <td className="p-4 text-muted-foreground">
-                    {payment.payment_date || "-"}
+                    {formatDate(payment.payment_date)}
                   </td>
                   <td className="p-4 font-medium text-card-foreground">
                     {formatCurrency(payment.amount)}
@@ -279,6 +285,7 @@ export default function Pagos() {
         onSubmit={handleFormSubmit}
         patients={patientOptions}
         mode={formMode}
+        patientName={selectedPayment?.patient_name}
         initialData={
           selectedPayment
             ? {

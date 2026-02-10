@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WeeklyCalendar } from "@/components/calendar/WeeklyCalendar";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -13,20 +13,67 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { SessionFormDialog } from "@/components/forms/SessionFormDialog";
+import { PendingSessionsModal } from "@/components/sessions/PendingSessionsModal";
+import { SessionDetailModal } from "@/components/sessions/SessionDetailModal";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { Session } from "@/hooks/useSessions";
 
 export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isSessionFormOpen, setIsSessionFormOpen] = useState(false);
+  const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
+  const [pendingSessionsChecked, setPendingSessionsChecked] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { patients } = usePatients();
   const { plannings } = usePlannings();
   const { payments } = usePayments();
-  const { sessions, createSession } = useSessions();
+  const { sessions, createSession, updateSession, deleteSession } = useSessions();
+  const { createPayment } = usePayments();
   const { isConnected: isGoogleConnected, createEvent } = useGoogleCalendar();
 
   const patientOptions = patients.map(p => ({ id: p.id, name: p.name }));
+
+  // Detectar sesiones pasadas que aún están en 'scheduled'
+  const now = new Date();
+  const pendingSessions = sessions.filter(session => {
+    const sessionEnd = new Date(session.end_time);
+    return session.status === 'scheduled' && sessionEnd < now;
+  });
+
+  // Mostrar modal de confirmación automáticamente si hay sesiones pendientes
+  useEffect(() => {
+    if (pendingSessions.length > 0 && !pendingSessionsChecked) {
+      setIsPendingModalOpen(true);
+      setPendingSessionsChecked(true);
+    }
+  }, [pendingSessions.length, pendingSessionsChecked]);
+
+  const handleConfirmPendingSession = async (sessionId: string, completed: boolean, amount?: number) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    // Actualizar estado de la sesión
+    updateSession.mutate({
+      id: sessionId,
+      status: completed ? 'completed' : 'no_show',
+    });
+
+    // Si se completó, crear pago pendiente
+    if (completed && amount && amount > 0) {
+      createPayment.mutate({
+        patient_id: session.patient_id,
+        session_id: sessionId,
+        amount: amount,
+        session_date: session.start_time.split('T')[0],
+        status: 'pending',
+      });
+    }
+  };
 
   const activePatients = patients.filter(p => p.status === 'active').length;
   const activePlannings = plannings.filter(p => p.status === 'active').length;
@@ -34,8 +81,11 @@ export default function Dashboard() {
   const paidPayments = payments.filter(p => p.status === 'paid').length;
 
   const handleCreateSession = async (data: any) => {
-    const startDateTime = `${data.date}T${data.start_time}:00`;
-    const endDateTime = `${data.date}T${data.end_time}:00`;
+    // Crear fechas como hora local y convertir a ISO con timezone
+    const startDate = new Date(`${data.date}T${data.start_time}:00`);
+    const endDate = new Date(`${data.date}T${data.end_time}:00`);
+    const startDateTime = startDate.toISOString();
+    const endDateTime = endDate.toISOString();
     
     const sessionData: SessionFormData = {
       patient_id: data.patient_id,
@@ -63,6 +113,61 @@ export default function Dashboard() {
         }
       }
     });
+  };
+
+  // Handlers para el modal de detalle de sesión
+  const handleSessionClick = (session: any) => {
+    // Buscar la sesión completa en el array de sessions
+    const fullSession = sessions.find(s => s.id === session.id);
+    if (fullSession) {
+      setSelectedSession(fullSession);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleConfirmSession = (sessionId: string) => {
+    updateSession.mutate(
+      { id: sessionId, status: 'confirmed' },
+      { onSuccess: () => setSelectedSession(prev => prev ? { ...prev, status: 'confirmed' } : null) }
+    );
+  };
+
+  const handleCancelSession = (sessionId: string) => {
+    updateSession.mutate(
+      { id: sessionId, status: 'cancelled' },
+      { onSuccess: () => {
+        setSelectedSession(prev => prev ? { ...prev, status: 'cancelled' } : null);
+      }}
+    );
+  };
+
+  const handleCompleteSession = (sessionId: string) => {
+    updateSession.mutate(
+      { id: sessionId, status: 'completed' },
+      { onSuccess: () => {
+        setSelectedSession(prev => prev ? { ...prev, status: 'completed' } : null);
+      }}
+    );
+  };
+
+  const handleDeleteSession = (sessionId: string) => {
+    deleteSession.mutate(sessionId);
+    setIsDetailModalOpen(false);
+  };
+
+  const handleUpdateNotes = (sessionId: string, notes: string) => {
+    updateSession.mutate(
+      { id: sessionId, notes },
+      { onSuccess: () => {
+        setSelectedSession(prev => prev ? { ...prev, notes } : null);
+        toast.success('Notas actualizadas');
+      }}
+    );
+  };
+
+  const handleViewPayment = (patientId: string) => {
+    setIsDetailModalOpen(false);
+    navigate('/pagos');
   };
 
   const getGreeting = () => {
@@ -142,6 +247,8 @@ export default function Dashboard() {
             currentDate={currentDate}
             onDateChange={setCurrentDate}
             sessions={sessions}
+            onSessionClick={handleSessionClick}
+            onDeleteSession={handleDeleteSession}
           />
         </div>
 
@@ -168,6 +275,27 @@ export default function Dashboard() {
         onSubmit={handleCreateSession}
         patients={patientOptions}
         isLoading={createSession.isPending}
+      />
+
+      <PendingSessionsModal
+        open={isPendingModalOpen}
+        onOpenChange={setIsPendingModalOpen}
+        pendingSessions={pendingSessions}
+        onConfirmSession={handleConfirmPendingSession}
+        defaultSessionPrice={30000}
+      />
+
+      <SessionDetailModal
+        open={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+        session={selectedSession}
+        onConfirm={handleConfirmSession}
+        onCancel={handleCancelSession}
+        onComplete={handleCompleteSession}
+        onDelete={handleDeleteSession}
+        onUpdateNotes={handleUpdateNotes}
+        onViewPayment={handleViewPayment}
+        isLoading={updateSession.isPending}
       />
     </AppLayout>
   );

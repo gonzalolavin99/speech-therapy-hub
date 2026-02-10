@@ -12,7 +12,7 @@ export interface Session {
   session_type: 'evaluation' | 'therapy' | 'followup';
   start_time: string;
   end_time: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -27,7 +27,7 @@ export interface SessionFormData {
   session_type: 'evaluation' | 'therapy' | 'followup';
   start_time: string;
   end_time: string;
-  status?: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes?: string | null;
 }
 
