@@ -10,28 +10,36 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Info,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ReminderPanel } from "@/components/reminders/ReminderPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const navigation = [
-  { name: "Calendario", href: "/", icon: Calendar },
-  { name: "Pacientes", href: "/pacientes", icon: Users },
-  { name: "Tests", href: "/tests", icon: ClipboardList },
-  { name: "Planificaciones", href: "/planificaciones", icon: FileText },
-  { name: "Pagos", href: "/pagos", icon: CreditCard },
-  { name: "Mi Perfil", href: "/perfil", icon: User },
+  { name: "Calendario", href: "/", icon: Calendar, adminOnly: false },
+  { name: "Pacientes", href: "/pacientes", icon: Users, adminOnly: false },
+  { name: "Tests", href: "/tests", icon: ClipboardList, adminOnly: false },
+  { name: "Planificaciones", href: "/planificaciones", icon: FileText, adminOnly: false },
+  { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
+  { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
+  { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
+  { name: "Legal", href: "/legal", icon: Info, adminOnly: false },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isCollapsed, toggle } = useSidebar();
+  const { isAdmin } = useAdmin();
+
+  const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <aside 
@@ -76,7 +84,7 @@ export function AppSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-2 py-4">
-          {navigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href;
             const linkContent = (
               <Link

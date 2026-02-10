@@ -1,73 +1,141 @@
-# Welcome to your Lovable project
+# 🎤 TherapyHub
 
-## Project info
+**Plataforma profesional de gestión clínica para fonoaudiólogos**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+[![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?style=flat&logo=vercel)](https://speech-therapy-hub.vercel.app)
+[![React](https://img.shields.io/badge/React-18-blue?style=flat&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-green?style=flat&logo=supabase)](https://supabase.com/)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 📋 Descripción
 
-**Use Lovable**
+TherapyHub es una aplicación web moderna diseñada para profesionales de la fonoaudiología. Permite gestionar pacientes, aplicar evaluaciones estandarizadas, crear planificaciones terapéuticas y llevar control de pagos, todo en una plataforma segura y fácil de usar.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## ✨ Características Principales
 
-Changes made via Lovable will be committed automatically to this repo.
+### 👥 Gestión de Pacientes
+- Registro completo de información clínica
+- Historial de anamnesis
+- Consentimiento informado digital
+- Exportación de ficha a PDF
 
-**Use your preferred IDE**
+### 📊 Evaluaciones Estandarizadas
+- **MBGR** - Protocolo de Evaluación Miofuncional Orofacial
+- **TAR** - Test de Articulación a la Repetición
+- **TEPROSIF-R** - Test de Procesos de Simplificación Fonológica
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📅 Calendario y Agenda
+- Integración con Google Calendar
+- Recordatorios automáticos
+- Vista de citas del día/semana/mes
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 💰 Control de Pagos
+- Registro de pagos por sesión
+- Historial financiero
+- Estados de pago (pendiente/pagado)
 
-Follow these steps:
+### 🔒 Seguridad y Cumplimiento Legal
+- Autenticación segura con Supabase
+- Row Level Security (RLS)
+- Cumplimiento Ley 19.628 (Protección de Datos)
+- Cumplimiento Ley 20.584 (Derechos del Paciente)
+- Logs de auditoría
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 📱 PWA Ready
+- Instalable en dispositivos móviles
+- Diseño responsive
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🛠️ Tecnologías
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+| Categoría | Tecnología |
+|-----------|------------|
+| Frontend | React 18, TypeScript, Vite |
+| Estilos | TailwindCSS, shadcn/ui |
+| Backend | Supabase (PostgreSQL, Auth, Storage) |
+| State Management | TanStack Query |
+| Routing | React Router v6 |
+| PDF Export | jsPDF, jspdf-autotable |
+| Icons | Lucide React |
+| Deploy | Vercel |
+
+---
+
+## 🚀 Instalación Local
+
+### Prerrequisitos
+- Node.js 18+ o Bun
+- Cuenta en Supabase
+
+### Pasos
+
+```bash
+# Clonar repositorio
+git clone https://github.com/tu-usuario/speech-therapy-hub.git
+cd speech-therapy-hub
+
+# Instalar dependencias
+bun install  # o npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales de Supabase
+
+# Ejecutar en desarrollo
+bun dev  # o npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Variables de Entorno
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```env
+VITE_SUPABASE_URL=tu-url-supabase
+VITE_SUPABASE_ANON_KEY=tu-anon-key
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📁 Estructura del Proyecto
 
-## What technologies are used for this project?
+```
+src/
+├── components/       # Componentes reutilizables
+│   ├── ui/          # Componentes shadcn/ui
+│   ├── layout/      # Layout principal
+│   ├── forms/       # Formularios
+│   └── tests/       # Componentes de evaluaciones
+├── contexts/        # Contextos de React (Auth, Theme, Sidebar)
+├── hooks/           # Custom hooks (usePatients, useAuditLog, etc.)
+├── pages/           # Páginas de la aplicación
+├── lib/             # Utilidades y configuración
+└── utils/           # Funciones auxiliares
+```
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔐 Seguridad
 
-## How can I deploy this project?
+- **Autenticación**: Email/Password con verificación
+- **Autorización**: Row Level Security en todas las tablas
+- **Recuperación de contraseña**: Vía email
+- **Auditoría**: Registro de todas las acciones críticas
+- **Datos sensibles**: Nunca se exponen en el frontend
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 📄 Licencia
 
-Yes, you can!
+Este proyecto es privado y de uso exclusivo para TherapyHub.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📞 Contacto
+
+- **Email**: soporte@therapyhub.cl
+- **Web**: https://speech-therapy-hub.vercel.app
+
+---
+
+Desarrollado con ❤️ para fonoaudiólogos

@@ -13,10 +13,16 @@ import {
   FileText,
   Edit,
   Loader2,
+  FileSignature,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
+import { ConsentDialog, ConsentBadge, ConsentData } from "@/components/consent/ConsentDialog";
 import { usePatients, Patient, PatientFormData } from "@/hooks/usePatients";
+import { exportPatientToPDF } from "@/utils/exportPatient";
+import { PatientListSkeleton } from "@/components/ui/skeleton-card";
+import { toast } from "sonner";
 
 export default function Pacientes() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,8 +30,34 @@ export default function Pacientes() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [consentDialogOpen, setConsentDialogOpen] = useState(false);
 
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
+
+  const handleConsent = (patientId: string, data: ConsentData) => {
+    updatePatient.mutate({
+      id: patientId,
+      consent_given: data.consent_given,
+      consent_date: data.consent_date,
+      consent_guardian_name: data.consent_guardian_name || null,
+      consent_guardian_rut: data.consent_guardian_rut || null,
+    }, {
+      onSuccess: () => {
+        toast.success("Consentimiento registrado exitosamente");
+        if (selectedPatient) {
+          setSelectedPatient({ ...selectedPatient, consent_given: true, consent_date: data.consent_date });
+        }
+      }
+    });
+  };
+
+  const isMinor = (birthDate: string | null) => {
+    if (!birthDate) return false;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    const age = today.getFullYear() - birth.getFullYear();
+    return age < 18;
+  };
 
   const filteredPatients = patients.filter(
     (patient) =>
@@ -119,7 +151,14 @@ export default function Pacientes() {
           </div>
 
           <div className="overflow-auto" style={{ height: "calc(100vh - 140px)" }}>
-            {filteredPatients.map((patient) => (
+            {isLoading ? (
+              <PatientListSkeleton />
+            ) : filteredPatients.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <User className="h-12 w-12 mb-4 opacity-50" />
+                <p>No se encontraron pacientes</p>
+              </div>
+            ) : filteredPatients.map((patient) => (
               <div
                 key={patient.id}
                 onClick={() => setSelectedPatient(patient)}
@@ -142,7 +181,10 @@ export default function Pacientes() {
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">{patient.diagnosis}</p>
-                  {getStatusBadge(patient.status)}
+                  <div className="flex items-center gap-2">
+                    <ConsentBadge hasConsent={patient.consent_given || false} />
+                    {getStatusBadge(patient.status)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -168,9 +210,29 @@ export default function Pacientes() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setConsentDialogOpen(true)}
+                    className={selectedPatient.consent_given ? "text-green-600 border-green-200" : "text-amber-600 border-amber-200"}
+                  >
+                    <FileSignature className="h-4 w-4 mr-2" />
+                    {selectedPatient.consent_given ? "Ver Consentimiento" : "Firmar Consentimiento"}
+                  </Button>
                   <Button variant="outline" size="sm">
                     <FileText className="h-4 w-4 mr-2" />
                     Ver Tests
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      exportPatientToPDF({ patient: selectedPatient });
+                      toast.success('PDF exportado exitosamente');
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
                   </Button>
                   <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleEditPatient}>
                     <Edit className="h-4 w-4 mr-2" />
@@ -293,6 +355,22 @@ export default function Pacientes() {
             : undefined
         }
       />
+
+      {selectedPatient && (
+        <ConsentDialog
+          open={consentDialogOpen}
+          onOpenChange={setConsentDialogOpen}
+          patientName={selectedPatient.name}
+          patientId={selectedPatient.id}
+          isMinor={isMinor(selectedPatient.birth_date)}
+          existingConsent={{
+            consent_given: selectedPatient.consent_given || false,
+            consent_date: selectedPatient.consent_date,
+            consent_guardian_name: selectedPatient.consent_guardian_name,
+          }}
+          onConsent={handleConsent}
+        />
+      )}
     </AppLayout>
   );
 }
