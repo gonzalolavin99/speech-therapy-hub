@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import { toast } from 'sonner';
 
 export interface Payment {
@@ -34,6 +35,7 @@ export interface PaymentFormData {
 export function usePayments() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { log } = useAuditLog();
 
   const paymentsQuery = useQuery({
     queryKey: ['payments', user?.id],
@@ -71,9 +73,15 @@ export function usePayments() {
       if (error) throw error;
       return data as Payment;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       toast.success('Pago registrado exitosamente');
+      log({
+        action: 'CREATE',
+        entityType: 'payment',
+        entityId: data.id,
+        details: { amount: data.amount, status: data.status }
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al registrar pago', { description: error.message });
@@ -92,9 +100,15 @@ export function usePayments() {
       if (error) throw error;
       return data as Payment;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       toast.success('Pago actualizado');
+      log({
+        action: 'UPDATE',
+        entityType: 'payment',
+        entityId: data.id,
+        details: { amount: data.amount, status: data.status, payment_method: data.payment_method }
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al actualizar pago', { description: error.message });
@@ -110,9 +124,14 @@ export function usePayments() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       toast.success('Pago eliminado');
+      log({
+        action: 'DELETE',
+        entityType: 'payment',
+        entityId: id,
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al eliminar pago', { description: error.message });

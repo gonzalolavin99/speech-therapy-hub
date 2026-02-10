@@ -1,9 +1,11 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,7 +33,7 @@ const paymentSchema = z.object({
   sessionDate: z.string().min(1, "Fecha de sesión requerida"),
   paymentDate: z.string().optional(),
   amount: z.number().min(0, "Monto inválido"),
-  paymentMethod: z.string().optional(),
+  paymentMethod: z.string().min(1, "Seleccione un método de pago"),
   status: z.enum(["paid", "pending", "overdue"]),
   notes: z.string().max(500).optional(),
 });
@@ -42,6 +44,7 @@ interface PaymentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PaymentFormData) => void;
+  onCancelWithoutCharge?: () => void;
   patients: { id: string; name: string }[];
   mode: "create" | "register";
   initialData?: Partial<PaymentFormData>;
@@ -53,6 +56,7 @@ export function PaymentFormDialog({
   open,
   onOpenChange,
   onSubmit,
+  onCancelWithoutCharge,
   patients,
   mode,
   initialData,
@@ -85,6 +89,21 @@ export function PaymentFormDialog({
     },
   });
 
+  // Resetear formulario cuando cambian los datos iniciales
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        patientId: initialData?.patientId || "",
+        sessionDate: initialData?.sessionDate || "",
+        paymentDate: initialData?.paymentDate || new Date().toISOString().split("T")[0],
+        amount: initialData?.amount || defaultAmount,
+        paymentMethod: initialData?.paymentMethod || "",
+        status: initialData?.status || "paid",
+        notes: initialData?.notes || "",
+      });
+    }
+  }, [open, initialData, defaultAmount, form]);
+
   const handleSubmit = (data: PaymentFormData) => {
     onSubmit(data);
     toast.success(mode === "create" ? "Sesión registrada" : "Pago registrado exitosamente");
@@ -99,6 +118,11 @@ export function PaymentFormDialog({
           <DialogTitle>
             {mode === "create" ? "Nueva Sesión" : "Registrar Pago"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "create" 
+              ? "Complete los datos para registrar una nueva sesión"
+              : "Confirme los datos del pago para esta sesión"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -140,7 +164,7 @@ export function PaymentFormDialog({
                   name="paymentMethod"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Método de Pago</FormLabel>
+                      <FormLabel>Método de Pago *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -246,13 +270,28 @@ export function PaymentFormDialog({
             )}
 
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {mode === "create" ? "Crear Sesión" : "Confirmar Pago"}
-              </Button>
+            <div className="flex flex-col gap-3 pt-4">
+              {mode === "register" && onCancelWithoutCharge && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    onCancelWithoutCharge();
+                    onOpenChange(false);
+                  }}
+                >
+                  Paciente canceló - No cobrar
+                </Button>
+              )}
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {mode === "create" ? "Crear Sesión" : "Confirmar Pago"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>

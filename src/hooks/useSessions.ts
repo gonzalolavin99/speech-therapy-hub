@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import { toast } from 'sonner';
 
 export interface Session {
@@ -34,6 +35,7 @@ export interface SessionFormData {
 export function useSessions() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { log } = useAuditLog();
 
   const sessionsQuery = useQuery({
     queryKey: ['sessions', user?.id],
@@ -71,9 +73,16 @@ export function useSessions() {
       if (error) throw error;
       return data as Session;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast.success('Cita creada exitosamente');
+      log({
+        action: 'CREATE',
+        entityType: 'session',
+        entityId: data.id,
+        entityName: data.title,
+        details: { patient_id: data.patient_id, start_time: data.start_time }
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al crear cita', { description: error.message });
@@ -92,9 +101,16 @@ export function useSessions() {
       if (error) throw error;
       return data as Session;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast.success('Cita actualizada');
+      log({
+        action: 'UPDATE',
+        entityType: 'session',
+        entityId: data.id,
+        entityName: data.title,
+        details: { status: data.status }
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al actualizar cita', { description: error.message });
@@ -103,6 +119,17 @@ export function useSessions() {
 
   const deleteSession = useMutation({
     mutationFn: async (id: string) => {
+      // Primero eliminar pagos asociados a esta sesión
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .delete()
+        .eq('session_id', id);
+
+      if (paymentError) {
+        console.warn('Error al eliminar pagos asociados:', paymentError);
+      }
+
+      // Luego eliminar la sesión
       const { error } = await supabase
         .from('sessions')
         .delete()
@@ -110,9 +137,15 @@ export function useSessions() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      toast.success('Cita eliminada');
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast.success('Cita y pagos asociados eliminados');
+      log({
+        action: 'DELETE',
+        entityType: 'session',
+        entityId: id,
+      });
     },
     onError: (error: Error) => {
       toast.error('Error al eliminar cita', { description: error.message });

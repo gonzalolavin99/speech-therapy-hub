@@ -3,6 +3,7 @@ import { AppSidebar } from "./AppSidebar";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 import { useProfile } from "@/hooks/useProfile";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
@@ -12,6 +13,9 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const { needsOnboarding, isLoading } = useProfile();
   const { isCollapsed } = useSidebar();
+  
+  // Activar timeout de sesión por inactividad
+  useSessionTimeout();
 
   return (
     <div className="min-h-screen bg-background">

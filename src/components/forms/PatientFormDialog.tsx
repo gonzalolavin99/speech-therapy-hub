@@ -27,22 +27,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { validateRUT, sanitizeName, sanitizeText } from "@/utils/validation";
 
 const patientSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
-  rut: z.string().min(9, "RUT inválido").max(12),
+  name: z.string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(100)
+    .transform(sanitizeName),
+  rut: z.string()
+    .min(9, "RUT inválido")
+    .max(12)
+    .refine((val) => validateRUT(val).valid, { message: "RUT inválido" }),
   birthDate: z.string().min(1, "Fecha requerida"),
   phone: z.string().min(9, "Teléfono inválido").max(15),
   email: z.string().email("Email inválido").max(255),
-  address: z.string().max(200).optional(),
-  guardianName: z.string().max(100).optional(),
+  address: z.string().max(200).optional().transform((val) => val ? sanitizeText(val) : val),
+  guardianName: z.string().max(100).optional().transform((val) => val ? sanitizeName(val) : val),
   guardianPhone: z.string().max(15).optional(),
-  diagnosis: z.string().min(1, "Diagnóstico requerido"),
-  consultReason: z.string().min(1, "Motivo de consulta requerido"),
-  referredBy: z.string().max(100).optional(),
-  perinatalHistory: z.string().max(500).optional(),
-  psychomotorDev: z.string().max(500).optional(),
-  observations: z.string().max(1000).optional(),
+  diagnosis: z.string().min(1, "Diagnóstico requerido").transform(sanitizeText),
+  consultReason: z.string().min(1, "Motivo de consulta requerido").transform(sanitizeText),
+  referredBy: z.string().max(100).optional().transform((val) => val ? sanitizeText(val) : val),
+  perinatalHistory: z.string().max(500).optional().transform((val) => val ? sanitizeText(val) : val),
+  psychomotorDev: z.string().max(500).optional().transform((val) => val ? sanitizeText(val) : val),
+  observations: z.string().max(1000).optional().transform((val) => val ? sanitizeText(val) : val),
   status: z.enum(["active", "inactive", "completed"]),
 });
 

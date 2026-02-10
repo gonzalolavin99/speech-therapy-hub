@@ -196,86 +196,93 @@ export default function Pacientes() {
           <div className="flex-1 overflow-auto">
             <div className="p-8">
               {/* Header */}
-              <div className="flex items-start justify-between mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <User className="h-8 w-8 text-primary" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">
+                  <div className="min-w-0">
+                    <h2 className="text-xl lg:text-2xl font-bold text-foreground truncate">
                       {selectedPatient.name}
                     </h2>
                     <p className="text-muted-foreground">{selectedPatient.rut}</p>
                     {getStatusBadge(selectedPatient.status)}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setConsentDialogOpen(true)}
-                    className={selectedPatient.consent_given ? "text-green-600 border-green-200" : "text-amber-600 border-amber-200"}
+                    className={cn(
+                      "flex-shrink-0",
+                      selectedPatient.consent_given ? "text-green-600 border-green-200" : "text-amber-600 border-amber-200"
+                    )}
                   >
-                    <FileSignature className="h-4 w-4 mr-2" />
-                    {selectedPatient.consent_given ? "Ver Consentimiento" : "Firmar Consentimiento"}
+                    <FileSignature className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">{selectedPatient.consent_given ? "Ver Consentimiento" : "Firmar Consentimiento"}</span>
+                    <span className="sm:hidden">{selectedPatient.consent_given ? "Consentimiento" : "Firmar"}</span>
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Ver Tests
+                  <Button variant="outline" size="sm" className="flex-shrink-0">
+                    <FileText className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Ver Tests</span>
+                    <span className="sm:hidden">Tests</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="flex-shrink-0"
                     onClick={() => {
                       exportPatientToPDF({ patient: selectedPatient });
                       toast.success('PDF exportado exitosamente');
                     }}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Exportar
+                    <Download className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Exportar</span>
+                    <span className="sm:hidden">PDF</span>
                   </Button>
-                  <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleEditPatient}>
-                    <Edit className="h-4 w-4 mr-2" />
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 flex-shrink-0" onClick={handleEditPatient}>
+                    <Edit className="h-4 w-4 mr-1 lg:mr-2" />
                     Editar
                   </Button>
                 </div>
               </div>
 
               {/* Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="bg-card rounded-xl border p-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-8">
+                <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">Edad</span>
+                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs lg:text-sm">Edad</span>
                   </div>
-                  <p className="text-lg font-semibold text-card-foreground">
+                  <p className="text-base lg:text-lg font-semibold text-card-foreground">
                     {selectedPatient.age} años
                   </p>
                 </div>
-                <div className="bg-card rounded-xl border p-4">
+                <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm">Teléfono</span>
+                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs lg:text-sm">Teléfono</span>
                   </div>
-                  <p className="text-lg font-semibold text-card-foreground">
-                    {selectedPatient.phone}
+                  <p className="text-sm lg:text-base font-semibold text-card-foreground truncate">
+                    {selectedPatient.phone || "-"}
                   </p>
                 </div>
-                <div className="bg-card rounded-xl border p-4">
+                <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Mail className="h-4 w-4" />
-                    <span className="text-sm">Email</span>
+                    <Mail className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs lg:text-sm">Email</span>
                   </div>
-                  <p className="text-sm font-semibold text-card-foreground truncate">
-                    {selectedPatient.email}
+                  <p className="text-xs lg:text-sm font-semibold text-card-foreground truncate">
+                    {selectedPatient.email || "-"}
                   </p>
                 </div>
-                <div className="bg-card rounded-xl border p-4">
+                <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">Próxima Cita</span>
+                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs lg:text-sm">Próxima Cita</span>
                   </div>
-                  <p className="text-lg font-semibold text-primary">
+                  <p className="text-base lg:text-lg font-semibold text-primary">
                     -
                   </p>
                 </div>

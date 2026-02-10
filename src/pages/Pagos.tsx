@@ -30,7 +30,7 @@ export default function Pagos() {
   const [formMode, setFormMode] = useState<"create" | "register">("create");
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
-  const { payments, isLoading, createPayment, updatePayment } = usePayments();
+  const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
   const { patients } = usePatients();
 
   const patientOptions = patients.map((p) => ({ id: p.id, name: p.name }));
@@ -103,6 +103,7 @@ export default function Pagos() {
         id: selectedPayment.id,
         status: "paid",
         payment_date: data.paymentDate,
+        payment_method: data.paymentMethod,
       });
     } else {
       const paymentData: PaymentFormData = {
@@ -113,6 +114,12 @@ export default function Pagos() {
         status: data.status || "pending",
       };
       createPayment.mutate(paymentData);
+    }
+  };
+
+  const handleCancelWithoutCharge = () => {
+    if (selectedPayment) {
+      deletePayment.mutate(selectedPayment.id);
     }
   };
 
@@ -283,6 +290,7 @@ export default function Pagos() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSubmit={handleFormSubmit}
+        onCancelWithoutCharge={handleCancelWithoutCharge}
         patients={patientOptions}
         mode={formMode}
         patientName={selectedPayment?.patient_name}
