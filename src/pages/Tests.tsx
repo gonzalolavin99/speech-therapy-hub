@@ -20,7 +20,7 @@ import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, Alert
 import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
-import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest } from "@/components/tests";
+import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test } from "@/components/tests";
 
 const availableTests = [
   {
@@ -58,6 +58,15 @@ const availableTests = [
     duration: "20-30 min",
     categories: ["Fonología", "Desarrollo del Lenguaje"],
   },
+  {
+    id: "reel-3" as const,
+    name: "REEL-3",
+    fullName: "Test de Lenguaje Emergente Receptivo Expresivo",
+    description:
+      "Evaluación de habilidades lingüísticas receptivas y expresivas en niños",
+    duration: "20-30 min",
+    categories: ["Lenguaje", "Desarrollo Temprano"],
+  },
 ];
 
 interface TestResult {
@@ -72,10 +81,10 @@ interface TestResult {
 }
 
 export default function Tests() {
-  const [activeTest, setActiveTest] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | null>(null);
+  const [activeTest, setActiveTest] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [showPatientSelect, setShowPatientSelect] = useState(false);
-  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | null>(null);
+  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
 
@@ -84,7 +93,7 @@ export default function Tests() {
 
   const selectedPatientData = patients.find(p => p.id === selectedPatient);
 
-  const handleApplyTest = (testId: "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif") => {
+  const handleApplyTest = (testId: "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3") => {
     setPendingTestType(testId);
     setShowPatientSelect(true);
   };
@@ -100,7 +109,7 @@ export default function Tests() {
     const testData: TestResultFormData = {
       patient_id: selectedPatient,
       test_type: activeTest!,
-      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'mmbgr-lactantes' ? 'MMBGR Lactantes' : activeTest === 'tar' ? 'TAR' : 'TEPROSIF-R',
+      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'mmbgr-lactantes' ? 'MMBGR Lactantes' : activeTest === 'tar' ? 'TAR' : activeTest === 'reel-3' ? 'REEL-3' : 'TEPROSIF-R',
       evaluation_date: new Date().toISOString().split('T')[0],
       status: "completed",
       score: JSON.stringify(results),
@@ -349,6 +358,19 @@ export default function Tests() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={activeTest === 'reel-3'} onOpenChange={() => activeTest === 'reel-3' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>REEL-3</DialogTitle>
+          </DialogHeader>
+          <REEL3Test
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results, score) => handleTestComplete({ results, score })}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!selectedTestDetail} onOpenChange={() => setSelectedTestDetail(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -522,6 +544,43 @@ export default function Tests() {
                                   ))}
                                 </div>
                               </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      
+                      if (selectedTestDetail.test_type === 'reel-3') {
+                        const { score, rawScores, scores: testScores, patientInfo } = parsed;
+                        return (
+                          <div className="space-y-4 bg-muted rounded-lg p-4 max-h-[400px] overflow-y-auto">
+                            <div className="flex items-center justify-between bg-primary/10 rounded-lg p-3">
+                              <span className="font-medium">Puntaje Total</span>
+                              <span className="text-lg font-bold text-primary">{score || (rawScores?.expresivo + rawScores?.receptivo) || 0} puntos</span>
+                            </div>
+                            {rawScores && (
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 rounded-lg border bg-background">
+                                  <p className="text-sm text-muted-foreground">Lenguaje Receptivo</p>
+                                  <p className="text-xl font-bold text-primary">{rawScores.receptivo || 0}</p>
+                                </div>
+                                <div className="p-3 rounded-lg border bg-background">
+                                  <p className="text-sm text-muted-foreground">Lenguaje Expresivo</p>
+                                  <p className="text-xl font-bold text-primary">{rawScores.expresivo || 0}</p>
+                                </div>
+                              </div>
+                            )}
+                            {testScores && (testScores.receptivo?.percentil || testScores.expresivo?.percentil) && (
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                {testScores.receptivo?.percentil && (
+                                  <div className="flex justify-between"><span className="text-muted-foreground">Percentil Receptivo:</span><span className="font-medium">{testScores.receptivo.percentil}</span></div>
+                                )}
+                                {testScores.expresivo?.percentil && (
+                                  <div className="flex justify-between"><span className="text-muted-foreground">Percentil Expresivo:</span><span className="font-medium">{testScores.expresivo.percentil}</span></div>
+                                )}
+                              </div>
+                            )}
+                            {patientInfo?.edadEnMeses && (
+                              <div className="text-xs text-muted-foreground">Edad: {patientInfo.edadEnMeses} meses</div>
                             )}
                           </div>
                         );

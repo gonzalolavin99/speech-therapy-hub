@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuditLog } from './useAuditLog';
 import { toast } from 'sonner';
 
 export interface TestResult {
@@ -22,7 +23,7 @@ export interface TestResult {
 
 export interface TestResultFormData {
   patient_id: string;
-  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif';
+  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif' | 'reel-3';
   test_name: string;
   evaluation_date: string;
   score?: string | null;
@@ -34,6 +35,7 @@ export interface TestResultFormData {
 export function useTestResults() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { log } = useAuditLog();
 
   const testResultsQuery = useQuery({
     queryKey: ['test_results', user?.id],
@@ -71,8 +73,15 @@ export function useTestResults() {
       if (error) throw error;
       return data as TestResult;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['test_results'] });
+      log({
+        action: 'CREATE',
+        entityType: 'test',
+        entityId: data.id,
+        entityName: data.test_name,
+        details: { test_type: data.test_type, patient_id: data.patient_id }
+      });
       toast.success('Test registrado exitosamente');
     },
     onError: (error: Error) => {
@@ -92,8 +101,14 @@ export function useTestResults() {
       if (error) throw error;
       return data as TestResult;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['test_results'] });
+      log({
+        action: 'UPDATE',
+        entityType: 'test',
+        entityId: data.id,
+        entityName: data.test_name,
+      });
       toast.success('Test actualizado');
     },
     onError: (error: Error) => {
@@ -109,9 +124,15 @@ export function useTestResults() {
         .eq('id', id);
 
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ['test_results'] });
+      log({
+        action: 'DELETE',
+        entityType: 'test',
+        entityId: id,
+      });
       toast.success('Test eliminado');
     },
     onError: (error: Error) => {

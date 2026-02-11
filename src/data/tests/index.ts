@@ -2,6 +2,7 @@ export { mbgrSections, mbgrTestInfo, type MBGRSection, type MBGRSubsection, type
 export { mmbgrLactantesSections, mmbgrLactantesTestInfo, type MMBGRSection, type MMBGRSubsection, type MMBGRItem } from './mmbgr-lactantes';
 export { tarSections, tarFrases, tarTestInfo, type TARSection, type TARItem } from './tar';
 export { teprosifItems, teprosifProcesses, teprosifTestInfo, type TEPROSIFItem, type TEPROSIFProcess } from './teprosif';
+export { reel3AgeGroups, reel3TestInfo, reel3ScoreInterpretation, type REEL3Item, type REEL3AgeGroup } from './reel3';
 
 export const availableTests = [
   {
@@ -35,5 +36,13 @@ export const availableTests = [
     category: 'Fonología',
     ageRange: '3-6 años',
     duration: '15-20 min',
+  },
+  {
+    id: 'reel-3',
+    name: 'REEL-3',
+    description: 'Test de Lenguaje Emergente Receptivo Expresivo',
+    category: 'Lenguaje',
+    ageRange: '0-36 meses',
+    duration: '20-30 min',
   },
 ];

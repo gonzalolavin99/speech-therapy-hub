@@ -88,7 +88,7 @@ CREATE TABLE test_results (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-  test_type TEXT NOT NULL CHECK (test_type IN ('mbgr', 'mmbgr-lactantes', 'tar', 'teprosif')),
+  test_type TEXT NOT NULL CHECK (test_type IN ('mbgr', 'mmbgr-lactantes', 'tar', 'teprosif', 'reel-3')),
   test_name TEXT NOT NULL,
   evaluation_date DATE NOT NULL,
   score TEXT,
