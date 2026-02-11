@@ -1,4 +1,5 @@
 export { mbgrSections, mbgrTestInfo, type MBGRSection, type MBGRSubsection, type MBGRItem } from './mbgr';
+export { mmbgrLactantesSections, mmbgrLactantesTestInfo, type MMBGRSection, type MMBGRSubsection, type MMBGRItem } from './mmbgr-lactantes';
 export { tarSections, tarFrases, tarTestInfo, type TARSection, type TARItem } from './tar';
 export { teprosifItems, teprosifProcesses, teprosifTestInfo, type TEPROSIFItem, type TEPROSIFProcess } from './teprosif';
 
@@ -10,6 +11,14 @@ export const availableTests = [
     category: 'Motricidad Orofacial',
     ageRange: 'Todas las edades',
     duration: '30-45 min',
+  },
+  {
+    id: 'mmbgr-lactantes',
+    name: 'Protocolo MMBGR - Lactantes',
+    description: 'Examen Clínico Miofuncional Orofacial',
+    category: 'Motricidad Orofacial',
+    ageRange: '6-71 meses',
+    duration: '25-35 min',
   },
   {
     id: 'tar',

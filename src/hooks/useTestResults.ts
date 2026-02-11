@@ -22,7 +22,7 @@ export interface TestResult {
 
 export interface TestResultFormData {
   patient_id: string;
-  test_type: 'mbgr' | 'tar' | 'teprosif';
+  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif';
   test_name: string;
   evaluation_date: string;
   score?: string | null;

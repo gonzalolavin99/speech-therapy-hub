@@ -20,7 +20,7 @@ import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, Alert
 import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
-import { MBGRTest, TARTest, TEPROSIFTest } from "@/components/tests";
+import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest } from "@/components/tests";
 
 const availableTests = [
   {
@@ -31,6 +31,15 @@ const availableTests = [
       "Evaluación de estructuras y funciones del sistema estomatognático",
     duration: "45-60 min",
     categories: ["Motricidad Orofacial", "Deglución", "Respiración"],
+  },
+  {
+    id: "mmbgr-lactantes" as const,
+    name: "MMBGR Lactantes",
+    fullName: "Protocolo MMBGR - Examen Clínico Miofuncional Orofacial",
+    description:
+      "Evaluación miofuncional orofacial para lactantes y preescolares (6-71 meses)",
+    duration: "25-35 min",
+    categories: ["Motricidad Orofacial", "Lactantes"],
   },
   {
     id: "tar" as const,
@@ -63,10 +72,10 @@ interface TestResult {
 }
 
 export default function Tests() {
-  const [activeTest, setActiveTest] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
+  const [activeTest, setActiveTest] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [showPatientSelect, setShowPatientSelect] = useState(false);
-  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "tar" | "teprosif" | null>(null);
+  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
 
@@ -75,7 +84,7 @@ export default function Tests() {
 
   const selectedPatientData = patients.find(p => p.id === selectedPatient);
 
-  const handleApplyTest = (testId: "mbgr" | "tar" | "teprosif") => {
+  const handleApplyTest = (testId: "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif") => {
     setPendingTestType(testId);
     setShowPatientSelect(true);
   };
@@ -91,7 +100,7 @@ export default function Tests() {
     const testData: TestResultFormData = {
       patient_id: selectedPatient,
       test_type: activeTest!,
-      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'tar' ? 'TAR' : 'TEPROSIF-R',
+      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'mmbgr-lactantes' ? 'MMBGR Lactantes' : activeTest === 'tar' ? 'TAR' : 'TEPROSIF-R',
       evaluation_date: new Date().toISOString().split('T')[0],
       status: "completed",
       score: JSON.stringify(results),
@@ -300,6 +309,19 @@ export default function Tests() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={activeTest === 'mmbgr-lactantes'} onOpenChange={() => activeTest === 'mmbgr-lactantes' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Protocolo MMBGR - Lactantes</DialogTitle>
+          </DialogHeader>
+          <MMBGRLactantesTest
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results, score) => handleTestComplete({ results, score })}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={activeTest === 'tar'} onOpenChange={() => activeTest === 'tar' && handleTestCancel()}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
@@ -359,17 +381,21 @@ export default function Tests() {
                     try {
                       const parsed = JSON.parse(selectedTestDetail.score || '{}');
                       
-                      if (selectedTestDetail.test_type === 'mbgr') {
+                      if (selectedTestDetail.test_type === 'mbgr' || selectedTestDetail.test_type === 'mmbgr-lactantes') {
+                        const isLactantes = selectedTestDetail.test_type === 'mmbgr-lactantes';
                         const { results, score } = parsed;
                         return (
                           <div className="space-y-3 bg-muted rounded-lg p-4 max-h-[400px] overflow-y-auto">
                             <div className="flex items-center justify-between bg-primary/10 rounded-lg p-3">
-                              <span className="font-medium">Puntaje Total</span>
+                              <div>
+                                <span className="font-medium">Puntaje Total</span>
+                                {isLactantes && <span className="text-xs text-muted-foreground ml-2">(menor = mejor)</span>}
+                              </div>
                               <span className="text-lg font-bold text-primary">{score || 0} puntos</span>
                             </div>
                             {results && Object.entries(results).length > 0 && (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium">Respuestas:</p>
+                                <p className="text-sm font-medium">Respuestas ({Object.keys(results).length} items):</p>
                                 <div className="grid gap-2">
                                   {Object.entries(results).map(([key, value]) => (
                                     <div key={key} className="flex justify-between text-sm bg-background rounded p-2">
