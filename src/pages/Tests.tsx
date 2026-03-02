@@ -16,11 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, AlertCircle } from "lucide-react";
+import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, AlertCircle, Sparkles, Loader2, Brain, Target, Lightbulb, Stethoscope } from "lucide-react";
 import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
 import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test } from "@/components/tests";
+import { analyzeTestResults, isAIConfigured, TestDiagnosisResult } from "@/lib/ai-service";
+import { toast } from "sonner";
 
 const availableTests = [
   {
@@ -87,6 +89,8 @@ export default function Tests() {
   const [pendingTestType, setPendingTestType] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<TestDiagnosisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { testResults, createTestResult } = useTestResults();
   const { patients } = usePatients();
@@ -593,8 +597,154 @@ export default function Tests() {
                   })()}
                 </div>
               </div>
+              {/* AI Analysis Section */}
+              {isAIConfigured() && (
+                <div className="border-t pt-4">
+                  {!aiAnalysis && !isAnalyzing && (
+                    <Button
+                      onClick={async () => {
+                        setIsAnalyzing(true);
+                        try {
+                          const parsed = JSON.parse(selectedTestDetail.score || '{}');
+                          const patient = patients.find(p => p.name === selectedTestDetail.patient_name);
+                          const result = await analyzeTestResults(
+                            selectedTestDetail.test_type,
+                            selectedTestDetail.test_name,
+                            selectedTestDetail.patient_name || '',
+                            patient?.age,
+                            patient?.diagnosis,
+                            parsed
+                          );
+                          setAiAnalysis(result);
+                        } catch (err: any) {
+                          toast.error('Error al analizar con IA', { description: err.message });
+                        } finally {
+                          setIsAnalyzing(false);
+                        }
+                      }}
+                      className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Analizar con IA
+                    </Button>
+                  )}
+
+                  {isAnalyzing && (
+                    <div className="flex flex-col items-center justify-center py-8 gap-3">
+                      <div className="relative">
+                        <Brain className="h-8 w-8 text-violet-500 animate-pulse" />
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Analizando resultados...
+                      </div>
+                    </div>
+                  )}
+
+                  {aiAnalysis && (
+                    <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-400">
+                        <Sparkles className="h-4 w-4" />
+                        Análisis IA
+                      </div>
+
+                      {/* Possible Diagnoses */}
+                      {aiAnalysis.possibleDiagnoses.length > 0 && (
+                        <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Stethoscope className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                            <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">Posibles Diagnósticos</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {aiAnalysis.possibleDiagnoses.map((d, i) => (
+                              <span key={i} className="px-3 py-1 bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 rounded-full text-xs font-medium">
+                                {d}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Clinical Analysis */}
+                      {aiAnalysis.clinicalAnalysis && (
+                        <div className="rounded-lg border p-4 bg-card">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Brain className="h-4 w-4 text-primary" />
+                            <p className="text-sm font-semibold">Análisis Clínico</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiAnalysis.clinicalAnalysis}</p>
+                        </div>
+                      )}
+
+                      {/* Priority Areas */}
+                      {aiAnalysis.priorityAreas.length > 0 && (
+                        <div className="rounded-lg border p-4 bg-card">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Target className="h-4 w-4 text-destructive" />
+                            <p className="text-sm font-semibold">Áreas Prioritarias</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {aiAnalysis.priorityAreas.map((a, i) => (
+                              <span key={i} className="px-3 py-1 bg-destructive/10 text-destructive rounded-full text-xs font-medium">{a}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Therapy Suggestions */}
+                      {aiAnalysis.therapySuggestions.length > 0 && (
+                        <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Lightbulb className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Sugerencias de Terapia</p>
+                          </div>
+                          <ul className="space-y-1.5">
+                            {aiAnalysis.therapySuggestions.map((s, i) => (
+                              <li key={i} className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
+                                <span className="text-emerald-500 mt-1">•</span>
+                                {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Recommended Approach */}
+                      {aiAnalysis.recommendedApproach && (
+                        <div className="rounded-lg border p-4 bg-card">
+                          <p className="text-sm font-semibold mb-1">Enfoque Recomendado</p>
+                          <p className="text-sm text-muted-foreground">{aiAnalysis.recommendedApproach}</p>
+                        </div>
+                      )}
+
+                      {/* Additional Recommendations */}
+                      {aiAnalysis.additionalRecommendations && (
+                        <div className="rounded-lg border p-4 bg-card">
+                          <p className="text-sm font-semibold mb-1">Recomendaciones Adicionales</p>
+                          <p className="text-sm text-muted-foreground">{aiAnalysis.additionalRecommendations}</p>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-muted-foreground italic text-center">
+                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiólogo.
+                      </p>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAiAnalysis(null)}
+                        className="w-full"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-2" />
+                        Volver a analizar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex justify-end">
-                <Button onClick={() => setSelectedTestDetail(null)}>Cerrar</Button>
+                <Button onClick={() => { setSelectedTestDetail(null); setAiAnalysis(null); }}>Cerrar</Button>
               </div>
             </div>
           )}

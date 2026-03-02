@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Sparkles, Loader2 } from "lucide-react";
+import { generatePlanningSuggestions, isAIConfigured } from "@/lib/ai-service";
 
 const planningSchema = z.object({
   patientId: z.string().min(1, "Seleccione un paciente"),
@@ -48,7 +51,7 @@ interface PlanningFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PlanningFormData) => void;
-  patients: { id: string; name: string }[];
+  patients: { id: string; name: string; diagnosis?: string | null; age?: number | null }[];
   mode: "create" | "edit";
   initialData?: Partial<PlanningFormData>;
 }
@@ -79,11 +82,47 @@ export function PlanningFormDialog({
     },
   });
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const handleSubmit = (data: PlanningFormData) => {
     onSubmit(data);
     toast.success(mode === "create" ? "Planificación creada exitosamente" : "Planificación actualizada");
     onOpenChange(false);
     form.reset();
+  };
+
+  const handleAIGenerate = async () => {
+    const patientId = form.getValues("patientId");
+    const approach = form.getValues("interventionApproach");
+    if (!patientId) {
+      toast.error("Selecciona un paciente primero");
+      return;
+    }
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) return;
+
+    setIsGenerating(true);
+    try {
+      const suggestion = await generatePlanningSuggestions(
+        patient.name,
+        patient.age,
+        patient.diagnosis,
+        approach || undefined
+      );
+      form.setValue("contents", suggestion.contents);
+      form.setValue("generalObjective", suggestion.generalObjective);
+      form.setValue("specificObjectives", suggestion.specificObjectives);
+      form.setValue("operationalObjectives", suggestion.operationalObjectives);
+      form.setValue("generalPlan", suggestion.generalPlan);
+      if (suggestion.recommendedMethod) {
+        form.setValue("method", suggestion.recommendedMethod);
+      }
+      toast.success("Sugerencias generadas por IA");
+    } catch (err: any) {
+      toast.error("Error al generar con IA", { description: err.message });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -205,7 +244,26 @@ export function PlanningFormDialog({
 
             {/* Contenidos y Objetivos */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Contenidos y Objetivos</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Contenidos y Objetivos</h3>
+                {isAIConfigured() && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAIGenerate}
+                    disabled={isGenerating || !form.getValues("patientId")}
+                    className="text-xs border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400 dark:hover:bg-violet-950/30"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    {isGenerating ? "Generando..." : "Generar con IA"}
+                  </Button>
+                )}
+              </div>
               
               <FormField
                 control={form.control}

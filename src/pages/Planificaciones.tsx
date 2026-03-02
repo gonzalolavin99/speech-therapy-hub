@@ -25,7 +25,7 @@ export default function Planificaciones() {
   const { plannings, isLoading, createPlanning } = usePlannings();
   const { patients } = usePatients();
 
-  const patientOptions = patients.map((p) => ({ id: p.id, name: p.name }));
+  const patientOptions = patients.map((p) => ({ id: p.id, name: p.name, diagnosis: p.diagnosis, age: p.age }));
 
   const filteredPlannings = plannings.filter(
     (planning) =>

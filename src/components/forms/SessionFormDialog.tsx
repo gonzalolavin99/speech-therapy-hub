@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus, ChevronDown, ChevronUp } from "lucide-react";
 
 interface SessionFormDialogProps {
   open: boolean;
@@ -33,6 +33,7 @@ interface SessionFormDialogProps {
     notes?: string;
   };
   isLoading?: boolean;
+  onQuickPatientCreate?: (data: { name: string; phone: string }) => Promise<{ id: string; name: string } | null>;
 }
 
 export function SessionFormDialog({
@@ -42,6 +43,7 @@ export function SessionFormDialog({
   patients,
   initialData,
   isLoading = false,
+  onQuickPatientCreate,
 }: SessionFormDialogProps) {
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -52,6 +54,17 @@ export function SessionFormDialog({
     end_time: "09:45",
     notes: "",
   });
+
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [quickName, setQuickName] = useState("");
+  const [quickPhone, setQuickPhone] = useState("");
+  const [isCreatingPatient, setIsCreatingPatient] = useState(false);
+  const [quickPatients, setQuickPatients] = useState<{ id: string; name: string }[]>([]);
+
+  const allPatients = [
+    ...patients,
+    ...quickPatients.filter(qp => !patients.some(p => p.id === qp.id)),
+  ];
 
   useEffect(() => {
     if (initialData) {
@@ -75,7 +88,31 @@ export function SessionFormDialog({
         notes: "",
       });
     }
+    setShowQuickCreate(false);
+    setQuickName("");
+    setQuickPhone("");
+    setQuickPatients([]);
   }, [initialData, open]);
+
+  const handleQuickPatientCreate = async () => {
+    if (!quickName.trim() || !onQuickPatientCreate) return;
+    setIsCreatingPatient(true);
+    try {
+      const newPatient = await onQuickPatientCreate({
+        name: quickName.trim(),
+        phone: quickPhone.trim(),
+      });
+      if (newPatient) {
+        setQuickPatients(prev => [...prev, newPatient]);
+        handleChange("patient_id", newPatient.id);
+        setShowQuickCreate(false);
+        setQuickName("");
+        setQuickPhone("");
+      }
+    } finally {
+      setIsCreatingPatient(false);
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -111,7 +148,20 @@ export function SessionFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="patient">Paciente *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="patient">Paciente *</Label>
+              {onQuickPatientCreate && (
+                <button
+                  type="button"
+                  onClick={() => setShowQuickCreate(!showQuickCreate)}
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Nuevo rápido
+                  {showQuickCreate ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+              )}
+            </div>
             <Select
               value={formData.patient_id}
               onValueChange={(value) => handleChange("patient_id", value)}
@@ -120,13 +170,55 @@ export function SessionFormDialog({
                 <SelectValue placeholder="Seleccionar paciente" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((patient) => (
+                {allPatients.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {showQuickCreate && (
+              <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                <p className="text-xs text-muted-foreground">
+                  Crea un paciente con datos mínimos. Podrás completar su ficha después.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nombre *</Label>
+                    <Input
+                      placeholder="Nombre del paciente"
+                      value={quickName}
+                      onChange={(e) => setQuickName(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Teléfono</Label>
+                    <Input
+                      placeholder="+56 9 1234 5678"
+                      value={quickPhone}
+                      onChange={(e) => setQuickPhone(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full h-8 text-xs"
+                  disabled={!quickName.trim() || isCreatingPatient}
+                  onClick={handleQuickPatientCreate}
+                >
+                  {isCreatingPatient ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <UserPlus className="mr-1 h-3 w-3" />
+                  )}
+                  Crear y seleccionar
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

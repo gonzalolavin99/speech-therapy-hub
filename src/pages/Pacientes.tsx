@@ -15,6 +15,8 @@ import {
   Loader2,
   FileSignature,
   Download,
+  Sparkles,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
@@ -23,6 +25,7 @@ import { usePatients, Patient, PatientFormData } from "@/hooks/usePatients";
 import { exportPatientToPDF } from "@/utils/exportPatient";
 import { PatientListSkeleton } from "@/components/ui/skeleton-card";
 import { toast } from "sonner";
+import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 
 export default function Pacientes() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +34,8 @@ export default function Pacientes() {
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
 
@@ -161,7 +166,7 @@ export default function Pacientes() {
             ) : filteredPatients.map((patient) => (
               <div
                 key={patient.id}
-                onClick={() => setSelectedPatient(patient)}
+                onClick={() => { setSelectedPatient(patient); setAiSummary(null); }}
                 className={cn(
                   "p-4 border-b cursor-pointer transition-colors hover:bg-muted/50",
                   selectedPatient?.id === patient.id && "bg-primary/5 border-l-2 border-l-primary"
@@ -297,6 +302,70 @@ export default function Pacientes() {
                   <p className="text-primary font-medium">{selectedPatient.diagnosis}</p>
                 </div>
               </div>
+
+              {/* AI Summary Section */}
+              {isAIConfigured() && (
+                <div className="bg-card rounded-xl border p-6 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-violet-600" />
+                      Resumen Clínico IA
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setIsGeneratingSummary(true);
+                        setAiSummary(null);
+                        try {
+                          const summary = await generatePatientSummary(
+                            selectedPatient.name,
+                            selectedPatient.age,
+                            selectedPatient.diagnosis,
+                            selectedPatient.consult_reason,
+                            selectedPatient.observations
+                          );
+                          setAiSummary(summary);
+                        } catch (err: any) {
+                          toast.error('Error al generar resumen', { description: err.message });
+                        } finally {
+                          setIsGeneratingSummary(false);
+                        }
+                      }}
+                      disabled={isGeneratingSummary}
+                      className="text-xs border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+                    >
+                      {isGeneratingSummary ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      {isGeneratingSummary ? "Generando..." : aiSummary ? "Regenerar" : "Generar Resumen"}
+                    </Button>
+                  </div>
+                  {isGeneratingSummary && (
+                    <div className="flex items-center justify-center py-6 gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Analizando datos del paciente...
+                    </div>
+                  )}
+                  {aiSummary && !isGeneratingSummary && (
+                    <div className="animate-in fade-in-0 duration-500">
+                      <div className="rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 p-4">
+                        <p className="text-sm text-violet-900 dark:text-violet-200 leading-relaxed whitespace-pre-line">{aiSummary}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic mt-2">
+                        Generado por IA. Debe ser validado por el profesional.
+                      </p>
+                    </div>
+                  )}
+                  {!aiSummary && !isGeneratingSummary && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Genera un resumen clínico integrado del paciente con IA
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Anamnesis Section */}
               <div className="bg-card rounded-xl border p-6">

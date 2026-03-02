@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { WeeklyCalendar } from "@/components/calendar/WeeklyCalendar";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ReminderWidget } from "@/components/dashboard/ReminderWidget";
-import { Users, Calendar, CheckCircle, Clock } from "lucide-react";
+import { Users, Calendar, CheckCircle, Clock, Sparkles, Loader2, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePatients } from "@/hooks/usePatients";
 import { usePlannings } from "@/hooks/usePlannings";
@@ -18,6 +18,7 @@ import { SessionDetailModal } from "@/components/sessions/SessionDetailModal";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Session } from "@/hooks/useSessions";
+import { generateProgressAnalysis, isAIConfigured } from "@/lib/ai-service";
 
 export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -29,7 +30,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { patients } = usePatients();
+  const { patients, createPatient } = usePatients();
   const { plannings } = usePlannings();
   const { payments } = usePayments();
   const { sessions, createSession, updateSession, deleteSession } = useSessions();
@@ -75,10 +76,53 @@ export default function Dashboard() {
     }
   };
 
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
+
   const activePatients = patients.filter(p => p.status === 'active').length;
   const activePlannings = plannings.filter(p => p.status === 'active').length;
   const completedSessions = plannings.reduce((acc, p) => acc + p.completed_sessions, 0);
   const paidPayments = payments.filter(p => p.status === 'paid').length;
+
+  // Count sessions this week
+  const startOfWeek = new Date(currentDate);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 7);
+  const weekSessions = sessions.filter(s => {
+    const d = new Date(s.start_time);
+    return d >= startOfWeek && d < endOfWeek;
+  }).length;
+
+  const handleGenerateInsight = async () => {
+    setIsGeneratingInsight(true);
+    try {
+      const insight = await generateProgressAnalysis(
+        activePatients, patients.length, activePlannings,
+        completedSessions, weekSessions, paidPayments, payments.length
+      );
+      setAiInsight(insight);
+    } catch (err: any) {
+      toast.error('Error al generar análisis', { description: err.message });
+    } finally {
+      setIsGeneratingInsight(false);
+    }
+  };
+
+  const handleQuickPatientCreate = async (data: { name: string; phone: string }): Promise<{ id: string; name: string } | null> => {
+    try {
+      const newPatient = await createPatient.mutateAsync({
+        name: data.name,
+        rut: "Por completar",
+        phone: data.phone || null,
+        status: 'active',
+      });
+      return { id: newPatient.id, name: newPatient.name };
+    } catch {
+      return null;
+    }
+  };
 
   const handleCreateSession = async (data: any) => {
     // Crear fechas como hora local y convertir a ISO con timezone
@@ -238,6 +282,47 @@ export default function Dashboard() {
           <ReminderWidget />
         </div>
 
+        {/* AI Insight */}
+        {isAIConfigured() && (
+          <div className="rounded-xl border bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Brain className="h-5 w-5 text-violet-600" />
+                Análisis de Actividad IA
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateInsight}
+                disabled={isGeneratingInsight}
+                className="text-xs border-violet-300 text-violet-700 hover:bg-violet-100 dark:border-violet-700 dark:text-violet-400"
+              >
+                {isGeneratingInsight ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {isGeneratingInsight ? "Analizando..." : aiInsight ? "Actualizar" : "Generar Análisis"}
+              </Button>
+            </div>
+            {isGeneratingInsight && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analizando métricas de tu práctica...
+              </div>
+            )}
+            {aiInsight && !isGeneratingInsight && (
+              <div className="animate-in fade-in-0 duration-500">
+                <p className="text-sm text-violet-900 dark:text-violet-200 leading-relaxed">{aiInsight}</p>
+                <p className="text-[10px] text-muted-foreground italic mt-2">Generado por IA basado en tus métricas actuales.</p>
+              </div>
+            )}
+            {!aiInsight && !isGeneratingInsight && (
+              <p className="text-sm text-muted-foreground">Obtén un análisis inteligente de tu actividad clínica semanal.</p>
+            )}
+          </div>
+        )}
+
         {/* Calendar */}
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -275,6 +360,7 @@ export default function Dashboard() {
         onSubmit={handleCreateSession}
         patients={patientOptions}
         isLoading={createSession.isPending}
+        onQuickPatientCreate={handleQuickPatientCreate}
       />
 
       <PendingSessionsModal

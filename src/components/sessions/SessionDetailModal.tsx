@@ -31,8 +31,11 @@ import {
   DollarSign,
   MessageSquare,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateSessionNotes, isAIConfigured } from "@/lib/ai-service";
+import { toast } from "sonner";
 
 interface Session {
   id: string;
@@ -75,6 +78,7 @@ export function SessionDetailModal({
   const [notes, setNotes] = useState(session?.notes || "");
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
 
   if (!session) return null;
 
@@ -219,18 +223,52 @@ export function SessionDetailModal({
                     placeholder="Agregar notas o instrucciones para la cita..."
                     rows={3}
                   />
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button size="sm" onClick={handleSaveNotes} disabled={isLoading}>
-                      {isLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                      Guardar
-                    </Button>
+                  <div className="flex justify-between gap-2">
+                    {isAIConfigured() && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          setIsGeneratingNotes(true);
+                          try {
+                            const suggestion = await generateSessionNotes(
+                              session.session_type,
+                              session.patient_name || 'Paciente',
+                              undefined,
+                              session.notes || undefined
+                            );
+                            setNotes(suggestion);
+                          } catch (err: any) {
+                            toast.error('Error al generar nota', { description: err.message });
+                          } finally {
+                            setIsGeneratingNotes(false);
+                          }
+                        }}
+                        disabled={isGeneratingNotes}
+                        className="text-xs border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+                      >
+                        {isGeneratingNotes ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        {isGeneratingNotes ? "Generando..." : "Sugerir con IA"}
+                      </Button>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button size="sm" onClick={handleSaveNotes} disabled={isLoading}>
+                        {isLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                        Guardar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
