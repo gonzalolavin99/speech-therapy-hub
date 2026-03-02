@@ -17,7 +17,9 @@ import {
   Download,
   Sparkles,
   Brain,
+  ArrowLeft,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
 import { ConsentDialog, ConsentBadge, ConsentData } from "@/components/consent/ConsentDialog";
@@ -28,6 +30,7 @@ import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 
 export default function Pacientes() {
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -134,7 +137,8 @@ export default function Pacientes() {
         {/* Patient List */}
         <div className={cn(
           "border-r bg-card transition-all duration-300",
-          selectedPatient ? "w-96" : "flex-1"
+          isMobile && selectedPatient ? "hidden" : "",
+          !isMobile && selectedPatient ? "w-96" : "flex-1"
         )}>
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
@@ -199,7 +203,20 @@ export default function Pacientes() {
         {/* Patient Detail */}
         {selectedPatient && (
           <div className="flex-1 overflow-auto">
-            <div className="p-8">
+            <div className="p-4 md:p-8">
+              {/* Mobile Back Button */}
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mb-4 -ml-1 text-muted-foreground"
+                  onClick={() => { setSelectedPatient(null); setAiSummary(null); }}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Volver a pacientes
+                </Button>
+              )}
+
               {/* Header */}
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
