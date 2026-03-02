@@ -10,10 +10,15 @@ export interface Planning {
   intervention_approach: string;
   method: string;
   modality: 'individual' | 'group';
+  contents: string | null;
   general_objective: string;
+  specific_objectives: string | null;
+  operational_objectives: string | null;
+  general_plan: string | null;
   total_sessions: number;
   completed_sessions: number;
   frequency: string;
+  session_duration: number | null;
   status: 'active' | 'completed' | 'paused';
   created_at: string;
   updated_at: string;
@@ -26,9 +31,14 @@ export interface PlanningFormData {
   intervention_approach: string;
   method: string;
   modality?: 'individual' | 'group';
+  contents?: string;
   general_objective: string;
+  specific_objectives?: string;
+  operational_objectives?: string;
+  general_plan?: string;
   total_sessions: number;
   frequency: string;
+  session_duration?: number;
   status?: 'active' | 'completed' | 'paused';
 }
 

@@ -28,6 +28,7 @@ import { exportPatientToPDF } from "@/utils/exportPatient";
 import { PatientListSkeleton } from "@/components/ui/skeleton-card";
 import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
+import { formatearEdad, calcularEdadEnAños } from "@/utils/age";
 
 export default function Pacientes() {
   const isMobile = useIsMobile();
@@ -111,7 +112,7 @@ export default function Pacientes() {
       name: data.name,
       rut: data.rut,
       birth_date: data.birthDate || null,
-      age: data.birthDate ? new Date().getFullYear() - new Date(data.birthDate).getFullYear() : null,
+      age: data.birthDate ? calcularEdadEnAños(data.birthDate) : null,
       phone: data.phone || null,
       email: data.email || null,
       diagnosis: data.diagnosis || null,
@@ -278,7 +279,7 @@ export default function Pacientes() {
                     <span className="text-xs lg:text-sm">Edad</span>
                   </div>
                   <p className="text-base lg:text-lg font-semibold text-card-foreground">
-                    {selectedPatient.age} años
+                    {selectedPatient.birth_date ? formatearEdad(selectedPatient.birth_date) : (selectedPatient.age ? `${selectedPatient.age} años` : "Sin registro")}
                   </p>
                 </div>
                 <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0 overflow-hidden">

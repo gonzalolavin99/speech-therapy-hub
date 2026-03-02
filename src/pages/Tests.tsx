@@ -212,8 +212,8 @@ export default function Tests() {
               />
             </div>
           </div>
-          <div className="bg-card rounded-xl border overflow-hidden">
-            <table className="w-full">
+          <div className="bg-card rounded-xl border overflow-x-auto">
+            <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">

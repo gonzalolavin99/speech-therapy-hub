@@ -16,11 +16,16 @@ import {
   Clock,
   XCircle,
   DollarSign,
+  FileText,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentFormDialog } from "@/components/forms/PaymentFormDialog";
 import { usePayments, Payment, PaymentFormData } from "@/hooks/usePayments";
 import { usePatients } from "@/hooks/usePatients";
+import { useProfile } from "@/hooks/useProfile";
+import { exportBoletaPDF, generateBoletaNumber } from "@/utils/exportBoleta";
+import { toast } from "sonner";
 
 export default function Pagos() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,6 +37,7 @@ export default function Pagos() {
 
   const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
   const { patients } = usePatients();
+  const { profile } = useProfile();
 
   const patientOptions = patients.map((p) => ({ id: p.id, name: p.name }));
 
@@ -134,10 +140,12 @@ export default function Pagos() {
               Control de pagos de sesiones
             </p>
           </div>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => { setFormMode('create'); setSelectedPayment(null); setIsFormOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Pago
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -225,8 +233,8 @@ export default function Pagos() {
         </div>
 
         {/* Payments Table */}
-        <div className="bg-card rounded-xl border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-card rounded-xl border overflow-x-auto">
+          <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">
@@ -269,15 +277,48 @@ export default function Pagos() {
                   </td>
                   <td className="p-4">{getStatusBadge(payment.status)}</td>
                   <td className="p-4">
-                    {payment.status !== "paid" && (
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleRegisterPayment(payment)}
-                      >
-                        Registrar Pago
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {payment.status !== "paid" && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRegisterPayment(payment)}
+                        >
+                          Registrar Pago
+                        </Button>
+                      )}
+                      {payment.status === "paid" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === payment.patient_id);
+                            exportBoletaPDF({
+                              boletaNumber: generateBoletaNumber(payment.id),
+                              professional: {
+                                name: profile?.full_name || 'Profesional',
+                                rut: profile?.rut || null,
+                                address: profile?.address || null,
+                                city: profile?.city || null,
+                                institution: profile?.institution || null,
+                              },
+                              patient: {
+                                name: payment.patient_name || 'Paciente',
+                                rut: patient?.rut || null,
+                              },
+                              amount: payment.amount,
+                              sessionDate: payment.session_date,
+                              paymentDate: payment.payment_date,
+                              paymentMethod: payment.payment_method,
+                            });
+                            toast.success('Boleta generada exitosamente');
+                          }}
+                        >
+                          <FileText className="h-3.5 w-3.5 mr-1" />
+                          Boleta
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

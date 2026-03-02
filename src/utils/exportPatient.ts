@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Patient } from '@/hooks/usePatients';
+import { formatearEdad } from '@/utils/age';
 
 interface ExportOptions {
   patient: Patient;
@@ -46,7 +47,7 @@ export function exportPatientToPDF({ patient, sessions = [], testResults = [] }:
     ['Nombre', patient.name],
     ['RUT', patient.rut],
     ['Fecha de Nacimiento', patient.birth_date ? new Date(patient.birth_date).toLocaleDateString('es-CL') : 'No registrado'],
-    ['Edad', patient.age ? `${patient.age} años` : 'No registrado'],
+    ['Edad', patient.birth_date ? formatearEdad(patient.birth_date) : (patient.age ? `${patient.age} años` : 'No registrado')],
     ['Teléfono', patient.phone || 'No registrado'],
     ['Email', patient.email || 'No registrado'],
     ['Estado', patient.status === 'active' ? 'Activo' : patient.status === 'inactive' ? 'Inactivo' : 'Completado'],

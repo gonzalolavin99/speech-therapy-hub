@@ -61,9 +61,14 @@ export default function Planificaciones() {
       intervention_approach: data.interventionApproach,
       method: data.method,
       modality: data.modality === "grupal" ? "group" : "individual",
+      contents: data.contents || null,
       general_objective: data.generalObjective,
+      specific_objectives: data.specificObjectives || null,
+      operational_objectives: data.operationalObjectives || null,
+      general_plan: data.generalPlan || null,
       total_sessions: parseInt(data.totalSessions),
       frequency: data.frequency,
+      session_duration: data.sessionDuration || null,
       status: "active",
     };
     createPlanning.mutate(planningData);
@@ -155,31 +160,91 @@ export default function Planificaciones() {
               {/* Expanded Content */}
               {expandedId === planning.id && (
                 <div className="px-6 pb-6 pt-2 border-t">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                    <div>
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <Target className="h-4 w-4" />
-                        <span className="text-sm font-medium">Objetivo General</span>
-                      </div>
-                      <p className="text-card-foreground">{planning.general_objective}</p>
+                  {/* Info row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-6">
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Modalidad</p>
+                      <p className="text-sm font-medium text-card-foreground capitalize">{planning.modality === 'group' ? 'Grupal' : 'Individual'}</p>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <Calendar className="h-4 w-4" />
-                        <span className="text-sm font-medium">Frecuencia</span>
-                      </div>
-                      <p className="text-card-foreground">{planning.frequency}</p>
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Frecuencia</p>
+                      <p className="text-sm font-medium text-card-foreground">{planning.frequency}</p>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <FileText className="h-4 w-4" />
-                        <span className="text-sm font-medium">Modalidad</span>
-                      </div>
-                      <p className="text-card-foreground capitalize">{planning.modality}</p>
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Duración sesión</p>
+                      <p className="text-sm font-medium text-card-foreground">{planning.session_duration ? `${planning.session_duration} min` : '-'}</p>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Método</p>
+                      <p className="text-sm font-medium text-card-foreground">{planning.method}</p>
                     </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6">
+                  {/* Contenidos */}
+                  {planning.contents && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Contenidos a Intervenir</p>
+                      <p className="text-sm text-card-foreground bg-primary/5 rounded-lg p-3 border border-primary/10">{planning.contents}</p>
+                    </div>
+                  )}
+
+                  {/* Objectives Table */}
+                  <div className="mb-6 overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivo General</th>
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivos Específicos</th>
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivos Operacionales</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="p-3 border align-top text-card-foreground">
+                            {planning.general_objective}
+                          </td>
+                          <td className="p-3 border align-top text-card-foreground">
+                            {planning.specific_objectives ? (
+                              <ul className="space-y-1.5">
+                                {planning.specific_objectives.split('\n').filter(Boolean).map((obj, i) => (
+                                  <li key={i} className="flex gap-2">
+                                    <span className="text-primary font-medium shrink-0">{i + 1}.</span>
+                                    <span>{obj.replace(/^\d+[\.\)\-]\s*/, '')}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-muted-foreground italic">Sin registrar</span>
+                            )}
+                          </td>
+                          <td className="p-3 border align-top text-card-foreground">
+                            {planning.operational_objectives ? (
+                              <ul className="space-y-1.5">
+                                {planning.operational_objectives.split('\n').filter(Boolean).map((obj, i) => (
+                                  <li key={i} className="flex gap-2">
+                                    <span className="text-primary font-medium shrink-0">{i + 1}.</span>
+                                    <span>{obj.replace(/^\d+[\.\)\-]\s*/, '')}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-muted-foreground italic">Sin registrar</span>
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* General Plan */}
+                  {planning.general_plan && (
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Plan General de Intervención</p>
+                      <p className="text-sm text-card-foreground bg-muted/30 rounded-lg p-3 whitespace-pre-line">{planning.general_plan}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
                     <Button variant="outline" size="sm">
                       Ver Sesiones
                     </Button>
