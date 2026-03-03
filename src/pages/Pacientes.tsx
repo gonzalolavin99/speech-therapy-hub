@@ -31,6 +31,8 @@ import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 import { formatearEdad, calcularEdadEnAños } from "@/utils/age";
 import { useTestResults } from "@/hooks/useTestResults";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 export default function Pacientes() {
   const isMobile = useIsMobile();
@@ -42,10 +44,13 @@ export default function Pacientes() {
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
 
   const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
   const { testResults } = useTestResults();
+  const { canCreate, hasFeature } = useSubscription();
 
   const handleConsent = (patientId: string, data: ConsentData) => {
     updatePatient.mutate({
@@ -98,6 +103,13 @@ export default function Pacientes() {
   };
 
   const handleCreatePatient = () => {
+    const activeCount = patients.filter(p => p.status === 'active').length;
+    const check = canCreate('patients', activeCount);
+    if (!check.allowed) {
+      setUpgradeMsg({ title: 'Límite de pacientes alcanzado', desc: 'Has alcanzado el máximo de pacientes activos de tu plan.', usage: check.message || '' });
+      setUpgradeOpen(true);
+      return;
+    }
     setFormMode("create");
     setEditingPatient(null);
     setIsFormOpen(true);
@@ -275,6 +287,11 @@ export default function Pacientes() {
                     size="sm"
                     className="flex-shrink-0"
                     onClick={async () => {
+                      if (!hasFeature('patient_export')) {
+                        setUpgradeMsg({ title: 'Exportar ficha', desc: 'La exportación PDF está disponible en el plan Profesional.', usage: '' });
+                        setUpgradeOpen(true);
+                        return;
+                      }
                       try {
                         await exportPatientToPDF({ patient: selectedPatient });
                         toast.success('PDF exportado exitosamente');
@@ -488,6 +505,14 @@ export default function Pacientes() {
           onConsent={handleConsent}
         />
       )}
+
+      <UpgradePrompt
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeMsg.title}
+        description={upgradeMsg.desc}
+        currentUsage={upgradeMsg.usage || undefined}
+      />
     </AppLayout>
   );
 }

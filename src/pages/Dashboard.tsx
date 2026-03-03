@@ -19,6 +19,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Session } from "@/hooks/useSessions";
 import { generateProgressAnalysis, isAIConfigured } from "@/lib/ai-service";
+import { TrialBanner } from "@/components/subscription/TrialBanner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,6 +30,8 @@ export default function Dashboard() {
   const [pendingSessionsChecked, setPendingSessionsChecked] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -36,6 +41,7 @@ export default function Dashboard() {
   const { sessions, createSession, updateSession, deleteSession } = useSessions();
   const { createPayment } = usePayments();
   const { isConnected: isGoogleConnected, createEvent } = useGoogleCalendar();
+  const { canCreate } = useSubscription();
 
   const patientOptions = patients.map(p => ({ id: p.id, name: p.name }));
 
@@ -243,11 +249,27 @@ export default function Dashboard() {
           </div>
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => setIsSessionFormOpen(true)}
+            onClick={() => {
+              const thisMonthSessions = sessions.filter(s => {
+                const d = new Date(s.start_time);
+                const n = new Date();
+                return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+              }).length;
+              const check = canCreate('sessions', thisMonthSessions);
+              if (!check.allowed) {
+                setUpgradeMsg({ title: 'Límite de sesiones alcanzado', desc: 'Has alcanzado el máximo de sesiones mensuales de tu plan.', usage: check.message || '' });
+                setUpgradeOpen(true);
+                return;
+              }
+              setIsSessionFormOpen(true);
+            }}
           >
             + Nueva Cita
           </Button>
         </div>
+
+        {/* Trial Banner */}
+        <TrialBanner />
 
         {/* Stats Grid with Reminders */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -382,6 +404,14 @@ export default function Dashboard() {
         onUpdateNotes={handleUpdateNotes}
         onViewPayment={handleViewPayment}
         isLoading={updateSession.isPending}
+      />
+
+      <UpgradePrompt
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeMsg.title}
+        description={upgradeMsg.desc}
+        currentUsage={upgradeMsg.usage || undefined}
       />
     </AppLayout>
   );

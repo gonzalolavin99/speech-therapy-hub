@@ -28,6 +28,8 @@ import { SessionFormDialog } from "@/components/forms/SessionFormDialog";
 import { usePlannings, PlanningFormData } from "@/hooks/usePlannings";
 import { useSessions, SessionFormData } from "@/hooks/useSessions";
 import { usePatients } from "@/hooks/usePatients";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 export default function Planificaciones() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,10 +40,13 @@ export default function Planificaciones() {
   const [sessionFormOpen, setSessionFormOpen] = useState(false);
   const [sessionsViewOpen, setSessionsViewOpen] = useState(false);
   const [activePlanningForSession, setActivePlanningForSession] = useState<any>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
 
   const { plannings, isLoading, createPlanning, updatePlanning } = usePlannings();
   const { sessions, createSession } = useSessions();
   const { patients, createPatient } = usePatients();
+  const { canCreate } = useSubscription();
 
   const patientOptions = patients.map((p) => ({ id: p.id, name: p.name, diagnosis: p.diagnosis, age: p.age }));
 
@@ -174,7 +179,16 @@ export default function Planificaciones() {
               Gestiona las planificaciones de intervenci&oacute;n de tus pacientes
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => { setFormMode('create'); setEditingPlanning(null); setIsFormOpen(true); }}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => {
+              const activePlannings = plannings.filter(p => p.status === 'active').length;
+              const check = canCreate('plannings', activePlannings);
+              if (!check.allowed) {
+                setUpgradeMsg({ title: 'Límite de planificaciones', desc: 'Has alcanzado el máximo de planificaciones activas de tu plan.', usage: check.message || '' });
+                setUpgradeOpen(true);
+                return;
+              }
+              setFormMode('create'); setEditingPlanning(null); setIsFormOpen(true);
+            }}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Planificaci&oacute;n
           </Button>
@@ -500,6 +514,14 @@ export default function Planificaciones() {
           })()}
         </DialogContent>
       </Dialog>
+
+      <UpgradePrompt
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeMsg.title}
+        description={upgradeMsg.desc}
+        currentUsage={upgradeMsg.usage || undefined}
+      />
     </AppLayout>
   );
 }

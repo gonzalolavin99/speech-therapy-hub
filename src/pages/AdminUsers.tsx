@@ -10,6 +10,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Search,
   UserCheck,
   UserX,
@@ -18,6 +27,10 @@ import {
   Mic2,
   Brain,
   Shield,
+  Crown,
+  CreditCard,
+  AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,8 +38,10 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { getProfessionConfig } from "@/config/professions";
 import type { ProfessionId } from "@/config/professions";
+import type { PlanId, Subscription } from "@/config/subscriptions";
+import { getTrialDaysRemaining, formatPriceCLP } from "@/config/subscriptions";
 
-interface PendingProfile {
+interface UserProfile {
   id: string;
   user_id: string;
   full_name: string;
@@ -38,22 +53,54 @@ interface PendingProfile {
   onboarding_completed: boolean;
   created_at: string;
   email?: string;
+  subscription?: Subscription | null;
 }
+
+const PLAN_LABELS: Record<PlanId, string> = {
+  free: "Free",
+  trial: "Trial",
+  professional: "Profesional",
+  clinic: "Clínica",
+  vip: "VIP",
+};
+
+const PLAN_COLORS: Record<PlanId, string> = {
+  free: "bg-muted text-muted-foreground",
+  trial: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  professional: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
+  clinic: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+  vip: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+};
+
+const PLAN_ICONS: Record<PlanId, React.ReactNode> = {
+  free: null,
+  trial: <Clock className="h-3 w-3" />,
+  professional: <CreditCard className="h-3 w-3" />,
+  clinic: <Sparkles className="h-3 w-3" />,
+  vip: <Crown className="h-3 w-3" />,
+};
 
 export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "incomplete">("all");
+  const [planFilter, setPlanFilter] = useState<"all" | PlanId>("all");
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editPlan, setEditPlan] = useState<PlanId>("free");
+  const [editNotes, setEditNotes] = useState("");
+  const [editTrialDays, setEditTrialDays] = useState("");
   const queryClient = useQueryClient();
 
+  // Fetch profiles + emails + subscriptions
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const [profilesRes, emailsRes] = await Promise.all([
+      const [profilesRes, emailsRes, subsRes] = await Promise.all([
         supabase
           .from("professional_profiles")
           .select("id, user_id, full_name, profession, institution, city, specialties, approved, onboarding_completed, created_at")
           .order("created_at", { ascending: false }),
         supabase.rpc("get_user_emails"),
+        supabase.from("subscriptions").select("*"),
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
@@ -65,13 +112,22 @@ export default function AdminUsers() {
         );
       }
 
-      return (profilesRes.data as PendingProfile[]).map((p) => ({
+      const subsMap = new Map<string, Subscription>();
+      if (!subsRes.error && subsRes.data) {
+        (subsRes.data as Subscription[]).forEach((s) =>
+          subsMap.set(s.user_id, s)
+        );
+      }
+
+      return (profilesRes.data as UserProfile[]).map((p) => ({
         ...p,
         email: emailMap.get(p.user_id) || undefined,
+        subscription: subsMap.get(p.user_id) || null,
       }));
     },
   });
 
+  // Approve/reject mutation
   const approveMutation = useMutation({
     mutationFn: async ({ id, approved }: { id: string; approved: boolean }) => {
       const { error } = await supabase
@@ -89,27 +145,108 @@ export default function AdminUsers() {
     },
   });
 
+  // Change plan mutation
+  const changePlanMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      plan,
+      notes,
+      trialDays,
+    }: {
+      userId: string;
+      plan: PlanId;
+      notes?: string;
+      trialDays?: number;
+    }) => {
+      const trialEndsAt = plan === "trial" && trialDays
+        ? new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+      const { data, error } = await supabase.rpc("admin_update_subscription", {
+        target_user_id: userId,
+        new_plan: plan,
+        new_status: "active",
+        new_trial_ends_at: trialEndsAt,
+        notes: notes || null,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+      toast.success("Plan actualizado");
+      setEditingUser(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Error al cambiar plan", { description: error.message });
+    },
+  });
+
+  const openEditPlan = (profile: UserProfile) => {
+    setEditingUser(profile);
+    setEditPlan(profile.subscription?.plan || "free");
+    setEditNotes(profile.subscription?.admin_notes || "");
+    setEditTrialDays("30");
+  };
+
+  const handleSavePlan = () => {
+    if (!editingUser) return;
+    changePlanMutation.mutate({
+      userId: editingUser.user_id,
+      plan: editPlan,
+      notes: editNotes,
+      trialDays: editPlan === "trial" ? parseInt(editTrialDays) || 30 : undefined,
+    });
+  };
+
+  // Filtering
   const filteredProfiles = profiles.filter((p) => {
     const matchesSearch =
       p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.institution || "").toLowerCase().includes(searchQuery.toLowerCase());
+      (p.institution || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.email || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "incomplete" && !p.onboarding_completed) ||
       (statusFilter === "pending" && p.onboarding_completed && !p.approved) ||
       (statusFilter === "approved" && p.approved);
-    return matchesSearch && matchesStatus;
+    const matchesPlan =
+      planFilter === "all" || (p.subscription?.plan || "free") === planFilter;
+    return matchesSearch && matchesStatus && matchesPlan;
   });
 
   const pendingCount = profiles.filter((p) => p.onboarding_completed && !p.approved).length;
   const incompleteCount = profiles.filter((p) => !p.onboarding_completed).length;
 
   const professionIcon = (prof: ProfessionId) =>
-    prof === "psicologo" ? (
-      <Brain className="h-4 w-4" />
-    ) : (
-      <Mic2 className="h-4 w-4" />
+    prof === "psicologo" ? <Brain className="h-4 w-4" /> : <Mic2 className="h-4 w-4" />;
+
+  const getPlanBadge = (sub: Subscription | null | undefined) => {
+    const plan = (sub?.plan || "free") as PlanId;
+    const trialDays = getTrialDaysRemaining(sub || null);
+    const isExpiredTrial = plan === "trial" && trialDays !== null && trialDays <= 0;
+
+    return (
+      <span className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+        isExpiredTrial ? "bg-destructive/10 text-destructive" : PLAN_COLORS[plan]
+      )}>
+        {PLAN_ICONS[plan]}
+        {isExpiredTrial ? "Trial expirado" : PLAN_LABELS[plan]}
+        {trialDays !== null && trialDays > 0 && (
+          <span className="text-[10px] opacity-70">({trialDays}d)</span>
+        )}
+      </span>
     );
+  };
+
+  // Stats
+  const planCounts = profiles.reduce<Record<string, number>>((acc, p) => {
+    const plan = p.subscription?.plan || "free";
+    acc[plan] = (acc[plan] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <AppLayout>
@@ -122,7 +259,7 @@ export default function AdminUsers() {
               Gestión de Usuarios
             </h1>
             <p className="text-muted-foreground mt-1">
-              Aprueba o administra cuentas de profesionales
+              Aprueba cuentas y gestiona suscripciones
             </p>
           </div>
           {pendingCount > 0 && (
@@ -133,19 +270,36 @@ export default function AdminUsers() {
           )}
         </div>
 
+        {/* Plan Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {(["free", "trial", "professional", "clinic", "vip"] as PlanId[]).map((plan) => (
+            <button
+              key={plan}
+              onClick={() => setPlanFilter(planFilter === plan ? "all" : plan)}
+              className={cn(
+                "rounded-xl border p-3 text-center transition-all hover:shadow-sm",
+                planFilter === plan ? "ring-2 ring-primary border-primary" : "bg-card"
+              )}
+            >
+              <p className="text-2xl font-bold">{planCounts[plan] || 0}</p>
+              <p className="text-xs text-muted-foreground">{PLAN_LABELS[plan]}</p>
+            </button>
+          ))}
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-4">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre o institución..."
+              placeholder="Buscar por nombre, email o institución..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -159,14 +313,13 @@ export default function AdminUsers() {
 
         {/* Users Table */}
         <div className="bg-card rounded-xl border overflow-x-auto">
-          <table className="w-full min-w-[700px]">
+          <table className="w-full min-w-[850px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesional</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesión</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Institución</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Ciudad</th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Estado</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Acciones</th>
               </tr>
@@ -174,7 +327,7 @@ export default function AdminUsers() {
             <tbody>
               {filteredProfiles.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center">
+                  <td colSpan={6} className="p-8 text-center">
                     <UserCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm font-medium text-muted-foreground">No hay usuarios que mostrar</p>
                   </td>
@@ -185,10 +338,15 @@ export default function AdminUsers() {
                 return (
                   <tr key={profile.id} className="border-b last:border-b-0 hover:bg-muted/30">
                     <td className="p-4">
-                      <span className="font-medium text-card-foreground">{profile.full_name}</span>
+                      <div>
+                        <span className="font-medium text-card-foreground">{profile.full_name}</span>
+                        {profile.institution && (
+                          <p className="text-xs text-muted-foreground">{profile.institution}</p>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
-                      <span className="text-xs text-muted-foreground">{profile.email || '-'}</span>
+                      <span className="text-xs text-muted-foreground">{profile.email || "-"}</span>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-sm">
@@ -196,8 +354,9 @@ export default function AdminUsers() {
                         <span>{config.label}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-muted-foreground text-sm">{profile.institution || "-"}</td>
-                    <td className="p-4 text-muted-foreground text-sm">{profile.city || "-"}</td>
+                    <td className="p-4">
+                      {getPlanBadge(profile.subscription)}
+                    </td>
                     <td className="p-4">
                       {!profile.onboarding_completed ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
@@ -211,7 +370,7 @@ export default function AdminUsers() {
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-                          <Clock className="h-3 w-3" />
+                          <AlertTriangle className="h-3 w-3" />
                           Pendiente
                         </span>
                       )}
@@ -240,6 +399,14 @@ export default function AdminUsers() {
                             Revocar
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditPlan(profile)}
+                        >
+                          <Crown className="h-3.5 w-3.5 mr-1" />
+                          Plan
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -249,6 +416,81 @@ export default function AdminUsers() {
           </table>
         </div>
       </div>
+
+      {/* Edit Plan Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Cambiar Plan</DialogTitle>
+            <DialogDescription>
+              {editingUser?.full_name} — {editingUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Current plan info */}
+            {editingUser?.subscription && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Plan actual:</span>
+                {getPlanBadge(editingUser.subscription)}
+                {editingUser.subscription.admin_override && (
+                  <span className="text-[10px] text-muted-foreground">(asignado por admin)</span>
+                )}
+              </div>
+            )}
+
+            {/* New plan select */}
+            <div className="space-y-2">
+              <Label>Nuevo plan</Label>
+              <Select value={editPlan} onValueChange={(v) => setEditPlan(v as PlanId)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free — $0</SelectItem>
+                  <SelectItem value="trial">Trial (30 días)</SelectItem>
+                  <SelectItem value="professional">Profesional — {formatPriceCLP(9990)}/mes</SelectItem>
+                  <SelectItem value="clinic">Clínica — {formatPriceCLP(24990)}/mes</SelectItem>
+                  <SelectItem value="vip">VIP — Acceso completo gratuito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Trial days (only if trial selected) */}
+            {editPlan === "trial" && (
+              <div className="space-y-2">
+                <Label>Días de trial</Label>
+                <Input
+                  type="number"
+                  value={editTrialDays}
+                  onChange={(e) => setEditTrialDays(e.target.value)}
+                  min={1}
+                  max={365}
+                />
+              </div>
+            )}
+
+            {/* Admin notes */}
+            <div className="space-y-2">
+              <Label>Notas (opcional)</Label>
+              <Textarea
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                placeholder="Ej: Cliente VIP, partner, tester..."
+                rows={2}
+              />
+            </div>
+
+            <Button
+              onClick={handleSavePlan}
+              disabled={changePlanMutation.isPending}
+              className="w-full"
+            >
+              {changePlanMutation.isPending ? "Guardando..." : "Guardar cambios"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

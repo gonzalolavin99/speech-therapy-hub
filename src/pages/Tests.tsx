@@ -24,6 +24,9 @@ import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test, PHQ9Tes
 import { analyzeTestResults, isAIConfigured, TestDiagnosisResult } from "@/lib/ai-service";
 import { toast } from "sonner";
 import { useProfession } from "@/contexts/ProfessionContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useUsage } from "@/hooks/useUsage";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 type TestId = "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | "phq-9" | "gad-7" | "psc-17" | "asrs" | "snap-iv";
 
@@ -146,9 +149,13 @@ export default function Tests() {
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<TestDiagnosisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
 
   const { testResults, createTestResult } = useTestResults();
   const { patients, createPatient } = usePatients();
+  const { canCreate: canCreateAI } = useSubscription();
+  const { usage, incrementUsage } = useUsage();
 
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [quickName, setQuickName] = useState("");
@@ -791,8 +798,15 @@ export default function Tests() {
                   {!aiAnalysis && !isAnalyzing && (
                     <Button
                       onClick={async () => {
+                        const aiCheck = canCreateAI('ai_requests', usage['ai_requests'] || 0);
+                        if (!aiCheck.allowed) {
+                          setUpgradeMsg({ title: 'Límite de consultas IA', desc: 'Has alcanzado el máximo de consultas IA mensuales de tu plan.', usage: aiCheck.message || '' });
+                          setUpgradeOpen(true);
+                          return;
+                        }
                         setIsAnalyzing(true);
                         try {
+                          incrementUsage('ai_requests');
                           const parsed = JSON.parse(selectedTestDetail.score || '{}');
                           const patient = patients.find(p => p.name === selectedTestDetail.patient_name);
                           const result = await analyzeTestResults(
@@ -938,6 +952,13 @@ export default function Tests() {
           )}
         </DialogContent>
       </Dialog>
+      <UpgradePrompt
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeMsg.title}
+        description={upgradeMsg.desc}
+        currentUsage={upgradeMsg.usage || undefined}
+      />
     </AppLayout>
   );
 }
