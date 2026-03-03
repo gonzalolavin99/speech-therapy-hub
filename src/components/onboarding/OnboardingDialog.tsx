@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Mic2, Brain, Check, User, Briefcase, Settings, ChevronRight, ChevronLeft } from "lucide-react";
 import { professionOptions, getProfessionConfig, type ProfessionId } from "@/config/professions";
 import { cn } from "@/lib/utils";
+import { RutInput } from "@/components/ui/rut-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -160,20 +162,18 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rut">RUT</Label>
-                <Input
+                <RutInput
                   id="rut"
-                  placeholder="12.345.678-9"
                   value={formData.rut || ""}
-                  onChange={(e) => handleChange("rut", e.target.value)}
+                  onChange={(val) => handleChange("rut", val)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  placeholder="+56 9 1234 5678"
                   value={formData.phone || ""}
-                  onChange={(e) => handleChange("phone", e.target.value)}
+                  onChange={(val) => handleChange("phone", val)}
                 />
               </div>
             </div>

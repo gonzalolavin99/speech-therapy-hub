@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Patient } from '@/hooks/usePatients';
 import { formatearEdad } from '@/utils/age';
 
@@ -18,7 +16,11 @@ interface ExportOptions {
   }>;
 }
 
-export function exportPatientToPDF({ patient, sessions = [], testResults = [] }: ExportOptions) {
+export async function exportPatientToPDF({ patient, sessions = [], testResults = [] }: ExportOptions) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   

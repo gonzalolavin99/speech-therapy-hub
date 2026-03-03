@@ -41,7 +41,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {!isMobile && <AppSidebar />}
-      <main className={cn(
+      <main id="main-content" className={cn(
         "transition-all duration-300",
         isMobile ? "pl-0 pb-16" : isCollapsed ? "pl-16" : "pl-64"
       )}>

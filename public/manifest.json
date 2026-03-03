@@ -1,7 +1,7 @@
 {
-  "name": "TherapyHub - Gestión de Fonoaudiología",
+  "name": "TherapyHub - Plataforma para Profesionales de Salud",
   "short_name": "TherapyHub",
-  "description": "Plataforma profesional para fonoaudiólogos. Gestiona pacientes, sesiones, evaluaciones y pagos.",
+  "description": "Plataforma profesional para fonoaudiólogos y psicólogos. Gestiona pacientes, sesiones, evaluaciones y pagos.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -12,7 +12,7 @@
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-192.png",

@@ -5,7 +5,7 @@ import { setAISystemPrompt } from '@/lib/ai-service';
 
 interface ProfessionContextType {
   config: ProfessionConfig;
-  professionId: ProfessionId;
+  professionId: ProfessionId | null;
   isApproved: boolean;
 }
 
@@ -14,7 +14,7 @@ const ProfessionContext = createContext<ProfessionContextType | undefined>(undef
 export function ProfessionProvider({ children }: { children: ReactNode }) {
   const { profile } = useProfile();
 
-  const professionId: ProfessionId = profile?.profession || 'fonoaudiologo';
+  const professionId: ProfessionId | null = profile?.profession || null;
   const config = getProfessionConfig(professionId);
   const isApproved = profile?.approved ?? false;
 

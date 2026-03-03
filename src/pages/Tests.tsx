@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,59 +16,59 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, AlertCircle, Sparkles, Loader2, Brain, Target, Lightbulb, Stethoscope } from "lucide-react";
+import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, AlertCircle, Sparkles, Loader2, Brain, Target, Lightbulb, Stethoscope, UserPlus, ChevronDown, ChevronUp } from "lucide-react";
 import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
-import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test, PHQ9Test, GAD7Test, PSC17Test } from "@/components/tests";
+import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test, PHQ9Test, GAD7Test, PSC17Test, ASRSTest, SNAPIVTest } from "@/components/tests";
 import { analyzeTestResults, isAIConfigured, TestDiagnosisResult } from "@/lib/ai-service";
 import { toast } from "sonner";
 import { useProfession } from "@/contexts/ProfessionContext";
 
-type TestId = "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | "phq-9" | "gad-7" | "psc-17";
+type TestId = "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | "phq-9" | "gad-7" | "psc-17" | "asrs" | "snap-iv";
 
 const allAvailableTests: { id: TestId; name: string; fullName: string; description: string; duration: string; categories: string[] }[] = [
   {
     id: "mbgr" as const,
     name: "MBGR",
-    fullName: "Protocolo de Evaluación Miofuncional Orofacial MBGR",
+    fullName: "Protocolo de EvaluaciÃ³n Miofuncional Orofacial MBGR",
     description:
-      "Evaluación de estructuras y funciones del sistema estomatognático",
+      "EvaluaciÃ³n de estructuras y funciones del sistema estomatognÃ¡tico",
     duration: "45-60 min",
-    categories: ["Motricidad Orofacial", "Deglución", "Respiración"],
+    categories: ["Motricidad Orofacial", "DegluciÃ³n", "RespiraciÃ³n"],
   },
   {
     id: "mmbgr-lactantes" as const,
     name: "MMBGR Lactantes",
-    fullName: "Protocolo MMBGR - Examen Clínico Miofuncional Orofacial",
+    fullName: "Protocolo MMBGR - Examen ClÃ­nico Miofuncional Orofacial",
     description:
-      "Evaluación miofuncional orofacial para lactantes y preescolares (6-71 meses)",
+      "EvaluaciÃ³n miofuncional orofacial para lactantes y preescolares (6-71 meses)",
     duration: "25-35 min",
     categories: ["Motricidad Orofacial", "Lactantes"],
   },
   {
     id: "tar" as const,
     name: "TAR Abreviado",
-    fullName: "Test de Articulación a la Repetición",
-    description: "Evaluación de la producción articulatoria mediante repetición",
+    fullName: "Test de ArticulaciÃ³n a la RepeticiÃ³n",
+    description: "EvaluaciÃ³n de la producciÃ³n articulatoria mediante repeticiÃ³n",
     duration: "15-20 min",
-    categories: ["Articulación", "Fonología"],
+    categories: ["ArticulaciÃ³n", "FonologÃ­a"],
   },
   {
     id: "teprosif" as const,
     name: "TEPROSIF-R",
-    fullName: "Test para Evaluar Procesos de Simplificación Fonológica",
+    fullName: "Test para Evaluar Procesos de SimplificaciÃ³n FonolÃ³gica",
     description:
-      "Identificación de procesos de simplificación fonológica en niños",
+      "IdentificaciÃ³n de procesos de simplificaciÃ³n fonolÃ³gica en niÃ±os",
     duration: "20-30 min",
-    categories: ["Fonología", "Desarrollo del Lenguaje"],
+    categories: ["FonologÃ­a", "Desarrollo del Lenguaje"],
   },
   {
     id: "reel-3" as const,
     name: "REEL-3",
     fullName: "Test de Lenguaje Emergente Receptivo Expresivo",
     description:
-      "Evaluación de habilidades lingüísticas receptivas y expresivas en niños",
+      "EvaluaciÃ³n de habilidades lingÃ¼Ã­sticas receptivas y expresivas en niÃ±os",
     duration: "20-30 min",
     categories: ["Lenguaje", "Desarrollo Temprano"],
   },
@@ -78,16 +78,16 @@ const allAvailableTests: { id: TestId; name: string; fullName: string; descripti
     name: "PHQ-9",
     fullName: "Patient Health Questionnaire-9",
     description:
-      "Cuestionario de 9 ítems para screening y medición de severidad de depresión",
+      "Cuestionario de 9 Ã­tems para screening y mediciÃ³n de severidad de depresiÃ³n",
     duration: "5-10 min",
-    categories: ["Depresión", "Screening"],
+    categories: ["DepresiÃ³n", "Screening"],
   },
   {
     id: "gad-7",
     name: "GAD-7",
     fullName: "Generalized Anxiety Disorder-7",
     description:
-      "Escala de 7 ítems para screening y medición de severidad de ansiedad generalizada",
+      "Escala de 7 Ã­tems para screening y mediciÃ³n de severidad de ansiedad generalizada",
     duration: "5-10 min",
     categories: ["Ansiedad", "Screening"],
   },
@@ -96,9 +96,27 @@ const allAvailableTests: { id: TestId; name: string; fullName: string; descripti
     name: "PSC-17",
     fullName: "Pediatric Symptom Checklist-17",
     description:
-      "Checklist abreviado de 17 ítems para screening psicosocial pediátrico",
+      "Checklist abreviado de 17 Ã­tems para screening psicosocial pediÃ¡trico",
     duration: "5-10 min",
-    categories: ["Pediátrico", "Screening", "Psicosocial"],
+    categories: ["PediÃ¡trico", "Screening", "Psicosocial"],
+  },
+  {
+    id: "asrs",
+    name: "ASRS v1.1",
+    fullName: "Adult ADHD Self-Report Scale v1.1 (OMS)",
+    description:
+      "Escala de 18 items de la OMS para screening de TDAH en adultos. Parte A (6 items) como screening rapido.",
+    duration: "10-15 min",
+    categories: ["TDAH", "Adultos", "Screening"],
+  },
+  {
+    id: "snap-iv",
+    name: "SNAP-IV",
+    fullName: "Swanson, Nolan & Pelham Rating Scale IV",
+    description:
+      "Escala de 26 items para evaluacion de TDAH e inatencion, hiperactividad y oposicionismo en ninos.",
+    duration: "10-15 min",
+    categories: ["TDAH", "Infantil", "Screening"],
   },
 ];
 
@@ -118,9 +136,11 @@ export default function Tests() {
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [showPatientSelect, setShowPatientSelect] = useState(false);
   const [pendingTestType, setPendingTestType] = useState<TestId | null>(null);
-  const { config: profConfig } = useProfession();
+  const { config: profConfig, professionId } = useProfession();
 
-  const availableTests = allAvailableTests.filter(t => profConfig.availableTestIds.includes(t.id));
+  const availableTests = professionId
+    ? allAvailableTests.filter(t => profConfig.availableTestIds.includes(t.id))
+    : [];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
@@ -128,7 +148,40 @@ export default function Tests() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { testResults, createTestResult } = useTestResults();
-  const { patients } = usePatients();
+  const { patients, createPatient } = usePatients();
+
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [quickName, setQuickName] = useState("");
+  const [quickPhone, setQuickPhone] = useState("");
+  const [isCreatingPatient, setIsCreatingPatient] = useState(false);
+  const [quickPatients, setQuickPatients] = useState<{ id: string; name: string }[]>([]);
+
+  const allPatients = [
+    ...patients,
+    ...quickPatients.filter(qp => !patients.some(p => p.id === qp.id)),
+  ];
+
+  const handleQuickPatientCreate = async () => {
+    if (!quickName.trim()) return;
+    setIsCreatingPatient(true);
+    try {
+      const newPatient = await createPatient.mutateAsync({
+        name: quickName.trim(),
+        rut: "Por completar",
+        phone: quickPhone.trim() || null,
+        status: 'active',
+      });
+      if (newPatient) {
+        setQuickPatients(prev => [...prev, { id: newPatient.id, name: newPatient.name }]);
+        setSelectedPatient(newPatient.id);
+        setShowQuickCreate(false);
+        setQuickName("");
+        setQuickPhone("");
+      }
+    } finally {
+      setIsCreatingPatient(false);
+    }
+  };
 
   const selectedPatientData = patients.find(p => p.id === selectedPatient);
 
@@ -327,27 +380,53 @@ export default function Tests() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Paciente</Label>
+              <div className="flex items-center justify-between">
+                <Label>Paciente</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickCreate(!showQuickCreate)}
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Nuevo rápido
+                  {showQuickCreate ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+              </div>
               <Select value={selectedPatient} onValueChange={setSelectedPatient}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar paciente..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
+                  {allPatients.map((patient) => (
                     <SelectItem key={patient.id} value={patient.id}>
                       {patient.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {showQuickCreate && (
+                <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                  <p className="text-xs text-muted-foreground">Crea un paciente con datos mínimos. Podrás completar su ficha después.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nombre *</Label>
+                      <Input placeholder="Nombre del paciente" value={quickName} onChange={(e) => setQuickName(e.target.value)} className="h-8 text-sm" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Teléfono</Label>
+                      <Input placeholder="+56 9 1234 5678" value={quickPhone} onChange={(e) => setQuickPhone(e.target.value)} className="h-8 text-sm" />
+                    </div>
+                  </div>
+                  <Button type="button" size="sm" className="w-full" onClick={handleQuickPatientCreate} disabled={!quickName.trim() || isCreatingPatient}>
+                    {isCreatingPatient ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <UserPlus className="h-3 w-3 mr-1" />}
+                    Crear y seleccionar
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowPatientSelect(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handlePatientSelected} disabled={!selectedPatient}>
-                Iniciar Test
-              </Button>
+              <Button variant="outline" onClick={() => setShowPatientSelect(false)}>Cancelar</Button>
+              <Button onClick={handlePatientSelected} disabled={!selectedPatient}>Iniciar Test</Button>
             </div>
           </div>
         </DialogContent>
@@ -458,6 +537,32 @@ export default function Tests() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={activeTest === 'asrs'} onOpenChange={() => activeTest === 'asrs' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>ASRS v1.1</DialogTitle>
+          </DialogHeader>
+          <ASRSTest
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'snap-iv'} onOpenChange={() => activeTest === 'snap-iv' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>SNAP-IV</DialogTitle>
+          </DialogHeader>
+          <SNAPIVTest
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!selectedTestDetail} onOpenChange={() => setSelectedTestDetail(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -523,9 +628,9 @@ export default function Tests() {
                         const { palabras, frases, summary, sectionObservations } = parsed;
                         const responseConfig: Record<string, { text: string; color: string; icon: React.ReactNode }> = {
                           C: { text: 'Correcto', color: 'text-success', icon: <Check className="h-3 w-3" /> },
-                          S: { text: 'Sustitución', color: 'text-warning', icon: <RefreshCw className="h-3 w-3" /> },
-                          O: { text: 'Omisión', color: 'text-destructive', icon: <X className="h-3 w-3" /> },
-                          D: { text: 'Distorsión', color: 'text-blue-500', icon: <AlertCircle className="h-3 w-3" /> },
+                          S: { text: 'SustituciÃ³n', color: 'text-warning', icon: <RefreshCw className="h-3 w-3" /> },
+                          O: { text: 'OmisiÃ³n', color: 'text-destructive', icon: <X className="h-3 w-3" /> },
+                          D: { text: 'DistorsiÃ³n', color: 'text-blue-500', icon: <AlertCircle className="h-3 w-3" /> },
                         };
                         const getWordById = (id: string) => {
                           for (const section of tarSections) {
@@ -581,7 +686,7 @@ export default function Tests() {
                             )}
                             {frases && Object.keys(frases).length > 0 && (
                               <div className="border rounded-lg overflow-hidden">
-                                <div className="bg-muted px-3 py-2 font-medium text-sm">Repetición de Frases</div>
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">RepeticiÃ³n de Frases</div>
                                 <div className="divide-y">
                                   {tarFrases.map((frase) => (
                                     <div key={frase.id} className="px-3 py-2 text-sm">
@@ -594,7 +699,7 @@ export default function Tests() {
                             )}
                             {sectionObservations && Object.keys(sectionObservations).filter(k => sectionObservations[k]).length > 0 && (
                               <div className="border rounded-lg overflow-hidden">
-                                <div className="bg-muted px-3 py-2 font-medium text-sm">Observaciones Clínicas</div>
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">Observaciones ClÃ­nicas</div>
                                 <div className="divide-y">
                                   {Object.entries(sectionObservations).map(([section, obs]: [string, any]) => obs && (
                                     <div key={section} className="px-3 py-2 text-sm"><span className="font-medium capitalize">{section}:</span><p className="text-muted-foreground mt-1">{obs}</p></div>
@@ -728,7 +833,7 @@ export default function Tests() {
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                       <div className="flex items-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-400">
                         <Sparkles className="h-4 w-4" />
-                        Análisis IA
+                        AnÃ¡lisis IA
                       </div>
 
                       {/* Possible Diagnoses */}
@@ -736,7 +841,7 @@ export default function Tests() {
                         <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Stethoscope className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                            <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">Posibles Diagnósticos</p>
+                            <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">Posibles DiagnÃ³sticos</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {aiAnalysis.possibleDiagnoses.map((d, i) => (
@@ -753,7 +858,7 @@ export default function Tests() {
                         <div className="rounded-lg border p-4 bg-card">
                           <div className="flex items-center gap-2 mb-2">
                             <Brain className="h-4 w-4 text-primary" />
-                            <p className="text-sm font-semibold">Análisis Clínico</p>
+                            <p className="text-sm font-semibold">AnÃ¡lisis ClÃ­nico</p>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiAnalysis.clinicalAnalysis}</p>
                         </div>
@@ -764,7 +869,7 @@ export default function Tests() {
                         <div className="rounded-lg border p-4 bg-card">
                           <div className="flex items-center gap-2 mb-2">
                             <Target className="h-4 w-4 text-destructive" />
-                            <p className="text-sm font-semibold">Áreas Prioritarias</p>
+                            <p className="text-sm font-semibold">Ãreas Prioritarias</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {aiAnalysis.priorityAreas.map((a, i) => (
@@ -784,7 +889,7 @@ export default function Tests() {
                           <ul className="space-y-1.5">
                             {aiAnalysis.therapySuggestions.map((s, i) => (
                               <li key={i} className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
-                                <span className="text-emerald-500 mt-1">•</span>
+                                <span className="text-emerald-500 mt-1">â€¢</span>
                                 {s}
                               </li>
                             ))}
@@ -809,7 +914,7 @@ export default function Tests() {
                       )}
 
                       <p className="text-[10px] text-muted-foreground italic text-center">
-                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiólogo.
+                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiÃ³logo.
                       </p>
 
                       <Button

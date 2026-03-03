@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-CL">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TherapyHub - Gestión de Fonoaudiología</title>
-    <meta name="description" content="Plataforma profesional para fonoaudiólogos. Gestiona pacientes, sesiones, evaluaciones y pagos de forma segura." />
+    <title>TherapyHub - Plataforma para Profesionales de Salud</title>
+    <meta name="description" content="Plataforma profesional para fonoaudiólogos y psicólogos. Gestiona pacientes, sesiones, evaluaciones y pagos de forma segura." />
     <meta name="author" content="TherapyHub" />
-    <meta name="keywords" content="fonoaudiología, gestión pacientes, terapia del habla, evaluaciones fonoaudiológicas, Chile" />
+    <meta name="keywords" content="fonoaudiología, psicología, gestión pacientes, terapia, evaluaciones clínicas, Chile" />
+    <link rel="canonical" href="https://speech-therapy-hub.vercel.app" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#2563eb" />
 
@@ -17,23 +18,27 @@
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- Preconnect to Supabase -->
+    <link rel="preconnect" href="https://vzqnadthsktmxgjcthht.supabase.co" crossorigin />
+
     <!-- Open Graph -->
-    <meta property="og:title" content="TherapyHub - Gestión de Fonoaudiología" />
-    <meta property="og:description" content="Plataforma profesional para fonoaudiólogos. Gestiona pacientes, sesiones, evaluaciones y pagos de forma segura." />
+    <meta property="og:title" content="TherapyHub - Plataforma para Profesionales de Salud" />
+    <meta property="og:description" content="Plataforma profesional para fonoaudiólogos y psicólogos. Gestiona pacientes, sesiones, evaluaciones y pagos." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://speech-therapy-hub.vercel.app" />
     <meta property="og:site_name" content="TherapyHub" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="TherapyHub - Gestión de Fonoaudiología" />
-    <meta name="twitter:description" content="Plataforma profesional para fonoaudiólogos." />
+    <meta name="twitter:title" content="TherapyHub - Plataforma para Profesionales de Salud" />
+    <meta name="twitter:description" content="Plataforma para fonoaudiólogos y psicólogos. Gestiona pacientes, sesiones y evaluaciones." />
 
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
 
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md">Ir al contenido principal</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

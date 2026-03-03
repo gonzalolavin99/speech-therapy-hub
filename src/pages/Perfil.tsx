@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { useProfession } from "@/contexts/ProfessionContext";
 import { useTour } from "@/hooks/useTour";
+import { RutInput } from "@/components/ui/rut-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export default function Perfil() {
   const { user } = useAuth();
@@ -101,11 +103,10 @@ export default function Perfil() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rut">RUT</Label>
-                <Input
+                <RutInput
                   id="rut"
                   value={formData.rut || ""}
-                  onChange={(e) => handleChange("rut", e.target.value)}
-                  className="bg-background"
+                  onChange={(val) => handleChange("rut", val)}
                 />
               </div>
             </div>
@@ -129,11 +130,10 @@ export default function Perfil() {
                   <Phone className="h-4 w-4 inline mr-2" />
                   Teléfono
                 </Label>
-                <Input
+                <PhoneInput
                   id="phone"
                   value={formData.phone || ""}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  className="bg-background"
+                  onChange={(val) => handleChange("phone", val)}
                 />
               </div>
             </div>

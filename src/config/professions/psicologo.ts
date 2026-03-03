@@ -74,7 +74,7 @@ export const psicologoConfig: ProfessionConfig = {
     },
   ],
 
-  availableTestIds: ['phq-9', 'gad-7', 'psc-17'],
+  availableTestIds: ['phq-9', 'gad-7', 'psc-17', 'asrs', 'snap-iv'],
 
   aiSystemPrompt: `Eres un asistente experto en psicología clínica chilena. 
 Respondes siempre en español de Chile. Eres preciso, profesional y práctico.

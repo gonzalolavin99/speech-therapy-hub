@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 import { ProfessionalProfile } from '@/hooks/useProfile';
 
 interface BoletaData {
@@ -79,7 +78,8 @@ function numberToWords(n: number): string {
   return result;
 }
 
-export function exportBoletaPDF(data: BoletaData) {
+export async function exportBoletaPDF(data: BoletaData) {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;

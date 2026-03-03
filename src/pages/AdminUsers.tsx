@@ -37,6 +37,7 @@ interface PendingProfile {
   approved: boolean;
   onboarding_completed: boolean;
   created_at: string;
+  email?: string;
 }
 
 export default function AdminUsers() {
@@ -47,13 +48,27 @@ export default function AdminUsers() {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("professional_profiles")
-        .select("id, user_id, full_name, profession, institution, city, specialties, approved, onboarding_completed, created_at")
-        .order("created_at", { ascending: false });
+      const [profilesRes, emailsRes] = await Promise.all([
+        supabase
+          .from("professional_profiles")
+          .select("id, user_id, full_name, profession, institution, city, specialties, approved, onboarding_completed, created_at")
+          .order("created_at", { ascending: false }),
+        supabase.rpc("get_user_emails"),
+      ]);
 
-      if (error) throw error;
-      return data as PendingProfile[];
+      if (profilesRes.error) throw profilesRes.error;
+
+      const emailMap = new Map<string, string>();
+      if (!emailsRes.error && emailsRes.data) {
+        (emailsRes.data as { user_id: string; email: string }[]).forEach((e) =>
+          emailMap.set(e.user_id, e.email)
+        );
+      }
+
+      return (profilesRes.data as PendingProfile[]).map((p) => ({
+        ...p,
+        email: emailMap.get(p.user_id) || undefined,
+      }));
     },
   });
 
@@ -148,6 +163,7 @@ export default function AdminUsers() {
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesional</th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesión</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Institución</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Ciudad</th>
@@ -158,7 +174,7 @@ export default function AdminUsers() {
             <tbody>
               {filteredProfiles.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center">
+                  <td colSpan={7} className="p-8 text-center">
                     <UserCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm font-medium text-muted-foreground">No hay usuarios que mostrar</p>
                   </td>
@@ -170,6 +186,9 @@ export default function AdminUsers() {
                   <tr key={profile.id} className="border-b last:border-b-0 hover:bg-muted/30">
                     <td className="p-4">
                       <span className="font-medium text-card-foreground">{profile.full_name}</span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-xs text-muted-foreground">{profile.email || '-'}</span>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-sm">

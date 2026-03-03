@@ -241,7 +241,7 @@ export default function Pagos() {
                   Paciente
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Fecha Sesión
+                  Fecha SesiÃ³n
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">
                   Fecha Pago
@@ -304,9 +304,10 @@ export default function Pagos() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            const patient = patients.find(p => p.id === payment.patient_id);
-                            exportBoletaPDF({
+                          onClick={async () => {
+                            try {
+                              const patient = patients.find(p => p.id === payment.patient_id);
+                              await exportBoletaPDF({
                               boletaNumber: generateBoletaNumber(payment.id),
                               professional: {
                                 name: profile?.full_name || 'Profesional',
@@ -324,7 +325,10 @@ export default function Pagos() {
                               paymentDate: payment.payment_date,
                               paymentMethod: payment.payment_method,
                             });
-                            toast.success('Boleta generada exitosamente');
+                              toast.success('Boleta generada exitosamente');
+                            } catch (e) {
+                              toast.error('Error al generar boleta');
+                            }
                           }}
                         >
                           <FileText className="h-3.5 w-3.5 mr-1" />
