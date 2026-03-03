@@ -69,7 +69,7 @@ export function exportPatientToPDF({ patient, sessions = [], testResults = [] }:
   let currentY = (doc as any).lastAutoTable.finalY + 15;
   
   doc.setFontSize(14);
-  doc.text('Diagnóstico Fonoaudiológico', 14, currentY);
+  doc.text('Diagnóstico Clínico', 14, currentY);
   currentY += 8;
   
   doc.setFontSize(10);

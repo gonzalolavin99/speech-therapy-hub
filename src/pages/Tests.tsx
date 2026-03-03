@@ -20,11 +20,14 @@ import { Search, FileText, Clock, User, ChevronRight, Check, RefreshCw, X, Alert
 import { tarSections, tarFrases } from "@/data/tests/tar";
 import { useTestResults, TestResultFormData } from "@/hooks/useTestResults";
 import { usePatients } from "@/hooks/usePatients";
-import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test } from "@/components/tests";
+import { MBGRTest, MMBGRLactantesTest, TARTest, TEPROSIFTest, REEL3Test, PHQ9Test, GAD7Test, PSC17Test } from "@/components/tests";
 import { analyzeTestResults, isAIConfigured, TestDiagnosisResult } from "@/lib/ai-service";
 import { toast } from "sonner";
+import { useProfession } from "@/contexts/ProfessionContext";
 
-const availableTests = [
+type TestId = "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | "phq-9" | "gad-7" | "psc-17";
+
+const allAvailableTests: { id: TestId; name: string; fullName: string; description: string; duration: string; categories: string[] }[] = [
   {
     id: "mbgr" as const,
     name: "MBGR",
@@ -69,6 +72,34 @@ const availableTests = [
     duration: "20-30 min",
     categories: ["Lenguaje", "Desarrollo Temprano"],
   },
+  // Psychology tests (public domain / open access)
+  {
+    id: "phq-9",
+    name: "PHQ-9",
+    fullName: "Patient Health Questionnaire-9",
+    description:
+      "Cuestionario de 9 ítems para screening y medición de severidad de depresión",
+    duration: "5-10 min",
+    categories: ["Depresión", "Screening"],
+  },
+  {
+    id: "gad-7",
+    name: "GAD-7",
+    fullName: "Generalized Anxiety Disorder-7",
+    description:
+      "Escala de 7 ítems para screening y medición de severidad de ansiedad generalizada",
+    duration: "5-10 min",
+    categories: ["Ansiedad", "Screening"],
+  },
+  {
+    id: "psc-17",
+    name: "PSC-17",
+    fullName: "Pediatric Symptom Checklist-17",
+    description:
+      "Checklist abreviado de 17 ítems para screening psicosocial pediátrico",
+    duration: "5-10 min",
+    categories: ["Pediátrico", "Screening", "Psicosocial"],
+  },
 ];
 
 interface TestResult {
@@ -83,10 +114,14 @@ interface TestResult {
 }
 
 export default function Tests() {
-  const [activeTest, setActiveTest] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | null>(null);
+  const [activeTest, setActiveTest] = useState<TestId | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [showPatientSelect, setShowPatientSelect] = useState(false);
-  const [pendingTestType, setPendingTestType] = useState<"mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3" | null>(null);
+  const [pendingTestType, setPendingTestType] = useState<TestId | null>(null);
+  const { config: profConfig } = useProfession();
+
+  const availableTests = allAvailableTests.filter(t => profConfig.availableTestIds.includes(t.id));
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTestDetail, setSelectedTestDetail] = useState<TestResult | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<TestDiagnosisResult | null>(null);
@@ -97,7 +132,7 @@ export default function Tests() {
 
   const selectedPatientData = patients.find(p => p.id === selectedPatient);
 
-  const handleApplyTest = (testId: "mbgr" | "mmbgr-lactantes" | "tar" | "teprosif" | "reel-3") => {
+  const handleApplyTest = (testId: TestId) => {
     setPendingTestType(testId);
     setShowPatientSelect(true);
   };
@@ -113,7 +148,7 @@ export default function Tests() {
     const testData: TestResultFormData = {
       patient_id: selectedPatient,
       test_type: activeTest!,
-      test_name: activeTest === 'mbgr' ? 'MBGR' : activeTest === 'mmbgr-lactantes' ? 'MMBGR Lactantes' : activeTest === 'tar' ? 'TAR' : activeTest === 'reel-3' ? 'REEL-3' : 'TEPROSIF-R',
+      test_name: allAvailableTests.find(t => t.id === activeTest)?.name || activeTest!,
       evaluation_date: new Date().toISOString().split('T')[0],
       status: "completed",
       score: JSON.stringify(results),
@@ -379,6 +414,45 @@ export default function Tests() {
           <REEL3Test
             patientName={selectedPatientData?.name || ''}
             onComplete={(results, score) => handleTestComplete({ results, score })}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'phq-9'} onOpenChange={() => activeTest === 'phq-9' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>PHQ-9</DialogTitle>
+          </DialogHeader>
+          <PHQ9Test
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'gad-7'} onOpenChange={() => activeTest === 'gad-7' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>GAD-7</DialogTitle>
+          </DialogHeader>
+          <GAD7Test
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
+            onCancel={handleTestCancel}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeTest === 'psc-17'} onOpenChange={() => activeTest === 'psc-17' && handleTestCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>PSC-17</DialogTitle>
+          </DialogHeader>
+          <PSC17Test
+            patientName={selectedPatientData?.name || ''}
+            onComplete={(results) => handleTestComplete(results)}
             onCancel={handleTestCancel}
           />
         </DialogContent>

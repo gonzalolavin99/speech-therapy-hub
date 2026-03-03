@@ -86,7 +86,7 @@ export default function Login() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">TherapyHub</CardTitle>
           <CardDescription>
-            Plataforma de gestión para fonoaudiólogos
+            Plataforma de gestión clínica para profesionales de la salud
           </CardDescription>
         </CardHeader>
         <CardContent>

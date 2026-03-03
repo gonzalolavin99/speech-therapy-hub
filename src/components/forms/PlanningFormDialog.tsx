@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { Sparkles, Loader2, Plus, Trash2 } from "lucide-react";
 import { generatePlanningSuggestions, isAIConfigured } from "@/lib/ai-service";
+import { useProfession } from "@/contexts/ProfessionContext";
 
 const planningSchema = z.object({
   patientId: z.string().min(1, "Seleccione un paciente"),
@@ -64,6 +65,7 @@ export function PlanningFormDialog({
   mode,
   initialData,
 }: PlanningFormDialogProps) {
+  const { config: profConfig } = useProfession();
   const form = useForm<PlanningFormData>({
     resolver: zodResolver(planningSchema),
     defaultValues: {
@@ -296,13 +298,9 @@ export function PlanningFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="fonologico">Enfoque Fonológico</SelectItem>
-                          <SelectItem value="pragmatico">Enfoque Pragmático</SelectItem>
-                          <SelectItem value="semantico">Enfoque Semántico</SelectItem>
-                          <SelectItem value="morfosintactico">Enfoque Morfosintáctico</SelectItem>
-                          <SelectItem value="fluencia">Fluencia</SelectItem>
-                          <SelectItem value="motricidad">Motricidad Orofacial</SelectItem>
-                          <SelectItem value="deglusion">Deglución</SelectItem>
+                          {profConfig.approaches.map((a) => (
+                            <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -322,12 +320,9 @@ export function PlanningFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="ciclos">Ciclos</SelectItem>
-                          <SelectItem value="pares_minimos">Pares Mínimos</SelectItem>
-                          <SelectItem value="modelado">Modelado</SelectItem>
-                          <SelectItem value="interaccionista">Interaccionista</SelectItem>
-                          <SelectItem value="conductual">Conductual</SelectItem>
-                          <SelectItem value="naturalista">Naturalista</SelectItem>
+                          {profConfig.methods.map((m) => (
+                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

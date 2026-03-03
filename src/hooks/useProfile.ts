@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { ProfessionId } from '@/config/professions';
 
 export interface ProfessionalProfile {
   id: string;
@@ -20,6 +21,8 @@ export interface ProfessionalProfile {
   session_price: number;
   evaluation_price: number;
   onboarding_completed: boolean;
+  profession: ProfessionId;
+  approved: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +42,7 @@ export interface ProfileFormData {
   session_price?: number;
   evaluation_price?: number;
   onboarding_completed?: boolean;
+  profession?: ProfessionId;
 }
 
 export function useProfile() {
@@ -54,9 +58,9 @@ export function useProfile() {
         .from('professional_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as ProfessionalProfile | null;
     },
     enabled: !!user,

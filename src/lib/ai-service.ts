@@ -45,13 +45,23 @@ export async function getAICompletion({ messages, temperature = 0.7, maxTokens =
 }
 
 // ============================================================
-// Specialized AI functions for speech therapy
+// Specialized AI functions for clinical professionals
 // ============================================================
 
-const SYSTEM_PROMPT_BASE = `Eres un asistente experto en fonoaudiología clínica chilena. 
+const DEFAULT_SYSTEM_PROMPT = `Eres un asistente experto en fonoaudiología clínica chilena. 
 Respondes siempre en español de Chile. Eres preciso, profesional y práctico.
 Tus sugerencias son clínicamente fundamentadas y adaptadas al contexto chileno.
 IMPORTANTE: Tus sugerencias son orientativas y deben ser validadas por el profesional fonoaudiólogo.`;
+
+let _professionSystemPrompt: string | null = null;
+
+export function setAISystemPrompt(prompt: string) {
+  _professionSystemPrompt = prompt;
+}
+
+function getSystemPrompt(): string {
+  return _professionSystemPrompt || DEFAULT_SYSTEM_PROMPT;
+}
 
 export interface TestDiagnosisResult {
   possibleDiagnoses: string[];
@@ -96,7 +106,7 @@ Responde ESTRICTAMENTE en el siguiente formato JSON (sin markdown, solo JSON pur
 
   const response = await getAICompletion({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT_BASE },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
@@ -134,7 +144,7 @@ export async function generatePlanningSuggestions(
   approach?: string,
   testHistory?: string
 ): Promise<PlanningAISuggestion> {
-  const prompt = `Genera una planificación de intervención fonoaudiológica para el siguiente caso.
+  const prompt = `Genera una planificación de intervención para el siguiente caso clínico.
 
 DATOS DEL PACIENTE:
 - Nombre: ${patientName}
@@ -155,7 +165,7 @@ Responde ESTRICTAMENTE en JSON (sin markdown):
 
   const response = await getAICompletion({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT_BASE },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     temperature: 0.5,
@@ -183,7 +193,7 @@ export async function generateSessionNotes(
   diagnosis?: string | null,
   previousNotes?: string
 ): Promise<string> {
-  const prompt = `Genera una nota clínica de sesión fonoaudiológica breve y profesional.
+  const prompt = `Genera una nota clínica de sesión breve y profesional.
 
 DATOS:
 - Paciente: ${patientName}
@@ -191,11 +201,11 @@ DATOS:
 ${diagnosis ? `- Diagnóstico: ${diagnosis}` : ''}
 ${previousNotes ? `- Notas previas: ${previousNotes}` : ''}
 
-Genera una nota clínica de ejemplo que el fonoaudiólogo pueda editar. Incluye: objetivo de la sesión, actividades realizadas, respuesta del paciente, y observaciones. Máximo 150 palabras. Solo texto plano, sin formato especial.`;
+Genera una nota clínica de ejemplo que el profesional pueda editar. Incluye: objetivo de la sesión, actividades realizadas, respuesta del paciente, y observaciones. Máximo 150 palabras. Solo texto plano, sin formato especial.`;
 
   return getAICompletion({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT_BASE },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     temperature: 0.6,
@@ -227,7 +237,7 @@ Genera un resumen clínico profesional de 2-3 párrafos que integre toda la info
 
   return getAICompletion({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT_BASE },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     temperature: 0.5,
@@ -244,7 +254,7 @@ export async function generateProgressAnalysis(
   paidPayments: number,
   totalPayments: number
 ): Promise<string> {
-  const prompt = `Eres el asistente de un fonoaudiólogo clínico chileno. Genera un análisis breve de progreso semanal basado en estas métricas:
+  const prompt = `Eres el asistente de un profesional clínico chileno. Genera un análisis breve de progreso semanal basado en estas métricas:
 
 MÉTRICAS ACTUALES:
 - Pacientes activos: ${activePatients} de ${totalPatients} total
@@ -262,7 +272,7 @@ Solo texto plano en español chileno, sin títulos ni formato especial.`;
 
   return getAICompletion({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT_BASE },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     temperature: 0.6,
@@ -294,7 +304,7 @@ export async function generateAdminInsights(stats: {
   unpaidPayments: number;
   periodDays: number;
 }): Promise<AdminInsightResult> {
-  const prompt = `Eres un consultor de UX y producto para una aplicación de gestión clínica fonoaudiológica chilena llamada TherapyHub. Analiza las siguientes métricas de uso y genera insights accionables.
+  const prompt = `Eres un consultor de UX y producto para una aplicación de gestión clínica chilena llamada TherapyHub. Analiza las siguientes métricas de uso y genera insights accionables.
 
 MÉTRICAS DE USO (últimos ${stats.periodDays} días):
 - Total de acciones registradas: ${stats.totalLogs}

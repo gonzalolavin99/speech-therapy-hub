@@ -4,15 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MapPin, Building, Save, Loader2, Calendar, Link, Unlink } from "lucide-react";
+import { User, Mail, Phone, MapPin, Building, Save, Loader2, Calendar, Link, Unlink, RotateCcw } from "lucide-react";
 import { useProfile, ProfileFormData } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
+import { useProfession } from "@/contexts/ProfessionContext";
+import { useTour } from "@/hooks/useTour";
 
 export default function Perfil() {
   const { user } = useAuth();
   const { profile, isLoading, updateProfile } = useProfile();
   const { isConnected: isGoogleConnected, isLoading: isGoogleLoading, connect: connectGoogle, disconnect: disconnectGoogle } = useGoogleCalendar();
+  const { config: profConfig } = useProfession();
+  const { resetTour } = useTour(user?.id);
   const [formData, setFormData] = useState<Partial<ProfileFormData>>({});
 
   useEffect(() => {
@@ -73,9 +77,9 @@ export default function Perfil() {
               <h2 className="text-xl font-semibold text-card-foreground">
                 {formData.full_name || "Sin nombre"}
               </h2>
-              <p className="text-muted-foreground">Fonoaudiólogo(a)</p>
+              <p className="text-muted-foreground">{profConfig.label}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {formData.sis_registration ? `Registro SIS: ${formData.sis_registration}` : "Sin registro SIS"}
+                {formData.sis_registration ? `${profConfig.labels.registrationLabel}: ${formData.sis_registration}` : `Sin ${profConfig.labels.registrationLabel.toLowerCase()}`}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {user?.email}
@@ -274,7 +278,15 @@ export default function Perfil() {
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetTour}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Repetir Tour
+          </Button>
           <Button 
             className="bg-primary hover:bg-primary/90"
             onClick={handleSave}

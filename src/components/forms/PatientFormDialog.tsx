@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { validateRUT, sanitizeName, sanitizeText } from "@/utils/validation";
+import { useProfession } from "@/contexts/ProfessionContext";
 
 const patientSchema = z.object({
   name: z.string()
@@ -70,6 +71,7 @@ export function PatientFormDialog({
   initialData,
   mode,
 }: PatientFormDialogProps) {
+  const { config: profConfig } = useProfession();
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
@@ -236,9 +238,9 @@ export function PatientFormDialog({
                 name="diagnosis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Diagnóstico Fonoaudiológico *</FormLabel>
+                    <FormLabel>{profConfig.labels.diagnosisTitle} *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Trastorno Fonológico, TEL, Disfemia..." {...field} />
+                      <Input placeholder={profConfig.labels.diagnosisPlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -3,3 +3,6 @@ export { MMBGRLactantesTest } from './MMBGRLactantesTest';
 export { TARTest } from './TARTest';
 export { TEPROSIFTest } from './TEPROSIFTest';
 export { REEL3Test } from './REEL3Test';
+export { PHQ9Test } from './PHQ9Test';
+export { GAD7Test } from './GAD7Test';
+export { PSC17Test } from './PSC17Test';

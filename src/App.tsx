@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { ProfessionProvider } from "@/contexts/ProfessionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -19,6 +20,7 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import AuditLogs from "./pages/AuditLogs";
 import AdminInsights from "./pages/AdminInsights";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,7 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <ProfessionProvider>
         <SidebarProvider>
           <TooltipProvider>
             <Toaster />
@@ -44,12 +47,14 @@ const App = () => (
               <Route path="/legal" element={<ProtectedRoute><Legal /></ProtectedRoute>} />
               <Route path="/auditoria" element={<AdminRoute><AuditLogs /></AdminRoute>} />
               <Route path="/insights" element={<AdminRoute><AdminInsights /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
         </SidebarProvider>
+        </ProfessionProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>

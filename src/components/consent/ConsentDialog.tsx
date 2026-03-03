@@ -130,14 +130,14 @@ export function ConsentDialog({
 
               <h5 className="font-medium mt-4">1. Responsable del Tratamiento</h5>
               <p className="text-muted-foreground">
-                El profesional fonoaudiólogo/a que utiliza la plataforma TherapyHub será el 
+                El profesional de salud que utiliza la plataforma TherapyHub será el 
                 responsable del tratamiento de los datos personales y de salud recopilados.
               </p>
 
               <h5 className="font-medium mt-4">2. Finalidad del Tratamiento</h5>
               <p className="text-muted-foreground">Los datos serán utilizados exclusivamente para:</p>
               <ul className="text-muted-foreground">
-                <li>Registro y seguimiento del tratamiento fonoaudiológico.</li>
+                <li>Registro y seguimiento del tratamiento clínico.</li>
                 <li>Almacenamiento de resultados de evaluaciones y tests.</li>
                 <li>Gestión de citas y recordatorios.</li>
                 <li>Elaboración de informes clínicos.</li>

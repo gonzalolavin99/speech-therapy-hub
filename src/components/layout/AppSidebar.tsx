@@ -13,6 +13,7 @@ import {
   Info,
   Shield,
   BarChart3,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -32,6 +33,7 @@ const navigation = [
   { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
   { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
   { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },
+  { name: "Usuarios", href: "/admin/users", icon: UserCheck, adminOnly: true },
   { name: "Legal", href: "/legal", icon: Info, adminOnly: false },
 ];
 

@@ -67,14 +67,14 @@ export function ConsentForm({ patientName, onConsent, onCancel, isMinor = false 
 
             <h5>1. Responsable del Tratamiento</h5>
             <p>
-              El profesional fonoaudiólogo/a que utiliza la plataforma FonoApp será el 
+              El profesional de salud que utiliza la plataforma TherapyHub será el 
               responsable del tratamiento de los datos personales y de salud recopilados.
             </p>
 
             <h5>2. Finalidad del Tratamiento</h5>
             <p>Los datos serán utilizados exclusivamente para:</p>
             <ul>
-              <li>Registro y seguimiento del tratamiento fonoaudiológico.</li>
+              <li>Registro y seguimiento del tratamiento clínico.</li>
               <li>Almacenamiento de resultados de evaluaciones y tests.</li>
               <li>Gestión de citas y recordatorios.</li>
               <li>Elaboración de informes clínicos.</li>

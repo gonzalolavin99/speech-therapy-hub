@@ -161,7 +161,7 @@ export function exportBoletaPDF(data: BoletaData) {
   // Table row
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  const description = data.description || 'Sesión de Fonoaudiología';
+  const description = data.description || 'Sesión Profesional';
   doc.text(description, margin + 4, y);
   doc.text(formatDateCL(data.sessionDate), 120, y);
   doc.setFont('helvetica', 'bold');
