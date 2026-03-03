@@ -156,7 +156,7 @@ export default function Pacientes() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, RUT o diagnÃ³stico..."
+                placeholder="Buscar por nombre, RUT o diagnóstico..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -258,7 +258,7 @@ export default function Pacientes() {
                       const patientTests = testResults.filter(t => t.patient_id === selectedPatient?.id);
                       if (patientTests.length === 0) {
                         toast.info('Sin evaluaciones', {
-                          description: `${selectedPatient?.name} no tiene tests registrados. Puedes aplicar uno desde la secciÃ³n de Tests.`,
+                          description: `${selectedPatient?.name} no tiene tests registrados. Puedes aplicar uno desde la sección de Tests.`,
                           action: { label: 'Ir a Tests', onClick: () => navigate('/tests') },
                         });
                       } else {
@@ -308,7 +308,7 @@ export default function Pacientes() {
                 <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Phone className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-xs lg:text-sm">TelÃ©fono</span>
+                    <span className="text-xs lg:text-sm">Teléfono</span>
                   </div>
                   <p className="text-sm lg:text-base font-semibold text-card-foreground truncate">
                     {selectedPatient.phone || "-"}
@@ -326,7 +326,7 @@ export default function Pacientes() {
                 <div className="bg-card rounded-xl border p-3 lg:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Calendar className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-xs lg:text-sm">PrÃ³xima Cita</span>
+                    <span className="text-xs lg:text-sm">Próxima Cita</span>
                   </div>
                   <p className="text-base lg:text-lg font-semibold text-primary">
                     -
@@ -337,7 +337,7 @@ export default function Pacientes() {
               {/* Diagnosis Section */}
               <div className="bg-card rounded-xl border p-6 mb-6">
                 <h3 className="text-lg font-semibold text-card-foreground mb-4">
-                  DiagnÃ³stico FonoaudiolÃ³gico
+                  Diagnóstico Fonoaudiológico
                 </h3>
                 <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                   <p className="text-primary font-medium">{selectedPatient.diagnosis}</p>
@@ -350,7 +350,7 @@ export default function Pacientes() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
                       <Brain className="h-5 w-5 text-violet-600" />
-                      Resumen ClÃ­nico IA
+                      Resumen Clínico IA
                     </h3>
                     <Button
                       variant="outline"
@@ -402,7 +402,7 @@ export default function Pacientes() {
                   )}
                   {!aiSummary && !isGeneratingSummary && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      Genera un resumen clÃ­nico integrado del paciente con IA
+                      Genera un resumen clínico integrado del paciente con IA
                     </p>
                   )}
                 </div>

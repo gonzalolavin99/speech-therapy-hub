@@ -31,44 +31,44 @@ const allAvailableTests: { id: TestId; name: string; fullName: string; descripti
   {
     id: "mbgr" as const,
     name: "MBGR",
-    fullName: "Protocolo de EvaluaciÃ³n Miofuncional Orofacial MBGR",
+    fullName: "Protocolo de Evaluación Miofuncional Orofacial MBGR",
     description:
-      "EvaluaciÃ³n de estructuras y funciones del sistema estomatognÃ¡tico",
+      "Evaluación de estructuras y funciones del sistema estomatognático",
     duration: "45-60 min",
-    categories: ["Motricidad Orofacial", "DegluciÃ³n", "RespiraciÃ³n"],
+    categories: ["Motricidad Orofacial", "Deglución", "Respiración"],
   },
   {
     id: "mmbgr-lactantes" as const,
     name: "MMBGR Lactantes",
-    fullName: "Protocolo MMBGR - Examen ClÃ­nico Miofuncional Orofacial",
+    fullName: "Protocolo MMBGR - Examen Clínico Miofuncional Orofacial",
     description:
-      "EvaluaciÃ³n miofuncional orofacial para lactantes y preescolares (6-71 meses)",
+      "Evaluación miofuncional orofacial para lactantes y preescolares (6-71 meses)",
     duration: "25-35 min",
     categories: ["Motricidad Orofacial", "Lactantes"],
   },
   {
     id: "tar" as const,
     name: "TAR Abreviado",
-    fullName: "Test de ArticulaciÃ³n a la RepeticiÃ³n",
-    description: "EvaluaciÃ³n de la producciÃ³n articulatoria mediante repeticiÃ³n",
+    fullName: "Test de Articulación a la Repetición",
+    description: "Evaluación de la producción articulatoria mediante repetición",
     duration: "15-20 min",
-    categories: ["ArticulaciÃ³n", "FonologÃ­a"],
+    categories: ["Articulación", "Fonología"],
   },
   {
     id: "teprosif" as const,
     name: "TEPROSIF-R",
-    fullName: "Test para Evaluar Procesos de SimplificaciÃ³n FonolÃ³gica",
+    fullName: "Test para Evaluar Procesos de Simplificación Fonológica",
     description:
-      "IdentificaciÃ³n de procesos de simplificaciÃ³n fonolÃ³gica en niÃ±os",
+      "Identificación de procesos de simplificación fonológica en niños",
     duration: "20-30 min",
-    categories: ["FonologÃ­a", "Desarrollo del Lenguaje"],
+    categories: ["Fonología", "Desarrollo del Lenguaje"],
   },
   {
     id: "reel-3" as const,
     name: "REEL-3",
     fullName: "Test de Lenguaje Emergente Receptivo Expresivo",
     description:
-      "EvaluaciÃ³n de habilidades lingÃ¼Ã­sticas receptivas y expresivas en niÃ±os",
+      "Evaluación de habilidades lingüísticas receptivas y expresivas en niños",
     duration: "20-30 min",
     categories: ["Lenguaje", "Desarrollo Temprano"],
   },
@@ -78,16 +78,16 @@ const allAvailableTests: { id: TestId; name: string; fullName: string; descripti
     name: "PHQ-9",
     fullName: "Patient Health Questionnaire-9",
     description:
-      "Cuestionario de 9 Ã­tems para screening y mediciÃ³n de severidad de depresiÃ³n",
+      "Cuestionario de 9 ítems para screening y medición de severidad de depresión",
     duration: "5-10 min",
-    categories: ["DepresiÃ³n", "Screening"],
+    categories: ["Depresión", "Screening"],
   },
   {
     id: "gad-7",
     name: "GAD-7",
     fullName: "Generalized Anxiety Disorder-7",
     description:
-      "Escala de 7 Ã­tems para screening y mediciÃ³n de severidad de ansiedad generalizada",
+      "Escala de 7 ítems para screening y medición de severidad de ansiedad generalizada",
     duration: "5-10 min",
     categories: ["Ansiedad", "Screening"],
   },
@@ -96,9 +96,9 @@ const allAvailableTests: { id: TestId; name: string; fullName: string; descripti
     name: "PSC-17",
     fullName: "Pediatric Symptom Checklist-17",
     description:
-      "Checklist abreviado de 17 Ã­tems para screening psicosocial pediÃ¡trico",
+      "Checklist abreviado de 17 ítems para screening psicosocial pediátrico",
     duration: "5-10 min",
-    categories: ["PediÃ¡trico", "Screening", "Psicosocial"],
+    categories: ["Pediátrico", "Screening", "Psicosocial"],
   },
   {
     id: "asrs",
@@ -628,9 +628,9 @@ export default function Tests() {
                         const { palabras, frases, summary, sectionObservations } = parsed;
                         const responseConfig: Record<string, { text: string; color: string; icon: React.ReactNode }> = {
                           C: { text: 'Correcto', color: 'text-success', icon: <Check className="h-3 w-3" /> },
-                          S: { text: 'SustituciÃ³n', color: 'text-warning', icon: <RefreshCw className="h-3 w-3" /> },
-                          O: { text: 'OmisiÃ³n', color: 'text-destructive', icon: <X className="h-3 w-3" /> },
-                          D: { text: 'DistorsiÃ³n', color: 'text-blue-500', icon: <AlertCircle className="h-3 w-3" /> },
+                          S: { text: 'Sustitución', color: 'text-warning', icon: <RefreshCw className="h-3 w-3" /> },
+                          O: { text: 'Omisión', color: 'text-destructive', icon: <X className="h-3 w-3" /> },
+                          D: { text: 'Distorsión', color: 'text-blue-500', icon: <AlertCircle className="h-3 w-3" /> },
                         };
                         const getWordById = (id: string) => {
                           for (const section of tarSections) {
@@ -686,7 +686,7 @@ export default function Tests() {
                             )}
                             {frases && Object.keys(frases).length > 0 && (
                               <div className="border rounded-lg overflow-hidden">
-                                <div className="bg-muted px-3 py-2 font-medium text-sm">RepeticiÃ³n de Frases</div>
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">Repetición de Frases</div>
                                 <div className="divide-y">
                                   {tarFrases.map((frase) => (
                                     <div key={frase.id} className="px-3 py-2 text-sm">
@@ -699,7 +699,7 @@ export default function Tests() {
                             )}
                             {sectionObservations && Object.keys(sectionObservations).filter(k => sectionObservations[k]).length > 0 && (
                               <div className="border rounded-lg overflow-hidden">
-                                <div className="bg-muted px-3 py-2 font-medium text-sm">Observaciones ClÃ­nicas</div>
+                                <div className="bg-muted px-3 py-2 font-medium text-sm">Observaciones Clínicas</div>
                                 <div className="divide-y">
                                   {Object.entries(sectionObservations).map(([section, obs]: [string, any]) => obs && (
                                     <div key={section} className="px-3 py-2 text-sm"><span className="font-medium capitalize">{section}:</span><p className="text-muted-foreground mt-1">{obs}</p></div>
@@ -833,7 +833,7 @@ export default function Tests() {
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                       <div className="flex items-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-400">
                         <Sparkles className="h-4 w-4" />
-                        AnÃ¡lisis IA
+                        Análisis IA
                       </div>
 
                       {/* Possible Diagnoses */}
@@ -841,7 +841,7 @@ export default function Tests() {
                         <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Stethoscope className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                            <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">Posibles DiagnÃ³sticos</p>
+                            <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">Posibles Diagnósticos</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {aiAnalysis.possibleDiagnoses.map((d, i) => (
@@ -858,7 +858,7 @@ export default function Tests() {
                         <div className="rounded-lg border p-4 bg-card">
                           <div className="flex items-center gap-2 mb-2">
                             <Brain className="h-4 w-4 text-primary" />
-                            <p className="text-sm font-semibold">AnÃ¡lisis ClÃ­nico</p>
+                            <p className="text-sm font-semibold">Análisis Clínico</p>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiAnalysis.clinicalAnalysis}</p>
                         </div>
@@ -869,7 +869,7 @@ export default function Tests() {
                         <div className="rounded-lg border p-4 bg-card">
                           <div className="flex items-center gap-2 mb-2">
                             <Target className="h-4 w-4 text-destructive" />
-                            <p className="text-sm font-semibold">Ãreas Prioritarias</p>
+                            <p className="text-sm font-semibold">Áreas Prioritarias</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {aiAnalysis.priorityAreas.map((a, i) => (
@@ -889,7 +889,7 @@ export default function Tests() {
                           <ul className="space-y-1.5">
                             {aiAnalysis.therapySuggestions.map((s, i) => (
                               <li key={i} className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
-                                <span className="text-emerald-500 mt-1">â€¢</span>
+                                <span className="text-emerald-500 mt-1">•</span>
                                 {s}
                               </li>
                             ))}
@@ -914,7 +914,7 @@ export default function Tests() {
                       )}
 
                       <p className="text-[10px] text-muted-foreground italic text-center">
-                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiÃ³logo.
+                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiólogo.
                       </p>
 
                       <Button

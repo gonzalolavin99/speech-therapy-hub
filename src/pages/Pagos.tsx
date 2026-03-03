@@ -241,7 +241,7 @@ export default function Pagos() {
                   Paciente
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Fecha SesiÃ³n
+                  Fecha Sesión
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">
                   Fecha Pago
