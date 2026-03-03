@@ -258,6 +258,19 @@ export default function Pagos() {
               </tr>
             </thead>
             <tbody>
+              {filteredPayments.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center">
+                    <DollarSign className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+                    <p className="text-sm font-medium text-muted-foreground">No hay pagos registrados</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      {searchQuery || statusFilter !== "all"
+                        ? "No se encontraron resultados con los filtros aplicados"
+                        : "Registra un nuevo pago para comenzar a hacer seguimiento"}
+                    </p>
+                  </td>
+                </tr>
+              )}
               {filteredPayments.map((payment) => (
                 <tr
                   key={payment.id}

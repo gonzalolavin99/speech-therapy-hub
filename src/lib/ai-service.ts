@@ -271,6 +271,85 @@ Solo texto plano en español chileno, sin títulos ni formato especial.`;
 }
 
 // ============================================================
+// Admin Insights: AI-powered usage analysis & suggestions
+// ============================================================
+
+export interface AdminInsightResult {
+  resumen: string;
+  hallazgos: string[];
+  sugerenciasMejora: string[];
+  flujosIncompletos: string[];
+  recomendacionesUX: string[];
+}
+
+export async function generateAdminInsights(stats: {
+  totalLogs: number;
+  uniqueUsers: number;
+  actionBreakdown: Record<string, number>;
+  entityBreakdown: Record<string, number>;
+  hourlyDistribution: Record<string, number>;
+  topUsers: { email: string; count: number }[];
+  patientsWithoutPlanning: number;
+  planningsWithoutSessions: number;
+  unpaidPayments: number;
+  periodDays: number;
+}): Promise<AdminInsightResult> {
+  const prompt = `Eres un consultor de UX y producto para una aplicación de gestión clínica fonoaudiológica chilena llamada TherapyHub. Analiza las siguientes métricas de uso y genera insights accionables.
+
+MÉTRICAS DE USO (últimos ${stats.periodDays} días):
+- Total de acciones registradas: ${stats.totalLogs}
+- Usuarios únicos activos: ${stats.uniqueUsers}
+
+ACCIONES POR TIPO:
+${Object.entries(stats.actionBreakdown).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+
+ENTIDADES MÁS USADAS:
+${Object.entries(stats.entityBreakdown).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+
+DISTRIBUCIÓN HORARIA (hora: cantidad):
+${Object.entries(stats.hourlyDistribution).map(([h, c]) => `- ${h}:00 → ${c} acciones`).join('\n')}
+
+USUARIOS MÁS ACTIVOS:
+${stats.topUsers.map(u => `- ${u.email}: ${u.count} acciones`).join('\n')}
+
+FLUJOS INCOMPLETOS:
+- Pacientes sin planificación: ${stats.patientsWithoutPlanning}
+- Planificaciones sin sesiones registradas: ${stats.planningsWithoutSessions}
+- Pagos pendientes: ${stats.unpaidPayments}
+
+Responde ESTRICTAMENTE en JSON (sin markdown):
+{
+  "resumen": "Resumen ejecutivo de 2-3 líneas sobre el estado de uso de la app",
+  "hallazgos": ["hallazgo clave 1", "hallazgo 2", "hallazgo 3"],
+  "sugerenciasMejora": ["sugerencia de mejora funcional 1", "sugerencia 2", "sugerencia 3"],
+  "flujosIncompletos": ["observación sobre flujo incompleto 1", "observación 2"],
+  "recomendacionesUX": ["recomendación UX/UI 1", "recomendación 2"]
+}`;
+
+  const response = await getAICompletion({
+    messages: [
+      { role: 'system', content: 'Eres un experto en análisis de producto y UX para aplicaciones de salud. Respondes en español de Chile. Eres directo, práctico y basado en datos.' },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.5,
+    maxTokens: 1500,
+  });
+
+  try {
+    const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleaned) as AdminInsightResult;
+  } catch {
+    return {
+      resumen: response,
+      hallazgos: [],
+      sugerenciasMejora: [],
+      flujosIncompletos: [],
+      recomendacionesUX: [],
+    };
+  }
+}
+
+// ============================================================
 // Helper: Build human-readable test context from raw results
 // ============================================================
 

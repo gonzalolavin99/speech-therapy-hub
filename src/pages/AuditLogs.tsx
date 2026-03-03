@@ -92,20 +92,20 @@ export default function AuditLogs() {
 
   return (
     <AppLayout>
-      <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-primary" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Logs de Auditoría</h1>
-              <p className="text-sm text-muted-foreground">
-                Registro de todas las acciones realizadas en el sistema
+              <h1 className="text-xl sm:text-2xl font-bold">Logs de Auditoría</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Registro de acciones del sistema
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={loadLogs} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
           </Button>
@@ -114,8 +114,8 @@ export default function AuditLogs() {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[200px]">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 min-w-0">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -126,33 +126,35 @@ export default function AuditLogs() {
                   />
                 </div>
               </div>
-              <Select value={filterAction} onValueChange={setFilterAction}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Acción" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las acciones</SelectItem>
-                  <SelectItem value="CREATE">Crear</SelectItem>
-                  <SelectItem value="UPDATE">Actualizar</SelectItem>
-                  <SelectItem value="DELETE">Eliminar</SelectItem>
-                  <SelectItem value="EXPORT">Exportar</SelectItem>
-                  <SelectItem value="CONSENT_SIGNED">Consentimiento</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterEntity} onValueChange={setFilterEntity}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Entidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las entidades</SelectItem>
-                  <SelectItem value="patient">Pacientes</SelectItem>
-                  <SelectItem value="session">Sesiones</SelectItem>
-                  <SelectItem value="test">Evaluaciones</SelectItem>
-                  <SelectItem value="consent">Consentimientos</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={filterAction} onValueChange={setFilterAction}>
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <Filter className="h-4 w-4 mr-1 shrink-0" />
+                    <SelectValue placeholder="Acción" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las acciones</SelectItem>
+                    <SelectItem value="CREATE">Crear</SelectItem>
+                    <SelectItem value="UPDATE">Actualizar</SelectItem>
+                    <SelectItem value="DELETE">Eliminar</SelectItem>
+                    <SelectItem value="EXPORT">Exportar</SelectItem>
+                    <SelectItem value="CONSENT_SIGNED">Consentimiento</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterEntity} onValueChange={setFilterEntity}>
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <Filter className="h-4 w-4 mr-1 shrink-0" />
+                    <SelectValue placeholder="Entidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las entidades</SelectItem>
+                    <SelectItem value="patient">Pacientes</SelectItem>
+                    <SelectItem value="session">Sesiones</SelectItem>
+                    <SelectItem value="test">Evaluaciones</SelectItem>
+                    <SelectItem value="consent">Consentimientos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -181,30 +183,31 @@ export default function AuditLogs() {
                 {filteredLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                   >
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
                       {getEntityIcon(log.entity_type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={getActionColor(log.action)}>
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                        <Badge className={`${getActionColor(log.action)} text-[11px] px-1.5 py-0`}>
                           {formatAuditAction(log.action)}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-[11px] px-1.5 py-0">
                           {formatEntityType(log.entity_type)}
                         </Badge>
+                        <span className="text-[11px] text-muted-foreground ml-auto whitespace-nowrap">
+                          {format(new Date(log.created_at), "d MMM yyyy", { locale: es })}
+                          {" "}
+                          {format(new Date(log.created_at), "HH:mm:ss")}
+                        </span>
                       </div>
                       <p className="text-sm font-medium truncate">
                         {log.entity_name || 'Sin nombre'}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground truncate">
                         {log.user_email}
                       </p>
-                    </div>
-                    <div className="text-right text-sm text-muted-foreground">
-                      <p>{format(new Date(log.created_at), "d MMM yyyy", { locale: es })}</p>
-                      <p>{format(new Date(log.created_at), "HH:mm:ss")}</p>
                     </div>
                   </div>
                 ))}

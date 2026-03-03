@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import { PatientListSkeleton } from "@/components/ui/skeleton-card";
 import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 import { formatearEdad, calcularEdadEnAños } from "@/utils/age";
+import { useTestResults } from "@/hooks/useTestResults";
 
 export default function Pacientes() {
   const isMobile = useIsMobile();
@@ -41,7 +43,9 @@ export default function Pacientes() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
+  const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
+  const { testResults } = useTestResults();
 
   const handleConsent = (patientId: string, data: ConsentData) => {
     updatePatient.mutate({
@@ -246,7 +250,22 @@ export default function Pacientes() {
                     <span className="hidden sm:inline">{selectedPatient.consent_given ? "Ver Consentimiento" : "Firmar Consentimiento"}</span>
                     <span className="sm:hidden">{selectedPatient.consent_given ? "Consentimiento" : "Firmar"}</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0"
+                    onClick={() => {
+                      const patientTests = testResults.filter(t => t.patient_id === selectedPatient?.id);
+                      if (patientTests.length === 0) {
+                        toast.info('Sin evaluaciones', {
+                          description: `${selectedPatient?.name} no tiene tests registrados. Puedes aplicar uno desde la sección de Tests.`,
+                          action: { label: 'Ir a Tests', onClick: () => navigate('/tests') },
+                        });
+                      } else {
+                        navigate('/tests');
+                      }
+                    }}
+                  >
                     <FileText className="h-4 w-4 mr-1 lg:mr-2" />
                     <span className="hidden sm:inline">Ver Tests</span>
                     <span className="sm:hidden">Tests</span>

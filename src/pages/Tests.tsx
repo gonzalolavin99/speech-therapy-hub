@@ -234,6 +234,15 @@ export default function Tests() {
                 </tr>
               </thead>
               <tbody>
+                {filteredTests.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center">
+                      <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-muted-foreground">No hay evaluaciones registradas</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Aplica un test desde las opciones de arriba para comenzar</p>
+                    </td>
+                  </tr>
+                )}
                 {filteredTests.map((test) => (
                   <tr key={test.id} className="border-b last:border-b-0 hover:bg-muted/30">
                     <td className="p-4">

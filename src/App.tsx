@@ -18,6 +18,7 @@ import Legal from "./pages/Legal";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import AuditLogs from "./pages/AuditLogs";
+import AdminInsights from "./pages/AdminInsights";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
               <Route path="/legal" element={<ProtectedRoute><Legal /></ProtectedRoute>} />
               <Route path="/auditoria" element={<AdminRoute><AuditLogs /></AdminRoute>} />
+              <Route path="/insights" element={<AdminRoute><AdminInsights /></AdminRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

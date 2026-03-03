@@ -22,18 +22,14 @@ export function useAdmin() {
         .from('admin_users')
         .select('*')
         .eq('email', user.email)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned - user is not admin
-          return null;
-        }
         console.error('Error checking admin status:', error);
         return null;
       }
 
-      return data as AdminUser;
+      return data as AdminUser | null;
     },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000, // 5 minutes

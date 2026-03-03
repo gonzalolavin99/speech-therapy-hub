@@ -21,8 +21,10 @@ export default function Planificaciones() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingPlanning, setEditingPlanning] = useState<any>(null);
 
-  const { plannings, isLoading, createPlanning } = usePlannings();
+  const { plannings, isLoading, createPlanning, updatePlanning } = usePlannings();
   const { patients } = usePatients();
 
   const patientOptions = patients.map((p) => ({ id: p.id, name: p.name, diagnosis: p.diagnosis, age: p.age }));
@@ -69,9 +71,19 @@ export default function Planificaciones() {
       total_sessions: parseInt(data.totalSessions),
       frequency: data.frequency,
       session_duration: data.sessionDuration || null,
-      status: "active",
+      status: editingPlanning?.status || "active",
     };
-    createPlanning.mutate(planningData);
+    if (formMode === "edit" && editingPlanning) {
+      updatePlanning.mutate({ id: editingPlanning.id, ...planningData });
+    } else {
+      createPlanning.mutate(planningData);
+    }
+  };
+
+  const handleEditPlanning = (planning: any) => {
+    setEditingPlanning(planning);
+    setFormMode("edit");
+    setIsFormOpen(true);
   };
 
   return (
@@ -85,7 +97,7 @@ export default function Planificaciones() {
               Gestiona las planificaciones de intervención de tus pacientes
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => { setFormMode('create'); setEditingPlanning(null); setIsFormOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Planificación
           </Button>
@@ -104,6 +116,17 @@ export default function Planificaciones() {
 
         {/* Plannings List */}
         <div className="space-y-4">
+          {filteredPlannings.length === 0 && (
+            <div className="bg-card rounded-xl border p-12 text-center">
+              <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+              <p className="text-lg font-medium text-muted-foreground">No hay planificaciones</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">
+                {searchQuery
+                  ? "No se encontraron resultados para tu búsqueda"
+                  : "Crea tu primera planificación de intervención para comenzar"}
+              </p>
+            </div>
+          )}
           {filteredPlannings.map((planning) => (
             <div
               key={planning.id}
@@ -180,58 +203,95 @@ export default function Planificaciones() {
                     </div>
                   </div>
 
-                  {/* Contenidos */}
-                  {planning.contents && (
-                    <div className="mb-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Contenidos a Intervenir</p>
-                      <p className="text-sm text-card-foreground bg-primary/5 rounded-lg p-3 border border-primary/10">{planning.contents}</p>
-                    </div>
-                  )}
-
-                  {/* Objectives Table */}
+                  {/* Objetivo General */}
                   <div className="mb-6 overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                       <thead>
                         <tr className="bg-muted/50">
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivo General</th>
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivos Específicos</th>
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">Objetivos Operacionales</th>
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">
+                            Objetivo General
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td className="p-3 border align-top text-card-foreground">
+                          <td className="p-3 border text-card-foreground">
                             {planning.general_objective}
                           </td>
-                          <td className="p-3 border align-top text-card-foreground">
-                            {planning.specific_objectives ? (
-                              <ul className="space-y-1.5">
-                                {planning.specific_objectives.split('\n').filter(Boolean).map((obj, i) => (
-                                  <li key={i} className="flex gap-2">
-                                    <span className="text-primary font-medium shrink-0">{i + 1}.</span>
-                                    <span>{obj.replace(/^\d+[\.\)\-]\s*/, '')}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <span className="text-muted-foreground italic">Sin registrar</span>
-                            )}
-                          </td>
-                          <td className="p-3 border align-top text-card-foreground">
-                            {planning.operational_objectives ? (
-                              <ul className="space-y-1.5">
-                                {planning.operational_objectives.split('\n').filter(Boolean).map((obj, i) => (
-                                  <li key={i} className="flex gap-2">
-                                    <span className="text-primary font-medium shrink-0">{i + 1}.</span>
-                                    <span>{obj.replace(/^\d+[\.\)\-]\s*/, '')}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <span className="text-muted-foreground italic">Sin registrar</span>
-                            )}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Contenidos */}
+                  <div className="mb-6 overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">
+                            Contenidos
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="p-3 border text-card-foreground">
+                            {(planning.contents || '').split('\n').filter(Boolean).map((c, i) => (
+                              <div key={i} className="flex gap-2 py-0.5">
+                                <span className="text-primary font-medium shrink-0">{i + 1}.</span>
+                                <span>{c.replace(/^\d+[\.\)\-]\s*/, '')}</span>
+                              </div>
+                            ))}
+                            {!(planning.contents || '').trim() && <span className="text-muted-foreground italic">-</span>}
                           </td>
                         </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Objectives Table: Obj. Específico + Obj. Operacional */}
+                  <div className="mb-6 overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider w-[50%]">Objetivo Específico</th>
+                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider w-[50%]">Objetivo Operacional</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const ROW_SEP = '|||';
+                          const specifics = (planning.specific_objectives || '').split('\n').filter(Boolean);
+                          const opRaw = planning.operational_objectives || '';
+                          const opRows = opRaw.includes(ROW_SEP)
+                            ? opRaw.split(ROW_SEP)
+                            : opRaw.split('\n').filter(Boolean);
+                          const maxRows = Math.max(specifics.length, opRows.length, 1);
+                          return Array.from({ length: maxRows }, (_, i) => (
+                            <tr key={i} className="border-b last:border-b-0">
+                              <td className="p-3 border align-top text-card-foreground">
+                                {specifics[i] ? (
+                                  <span className="flex gap-2">
+                                    <span className="text-primary font-medium shrink-0">{i + 1}.</span>
+                                    <span>{specifics[i].replace(/^\d+[\.\)\-]\s*/, '')}</span>
+                                  </span>
+                                ) : <span className="text-muted-foreground italic">-</span>}
+                              </td>
+                              <td className="p-3 border align-top text-card-foreground">
+                                {(opRows[i] || '').trim() ? (
+                                  <div className="space-y-0.5">
+                                    {opRows[i].trim().split('\n').filter(Boolean).map((op, j) => (
+                                      <div key={j} className="flex gap-2">
+                                        <span className="text-muted-foreground shrink-0 text-xs">{String.fromCharCode(97 + j)})</span>
+                                        <span>{op.replace(/^\d+[\.\)\-]\s*/, '').replace(/^[a-z]\)\s*/, '')}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : <span className="text-muted-foreground italic">-</span>}
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
                   </div>
@@ -248,7 +308,7 @@ export default function Planificaciones() {
                     <Button variant="outline" size="sm">
                       Ver Sesiones
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleEditPlanning(planning)}>
                       Editar Planificación
                     </Button>
                     <Button size="sm" className="bg-primary hover:bg-primary/90">
@@ -267,7 +327,21 @@ export default function Planificaciones() {
         onOpenChange={setIsFormOpen}
         onSubmit={handleFormSubmit}
         patients={patientOptions}
-        mode="create"
+        mode={formMode}
+        initialData={editingPlanning ? {
+          patientId: editingPlanning.patient_id,
+          interventionApproach: editingPlanning.intervention_approach,
+          method: editingPlanning.method,
+          modality: editingPlanning.modality === 'group' ? 'grupal' as const : 'individual' as const,
+          contents: editingPlanning.contents || '',
+          generalObjective: editingPlanning.general_objective,
+          specificObjectives: editingPlanning.specific_objectives || '',
+          operationalObjectives: editingPlanning.operational_objectives || '',
+          generalPlan: editingPlanning.general_plan || '',
+          totalSessions: editingPlanning.total_sessions,
+          frequency: editingPlanning.frequency,
+          sessionDuration: editingPlanning.session_duration || 45,
+        } : undefined}
       />
     </AppLayout>
   );

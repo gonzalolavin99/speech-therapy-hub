@@ -9,6 +9,7 @@ import {
   User,
   Info,
   Shield,
+  BarChart3,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const moreNav = [
   { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
   { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
   { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
+  { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },
   { name: "Legal", href: "/legal", icon: Info, adminOnly: false },
 ];
 
