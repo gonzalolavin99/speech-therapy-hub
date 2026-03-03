@@ -23,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { isCollapsed } = useSidebar();
   const isMobile = useIsMobile();
   const { isAdmin } = useAdmin();
-  const { showTour, completeTour } = useTour(user?.id);
+  const { showTour, completeTour } = useTour(user?.id, profile?.tour_completed);
   
   // Activar timeout de sesión por inactividad
   useSessionTimeout();

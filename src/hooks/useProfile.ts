@@ -21,6 +21,7 @@ export interface ProfessionalProfile {
   session_price: number;
   evaluation_price: number;
   onboarding_completed: boolean;
+  tour_completed: boolean;
   profession: ProfessionId;
   approved: boolean;
   created_at: string;
