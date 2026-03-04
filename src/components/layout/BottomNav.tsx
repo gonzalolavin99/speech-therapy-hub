@@ -18,6 +18,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useClinic } from "@/hooks/useClinic";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ReminderPanel } from "@/components/reminders/ReminderPanel";
@@ -31,23 +33,30 @@ const mainNav = [
 ];
 
 const moreNav = [
-  { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
-  { name: "Planes", href: "/planes", icon: Crown, adminOnly: false },
-  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false },
-  { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
-  { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
-  { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },
-  { name: "Usuarios", href: "/admin/users", icon: UserCheck, adminOnly: true },
-  { name: "Legal", href: "/legal", icon: Info, adminOnly: false },
+  { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false, clinicOnly: false },
+  { name: "Planes", href: "/planes", icon: Crown, adminOnly: false, clinicOnly: false },
+  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false, clinicOnly: true },
+  { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false, clinicOnly: false },
+  { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true, clinicOnly: false },
+  { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true, clinicOnly: false },
+  { name: "Usuarios", href: "/admin/users", icon: UserCheck, adminOnly: true, clinicOnly: false },
+  { name: "Legal", href: "/legal", icon: Info, adminOnly: false, clinicOnly: false },
 ];
 
 export function BottomNav() {
   const location = useLocation();
   const { signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isClinicMember, pendingInvitations } = useClinic();
+  const { effectivePlan } = useSubscription();
+  const showClinic = isClinicMember || pendingInvitations.length > 0 || effectivePlan === 'clinic' || effectivePlan === 'vip' || isAdmin;
   const [showMore, setShowMore] = useState(false);
 
-  const filteredMoreNav = moreNav.filter(item => !item.adminOnly || isAdmin);
+  const filteredMoreNav = moreNav.filter(item => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.clinicOnly && !showClinic) return false;
+    return true;
+  });
 
   const isMoreActive = filteredMoreNav.some(item => location.pathname === item.href);
 

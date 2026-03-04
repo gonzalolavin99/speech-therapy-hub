@@ -31,6 +31,9 @@ import {
   CreditCard,
   AlertTriangle,
   Sparkles,
+  Building,
+  Users,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,6 +43,22 @@ import { getProfessionConfig } from "@/config/professions";
 import type { ProfessionId } from "@/config/professions";
 import type { PlanId, Subscription } from "@/config/subscriptions";
 import { getTrialDaysRemaining, formatPriceCLP } from "@/config/subscriptions";
+
+interface ClinicInfo {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+}
+
+interface ClinicMemberInfo {
+  id: string;
+  clinic_id: string;
+  user_id: string | null;
+  email: string;
+  role: 'clinic_admin' | 'member';
+  status: 'invited' | 'active' | 'suspended' | 'removed';
+}
 
 interface UserProfile {
   id: string;
@@ -54,6 +73,8 @@ interface UserProfile {
   created_at: string;
   email?: string;
   subscription?: Subscription | null;
+  clinicMember?: ClinicMemberInfo | null;
+  clinic?: ClinicInfo | null;
 }
 
 const PLAN_LABELS: Record<PlanId, string> = {
@@ -88,19 +109,23 @@ export default function AdminUsers() {
   const [editPlan, setEditPlan] = useState<PlanId>("free");
   const [editNotes, setEditNotes] = useState("");
   const [editTrialDays, setEditTrialDays] = useState("");
+  const [editClinicRole, setEditClinicRole] = useState<string>("none");
+  const [editClinicId, setEditClinicId] = useState<string>("");
   const queryClient = useQueryClient();
 
   // Fetch profiles + emails + subscriptions
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const [profilesRes, emailsRes, subsRes] = await Promise.all([
+      const [profilesRes, emailsRes, subsRes, clinicsRes, membersRes] = await Promise.all([
         supabase
           .from("professional_profiles")
           .select("id, user_id, full_name, profession, institution, city, specialties, approved, onboarding_completed, created_at")
           .order("created_at", { ascending: false }),
         supabase.rpc("get_user_emails"),
         supabase.from("subscriptions").select("*"),
+        supabase.from("clinics").select("id, name, slug, owner_id"),
+        supabase.from("clinic_members").select("id, clinic_id, user_id, email, role, status").neq("status", "removed"),
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
@@ -119,11 +144,28 @@ export default function AdminUsers() {
         );
       }
 
-      return (profilesRes.data as UserProfile[]).map((p) => ({
-        ...p,
-        email: emailMap.get(p.user_id) || undefined,
-        subscription: subsMap.get(p.user_id) || null,
-      }));
+      const clinicsMap = new Map<string, ClinicInfo>();
+      if (!clinicsRes.error && clinicsRes.data) {
+        (clinicsRes.data as ClinicInfo[]).forEach((c) => clinicsMap.set(c.id, c));
+      }
+
+      const membersByUser = new Map<string, ClinicMemberInfo>();
+      if (!membersRes.error && membersRes.data) {
+        (membersRes.data as ClinicMemberInfo[]).forEach((m) => {
+          if (m.user_id) membersByUser.set(m.user_id, m);
+        });
+      }
+
+      return (profilesRes.data as UserProfile[]).map((p) => {
+        const cm = membersByUser.get(p.user_id) || null;
+        return {
+          ...p,
+          email: emailMap.get(p.user_id) || undefined,
+          subscription: subsMap.get(p.user_id) || null,
+          clinicMember: cm,
+          clinic: cm ? clinicsMap.get(cm.clinic_id) || null : null,
+        };
+      });
     },
   });
 
@@ -185,11 +227,75 @@ export default function AdminUsers() {
     },
   });
 
+  // Fetch clinics for the clinic assignment dropdown
+  const { data: allClinics = [] } = useQuery({
+    queryKey: ["admin-clinics"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clinics").select("id, name, slug, owner_id");
+      if (error) return [];
+      return data as ClinicInfo[];
+    },
+  });
+
+  // Clinic membership mutation
+  const clinicMemberMutation = useMutation({
+    mutationFn: async (params: { userId: string; email: string; clinicId: string | null; role: string }) => {
+      if (!params.clinicId || params.role === 'none') {
+        // Remove from clinic — delete existing membership
+        const { error } = await supabase
+          .from('clinic_members')
+          .update({ status: 'removed' })
+          .eq('user_id', params.userId);
+        if (error) throw error;
+      } else {
+        // Check if already in a clinic
+        const { data: existing } = await supabase
+          .from('clinic_members')
+          .select('id')
+          .eq('user_id', params.userId)
+          .in('status', ['active', 'invited'])
+          .single();
+
+        if (existing) {
+          // Update existing
+          const { error } = await supabase
+            .from('clinic_members')
+            .update({ clinic_id: params.clinicId, role: params.role, status: 'active' })
+            .eq('user_id', params.userId)
+            .in('status', ['active', 'invited']);
+          if (error) throw error;
+        } else {
+          // Insert new
+          const { error } = await supabase
+            .from('clinic_members')
+            .insert({
+              clinic_id: params.clinicId,
+              user_id: params.userId,
+              email: params.email,
+              role: params.role,
+              status: 'active',
+              joined_at: new Date().toISOString(),
+            });
+          if (error) throw error;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast.success('Membresía de clínica actualizada');
+    },
+    onError: (error: Error) => {
+      toast.error('Error al actualizar clínica', { description: error.message });
+    },
+  });
+
   const openEditPlan = (profile: UserProfile) => {
     setEditingUser(profile);
     setEditPlan(profile.subscription?.plan || "free");
     setEditNotes(profile.subscription?.admin_notes || "");
     setEditTrialDays("30");
+    setEditClinicRole(profile.clinicMember?.role || 'none');
+    setEditClinicId(profile.clinicMember?.clinic_id || '');
   };
 
   const handleSavePlan = () => {
@@ -201,6 +307,18 @@ export default function AdminUsers() {
       notes: editNotes,
       trialDays: needsDays ? parseInt(editTrialDays) || 30 : undefined,
     });
+
+    // Also update clinic membership if changed
+    const currentClinicRole = editingUser.clinicMember?.role || 'none';
+    const currentClinicId = editingUser.clinicMember?.clinic_id || '';
+    if (editClinicRole !== currentClinicRole || editClinicId !== currentClinicId) {
+      clinicMemberMutation.mutate({
+        userId: editingUser.user_id,
+        email: editingUser.email || '',
+        clinicId: editClinicRole === 'none' ? null : editClinicId,
+        role: editClinicRole,
+      });
+    }
   };
 
   // Filtering
@@ -323,6 +441,7 @@ export default function AdminUsers() {
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesión</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Clínica</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Estado</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Acciones</th>
               </tr>
@@ -330,7 +449,7 @@ export default function AdminUsers() {
             <tbody>
               {filteredProfiles.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center">
+                  <td colSpan={7} className="p-8 text-center">
                     <UserCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm font-medium text-muted-foreground">No hay usuarios que mostrar</p>
                   </td>
@@ -359,6 +478,26 @@ export default function AdminUsers() {
                     </td>
                     <td className="p-4">
                       {getPlanBadge(profile.subscription)}
+                    </td>
+                    <td className="p-4">
+                      {profile.clinicMember && profile.clinic ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                            profile.clinicMember.role === 'clinic_admin'
+                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                              : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                          )}>
+                            {profile.clinicMember.role === 'clinic_admin' ? <Shield className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                            {profile.clinicMember.role === 'clinic_admin' ? 'Admin' : 'Miembro'}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[80px]" title={profile.clinic.name}>
+                            {profile.clinic.name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="p-4">
                       {!profile.onboarding_completed ? (
@@ -485,6 +624,48 @@ export default function AdminUsers() {
               </p>
             )}
 
+            {/* Clinic Membership */}
+            <div className="space-y-2 border-t pt-4">
+              <Label className="flex items-center gap-2">
+                <Building className="h-4 w-4" />
+                Membresía de Clínica
+              </Label>
+              <Select value={editClinicRole} onValueChange={(v) => setEditClinicRole(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin clínica</SelectItem>
+                  <SelectItem value="clinic_admin">Admin de Clínica</SelectItem>
+                  <SelectItem value="member">Miembro de Clínica</SelectItem>
+                </SelectContent>
+              </Select>
+              {editClinicRole !== "none" && (
+                <div className="space-y-2">
+                  <Label>Clínica</Label>
+                  {allClinics.length > 0 ? (
+                    <Select value={editClinicId} onValueChange={(v) => setEditClinicId(v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar clínica" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allClinics.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No hay clínicas creadas aún</p>
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {editClinicRole === "clinic_admin" && "Podrá gestionar miembros e invitar profesionales"}
+                {editClinicRole === "member" && "Heredará el plan de la clínica a la que pertenece"}
+                {editClinicRole === "none" && "El usuario usará su propio plan individual"}
+              </p>
+            </div>
+
             {/* Admin notes */}
             <div className="space-y-2">
               <Label>Notas (opcional)</Label>
@@ -498,10 +679,10 @@ export default function AdminUsers() {
 
             <Button
               onClick={handleSavePlan}
-              disabled={changePlanMutation.isPending}
+              disabled={changePlanMutation.isPending || clinicMemberMutation.isPending}
               className="w-full"
             >
-              {changePlanMutation.isPending ? "Guardando..." : "Guardar cambios"}
+              {(changePlanMutation.isPending || clinicMemberMutation.isPending) ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </DialogContent>

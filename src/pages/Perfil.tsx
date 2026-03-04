@@ -16,6 +16,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useUsage } from "@/hooks/useUsage";
 import { usePatients } from "@/hooks/usePatients";
 import { usePlannings } from "@/hooks/usePlannings";
+import { useClinic } from "@/hooks/useClinic";
 import { formatPriceCLP } from "@/config/subscriptions";
 import type { PlanId, FeatureId } from "@/config/subscriptions";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +28,8 @@ export default function Perfil() {
   const { config: profConfig } = useProfession();
   const { resetTour } = useTour(user?.id);
   const navigate = useNavigate();
-  const { subscription, limits, effectivePlan, trialDaysRemaining, trialExpired, isLoading: subLoading } = useSubscription();
+  const { subscription, limits, effectivePlan, isClinicPlan, trialDaysRemaining, trialExpired, isLoading: subLoading } = useSubscription();
+  const { clinic, isClinicMember, isClinicAdmin } = useClinic();
   const { usage } = useUsage();
   const { patients } = usePatients();
   const { plannings } = usePlannings();
@@ -300,6 +302,11 @@ export default function Perfil() {
                 {(subscription?.status === 'suspended' || subscription?.status === 'canceled') && (
                   <span className="inline-flex items-center gap-1 text-xs text-destructive font-medium">
                     <XCircle className="h-3.5 w-3.5" /> {subscription.status === 'suspended' ? 'Suspendido' : 'Cancelado'}
+                  </span>
+                )}
+                {isClinicPlan && clinic && (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 rounded-full">
+                    <Building className="h-3.5 w-3.5" /> Vía {clinic.name}
                   </span>
                 )}
               </div>

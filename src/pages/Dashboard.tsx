@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { Session } from "@/hooks/useSessions";
 import { generateProgressAnalysis, isAIConfigured } from "@/lib/ai-service";
 import { TrialBanner } from "@/components/subscription/TrialBanner";
+import { ClinicInviteBanner } from "@/components/clinic/ClinicInviteBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
@@ -268,8 +269,9 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Trial Banner */}
+        {/* Banners */}
         <TrialBanner />
+        <ClinicInviteBanner />
 
         {/* Stats Grid with Reminders */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

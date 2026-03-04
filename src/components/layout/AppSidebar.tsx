@@ -23,22 +23,24 @@ import { ReminderPanel } from "@/components/reminders/ReminderPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useClinic } from "@/hooks/useClinic";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const navigation = [
-  { name: "Calendario", href: "/", icon: Calendar, adminOnly: false },
-  { name: "Pacientes", href: "/pacientes", icon: Users, adminOnly: false },
-  { name: "Tests", href: "/tests", icon: ClipboardList, adminOnly: false },
-  { name: "Planificaciones", href: "/planificaciones", icon: FileText, adminOnly: false },
-  { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
-  { name: "Planes", href: "/planes", icon: Crown, adminOnly: false },
-  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false },
-  { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
-  { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
-  { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },
-  { name: "Usuarios", href: "/admin/users", icon: UserCheck, adminOnly: true },
-  { name: "Legal", href: "/legal", icon: Info, adminOnly: false },
+  { name: "Calendario", href: "/", icon: Calendar, adminOnly: false, clinicOnly: false },
+  { name: "Pacientes", href: "/pacientes", icon: Users, adminOnly: false, clinicOnly: false },
+  { name: "Tests", href: "/tests", icon: ClipboardList, adminOnly: false, clinicOnly: false },
+  { name: "Planificaciones", href: "/planificaciones", icon: FileText, adminOnly: false, clinicOnly: false },
+  { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false, clinicOnly: false },
+  { name: "Planes", href: "/planes", icon: Crown, adminOnly: false, clinicOnly: false },
+  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false, clinicOnly: true },
+  { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false, clinicOnly: false },
+  { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true, clinicOnly: false },
+  { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true, clinicOnly: false },
+  { name: "Usuarios", href: "/admin/users", icon: UserCheck, adminOnly: true, clinicOnly: false },
+  { name: "Legal", href: "/legal", icon: Info, adminOnly: false, clinicOnly: false },
 ];
 
 export function AppSidebar() {
@@ -46,8 +48,15 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { isCollapsed, toggle } = useSidebar();
   const { isAdmin } = useAdmin();
+  const { isClinicMember, pendingInvitations } = useClinic();
+  const { effectivePlan } = useSubscription();
+  const showClinic = isClinicMember || pendingInvitations.length > 0 || effectivePlan === 'clinic' || effectivePlan === 'vip' || isAdmin;
 
-  const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
+  const filteredNavigation = navigation.filter(item => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.clinicOnly && !showClinic) return false;
+    return true;
+  });
 
   return (
     <aside 
