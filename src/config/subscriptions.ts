@@ -18,6 +18,7 @@ export interface PlanLimits {
   max_sessions_per_month: number;
   max_plannings: number;
   max_ai_requests_per_month: number;
+  max_members: number;
   available_tests: string[];
   features: FeatureId[];
   price_monthly: number;

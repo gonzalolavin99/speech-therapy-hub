@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bell, Send, MessageCircle, Mail, Check, Clock, X, Loader2, Trash2 } from "lucide-react";
+import { useProfession } from "@/contexts/ProfessionContext";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +27,8 @@ import { usePatients } from "@/hooks/usePatients";
 export function ReminderPanel() {
   const { reminders, isLoading, createReminder, updateReminder, deleteReminder, markAsSent } = useReminders();
   const { patients } = usePatients();
+  const { config: profConfig } = useProfession();
+  const sessionLabel = profConfig.id === 'psicologo' ? 'psicología' : 'fonoaudiología';
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [newReminder, setNewReminder] = useState<{
@@ -39,7 +42,7 @@ export function ReminderPanel() {
     sessionDate: "",
     sessionTime: "",
     method: "whatsapp",
-    message: "Hola {nombre}, te recordamos tu cita de fonoaudiología el día {fecha} a las {hora}. ¿Confirmas tu asistencia?",
+    message: `Hola {nombre}, te recordamos tu cita de ${sessionLabel} el día {fecha} a las {hora}. ¿Confirmas tu asistencia?`,
   });
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
@@ -62,7 +65,7 @@ export function ReminderPanel() {
 
   const sendWhatsAppReminder = (reminder: Reminder) => {
     const message = encodeURIComponent(
-      `Hola ${reminder.patient_name}, te recordamos tu cita de fonoaudiología el día ${reminder.session_date} a las ${reminder.session_time}. ¿Confirmas tu asistencia? Responde SÍ o NO.`
+      `Hola ${reminder.patient_name}, te recordamos tu cita de ${sessionLabel} el día ${reminder.session_date} a las ${reminder.session_time}. ¿Confirmas tu asistencia? Responde SÍ o NO.`
     );
     const phone = reminder.contact.replace(/\D/g, "");
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
@@ -73,7 +76,7 @@ export function ReminderPanel() {
   const sendEmailReminder = (reminder: Reminder) => {
     const subject = encodeURIComponent(`Recordatorio de cita - ${reminder.session_date}`);
     const body = encodeURIComponent(
-      `Estimado/a ${reminder.patient_name},\n\nLe recordamos su cita de fonoaudiología programada para el día ${reminder.session_date} a las ${reminder.session_time}.\n\nPor favor confirme su asistencia respondiendo a este correo.\n\nSaludos cordiales,\nFonoApp`
+      `Estimado/a ${reminder.patient_name},\n\nLe recordamos su cita de ${sessionLabel} programada para el día ${reminder.session_date} a las ${reminder.session_time}.\n\nPor favor confirme su asistencia respondiendo a este correo.\n\nSaludos cordiales,\nTherapyHub`
     );
     window.open(`mailto:${reminder.contact}?subject=${subject}&body=${body}`, "_blank");
     
@@ -117,7 +120,7 @@ export function ReminderPanel() {
           sessionDate: "",
           sessionTime: "",
           method: "whatsapp",
-          message: "Hola {nombre}, te recordamos tu cita de fonoaudiología el día {fecha} a las {hora}. ¿Confirmas tu asistencia?",
+          message: `Hola {nombre}, te recordamos tu cita de ${sessionLabel} el día {fecha} a las {hora}. ¿Confirmas tu asistencia?`,
         });
       }
     });

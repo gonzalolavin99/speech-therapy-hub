@@ -1,4 +1,5 @@
 import { Bell, Clock, Check, MessageCircle, Mail, ChevronRight, Plus, Trash2, Send, CheckCircle, X, Loader2 } from "lucide-react";
+import { useProfession } from "@/contexts/ProfessionContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ export function ReminderWidget() {
   const { reminders, isLoading: remindersLoading, markAsSent, createReminder, updateReminder, deleteReminder } = useReminders();
   const { tasks, isLoading: tasksLoading, createTask, toggleTask, deleteTask } = useTasks();
   const { patients } = usePatients();
+  const { config: profConfig } = useProfession();
+  const sessionLabel = profConfig.id === 'psicologo' ? 'psicología' : 'fonoaudiología';
   const [showFullPanel, setShowFullPanel] = useState(false);
   const [activeTab, setActiveTab] = useState("citas");
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
@@ -49,7 +52,7 @@ export function ReminderWidget() {
   const openSendModal = (reminder: Reminder) => {
     setSendModalReminder(reminder);
     setSendMethod("whatsapp");
-    setSendMessage(`Hola ${reminder.patient_name}, te recordamos tu cita de fonoaudiología el día ${reminder.session_date} a las ${reminder.session_time}. ¿Confirmas tu asistencia?`);
+    setSendMessage(`Hola ${reminder.patient_name}, te recordamos tu cita de ${sessionLabel} el día ${reminder.session_date} a las ${reminder.session_time}. ¿Confirmas tu asistencia?`);
   };
 
   const handleSendMessage = () => {

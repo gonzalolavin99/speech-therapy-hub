@@ -49,9 +49,9 @@ export default function Legal() {
               <CardContent className="prose prose-sm max-w-none">
                 <h3>¿Qué es TherapyHub?</h3>
                 <p>
-                  TherapyHub es una plataforma digital diseñada específicamente para profesionales 
-                  de la fonoaudiología. Nuestra misión es simplificar la gestión clínica, 
-                  permitiendo a los terapeutas enfocarse en lo más importante: sus pacientes.
+                  TherapyHub es una plataforma digital diseñada para profesionales 
+                  de la salud (fonoaudiólogos, psicólogos y más). Nuestra misión es simplificar la gestión clínica, 
+                  permitiendo a los profesionales enfocarse en lo más importante: sus pacientes.
                 </p>
 
                 <h3>Características Principales</h3>
@@ -172,7 +172,7 @@ export default function Legal() {
                 <h3>2. Descripción del Servicio</h3>
                 <p>
                   TherapyHub es una herramienta de gestión clínica para profesionales de la 
-                  fonoaudiología. El servicio incluye gestión de pacientes, evaluaciones, 
+                  salud. El servicio incluye gestión de pacientes, evaluaciones, 
                   planificaciones y agenda.
                 </p>
 
@@ -246,7 +246,7 @@ export default function Legal() {
                 <ul>
                   <li>Ley 19.628 sobre Protección de la Vida Privada (Chile)</li>
                   <li>Ley 20.584 sobre Derechos y Deberes de los Pacientes</li>
-                  <li>Normas éticas del Colegio de Fonoaudiólogos de Chile</li>
+                  <li>Normas éticas de los colegios profesionales correspondientes</li>
                 </ul>
 
                 <h3>2. Datos Sensibles de Salud</h3>

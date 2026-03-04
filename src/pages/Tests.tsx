@@ -440,7 +440,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'mbgr'} onOpenChange={() => activeTest === 'mbgr' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>Protocolo MBGR</DialogTitle>
           </DialogHeader>
@@ -453,7 +453,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'mmbgr-lactantes'} onOpenChange={() => activeTest === 'mmbgr-lactantes' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>Protocolo MMBGR - Lactantes</DialogTitle>
           </DialogHeader>
@@ -466,7 +466,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'tar'} onOpenChange={() => activeTest === 'tar' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>TAR Abreviado</DialogTitle>
           </DialogHeader>
@@ -479,7 +479,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'teprosif'} onOpenChange={() => activeTest === 'teprosif' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>TEPROSIF-R</DialogTitle>
           </DialogHeader>
@@ -493,7 +493,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'reel-3'} onOpenChange={() => activeTest === 'reel-3' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>REEL-3</DialogTitle>
           </DialogHeader>
@@ -506,7 +506,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'phq-9'} onOpenChange={() => activeTest === 'phq-9' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>PHQ-9</DialogTitle>
           </DialogHeader>
@@ -519,7 +519,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'gad-7'} onOpenChange={() => activeTest === 'gad-7' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>GAD-7</DialogTitle>
           </DialogHeader>
@@ -532,7 +532,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'psc-17'} onOpenChange={() => activeTest === 'psc-17' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>PSC-17</DialogTitle>
           </DialogHeader>
@@ -545,7 +545,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'asrs'} onOpenChange={() => activeTest === 'asrs' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>ASRS v1.1</DialogTitle>
           </DialogHeader>
@@ -558,7 +558,7 @@ export default function Tests() {
       </Dialog>
 
       <Dialog open={activeTest === 'snap-iv'} onOpenChange={() => activeTest === 'snap-iv' && handleTestCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>SNAP-IV</DialogTitle>
           </DialogHeader>
@@ -928,7 +928,7 @@ export default function Tests() {
                       )}
 
                       <p className="text-[10px] text-muted-foreground italic text-center">
-                        Sugerencia generada por IA. Debe ser validada por el profesional fonoaudiólogo.
+                        Sugerencia generada por IA. Debe ser validada por el profesional {professionId === 'psicologo' ? 'psicólogo' : 'fonoaudiólogo'}.
                       </p>
 
                       <Button

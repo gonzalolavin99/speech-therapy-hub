@@ -15,6 +15,7 @@ import {
   BarChart3,
   UserCheck,
   Crown,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -32,6 +33,7 @@ const navigation = [
   { name: "Planificaciones", href: "/planificaciones", icon: FileText, adminOnly: false },
   { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
   { name: "Planes", href: "/planes", icon: Crown, adminOnly: false },
+  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false },
   { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
   { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
   { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },

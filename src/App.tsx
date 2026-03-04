@@ -25,6 +25,7 @@ const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const AdminInsights = lazy(() => import("./pages/AdminInsights"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const Planes = lazy(() => import("./pages/Planes"));
+const Clinica = lazy(() => import("./pages/Clinica"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/insights" element={<AdminRoute><AdminInsights /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/planes" element={<ProtectedRoute><Planes /></ProtectedRoute>} />
+              <Route path="/clinica" element={<ProtectedRoute><Clinica /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

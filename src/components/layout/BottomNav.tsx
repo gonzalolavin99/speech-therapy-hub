@@ -13,6 +13,7 @@ import {
   UserCheck,
   LogOut,
   Crown,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +33,7 @@ const mainNav = [
 const moreNav = [
   { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false },
   { name: "Planes", href: "/planes", icon: Crown, adminOnly: false },
+  { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false },
   { name: "Mi Perfil", href: "/perfil", icon: User, adminOnly: false },
   { name: "Auditoría", href: "/auditoria", icon: Shield, adminOnly: true },
   { name: "Insights", href: "/insights", icon: BarChart3, adminOnly: true },

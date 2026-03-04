@@ -13,6 +13,7 @@ import { isTrialExpired, isGiftExpired, getTrialDaysRemaining, planHasFeature } 
 export function useSubscription() {
   const { user } = useAuth();
 
+  // Own subscription
   const query = useQuery({
     queryKey: ['subscription', user?.id],
     queryFn: async (): Promise<SubscriptionWithLimits | null> => {
@@ -28,8 +29,33 @@ export function useSubscription() {
     enabled: !!user,
   });
 
-  const subscription = query.data?.subscription ?? null;
-  const limits = query.data?.limits ?? null;
+  // Clinic subscription (if user is a clinic member)
+  const clinicQuery = useQuery({
+    queryKey: ['clinic-subscription', user?.id],
+    queryFn: async (): Promise<SubscriptionWithLimits | null> => {
+      if (!user) return null;
+
+      const { data, error } = await supabase.rpc('get_clinic_subscription');
+
+      if (error) return null; // Not a clinic member — not an error
+      if (!data) return null;
+
+      return data as SubscriptionWithLimits;
+    },
+    enabled: !!user,
+  });
+
+  // Use clinic subscription if it exists and is better than own
+  const ownSub = query.data ?? null;
+  const clinicSub = clinicQuery.data ?? null;
+
+  const useClinicPlan = clinicSub?.subscription?.status === 'active'
+    && clinicSub?.subscription?.plan
+    && !isGiftExpired(clinicSub.subscription);
+
+  const subscription = useClinicPlan ? clinicSub!.subscription : (ownSub?.subscription ?? null);
+  const limits = useClinicPlan ? clinicSub!.limits : (ownSub?.limits ?? null);
+  const isClinicPlan = !!useClinicPlan;
 
   // If trial/gift expired, treat as free plan for enforcement
   const effectivePlan: PlanId = (() => {
@@ -89,11 +115,12 @@ export function useSubscription() {
     subscription,
     limits,
     effectivePlan,
+    isClinicPlan,
     trialDaysRemaining,
     trialExpired,
     hasFeature,
     canCreate,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || clinicQuery.isLoading,
     error: query.error,
   };
 }

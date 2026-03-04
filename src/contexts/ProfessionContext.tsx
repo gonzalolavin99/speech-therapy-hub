@@ -19,9 +19,10 @@ export function ProfessionProvider({ children }: { children: ReactNode }) {
   const isApproved = profile?.approved ?? false;
 
   // Sync AI system prompt with current profession
+  const profLabel = config.id === 'psicologo' ? 'psicólogo' : 'fonoaudiólogo';
   useEffect(() => {
-    setAISystemPrompt(config.aiSystemPrompt);
-  }, [config.aiSystemPrompt]);
+    setAISystemPrompt(config.aiSystemPrompt, profLabel);
+  }, [config.aiSystemPrompt, profLabel]);
 
   return (
     <ProfessionContext.Provider value={{ config, professionId, isApproved }}>

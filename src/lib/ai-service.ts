@@ -54,9 +54,15 @@ Tus sugerencias son clínicamente fundamentadas y adaptadas al contexto chileno.
 IMPORTANTE: Tus sugerencias son orientativas y deben ser validadas por el profesional fonoaudiólogo.`;
 
 let _professionSystemPrompt: string | null = null;
+let _professionLabel: string = 'fonoaudiólogo';
 
-export function setAISystemPrompt(prompt: string) {
+export function setAISystemPrompt(prompt: string, professionLabel?: string) {
   _professionSystemPrompt = prompt;
+  if (professionLabel) _professionLabel = professionLabel;
+}
+
+export function getProfessionLabel(): string {
+  return _professionLabel;
 }
 
 function getSystemPrompt(): string {
@@ -82,7 +88,10 @@ export async function analyzeTestResults(
 ): Promise<TestDiagnosisResult> {
   const testContext = buildTestContext(testType, testResults);
 
-  const prompt = `Analiza los siguientes resultados de un test fonoaudiológico y proporciona un análisis clínico completo.
+  const profLabel = _professionLabel;
+  const testDomain = profLabel === 'psicólogo' ? 'psicológico' : 'fonoaudiológico';
+
+  const prompt = `Analiza los siguientes resultados de un test ${testDomain} y proporciona un análisis clínico completo.
 
 DATOS DEL PACIENTE:
 - Nombre: ${patientName}
@@ -101,7 +110,7 @@ Responde ESTRICTAMENTE en el siguiente formato JSON (sin markdown, solo JSON pur
   "therapySuggestions": ["sugerencia terapéutica 1", "sugerencia 2", "sugerencia 3"],
   "recommendedApproach": "Enfoque de intervención recomendado (ej: Enfoque fonológico, Terapia miofuncional, etc.)",
   "priorityAreas": ["área prioritaria 1", "área 2"],
-  "additionalRecommendations": "Recomendaciones adicionales para el fonoaudiólogo"
+  "additionalRecommendations": "Recomendaciones adicionales para el ${profLabel}"
 }`;
 
   const response = await getAICompletion({
