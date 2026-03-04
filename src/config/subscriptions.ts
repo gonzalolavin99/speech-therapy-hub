@@ -71,6 +71,14 @@ export function isTrialExpired(subscription: Subscription | null): boolean {
   return new Date(subscription.trial_ends_at) < new Date();
 }
 
+// Check if a temporal gift plan has expired (professional/clinic with trial_ends_at)
+export function isGiftExpired(subscription: Subscription | null): boolean {
+  if (!subscription) return false;
+  if (subscription.plan === 'vip' || subscription.plan === 'free') return false;
+  if (!subscription.current_period_end) return false;
+  return new Date(subscription.current_period_end) < new Date();
+}
+
 // Get days remaining in trial
 export function getTrialDaysRemaining(subscription: Subscription | null): number | null {
   if (!subscription || subscription.plan !== 'trial' || !subscription.trial_ends_at) return null;

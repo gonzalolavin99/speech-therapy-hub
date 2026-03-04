@@ -158,8 +158,10 @@ export default function AdminUsers() {
       notes?: string;
       trialDays?: number;
     }) => {
-      const trialEndsAt = plan === "trial" && trialDays
-        ? new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString()
+      // Calculate expiry for trial, professional gift, and clinic gift
+      const needsExpiry = ["trial", "professional", "clinic"].includes(plan) && trialDays;
+      const trialEndsAt = needsExpiry
+        ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
         : null;
 
       const { data, error } = await supabase.rpc("admin_update_subscription", {
@@ -192,11 +194,12 @@ export default function AdminUsers() {
 
   const handleSavePlan = () => {
     if (!editingUser) return;
+    const needsDays = ["trial", "professional", "clinic"].includes(editPlan);
     changePlanMutation.mutate({
       userId: editingUser.user_id,
       plan: editPlan,
       notes: editNotes,
-      trialDays: editPlan === "trial" ? parseInt(editTrialDays) || 30 : undefined,
+      trialDays: needsDays ? parseInt(editTrialDays) || 30 : undefined,
     });
   };
 
@@ -448,26 +451,38 @@ export default function AdminUsers() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="free">Free — $0</SelectItem>
-                  <SelectItem value="trial">Trial (30 días)</SelectItem>
-                  <SelectItem value="professional">Profesional — {formatPriceCLP(9990)}/mes</SelectItem>
-                  <SelectItem value="clinic">Clínica — {formatPriceCLP(24990)}/mes</SelectItem>
-                  <SelectItem value="vip">VIP — Acceso completo gratuito</SelectItem>
+                  <SelectItem value="trial">Trial (temporal)</SelectItem>
+                  <SelectItem value="professional">Profesional — regalo temporal</SelectItem>
+                  <SelectItem value="clinic">Clínica — regalo temporal</SelectItem>
+                  <SelectItem value="vip">VIP — Acceso completo permanente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Trial days (only if trial selected) */}
-            {editPlan === "trial" && (
+            {/* Days input for temporal plans */}
+            {["trial", "professional", "clinic"].includes(editPlan) && (
               <div className="space-y-2">
-                <Label>Días de trial</Label>
+                <Label>Días de vigencia</Label>
                 <Input
                   type="number"
                   value={editTrialDays}
                   onChange={(e) => setEditTrialDays(e.target.value)}
                   min={1}
                   max={365}
+                  placeholder="30"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {editPlan === "trial" && "Período de prueba con acceso profesional"}
+                  {editPlan === "professional" && "Acceso Profesional gratuito por tiempo limitado"}
+                  {editPlan === "clinic" && "Acceso Clínica gratuito por tiempo limitado"}
+                </p>
               </div>
+            )}
+
+            {editPlan === "vip" && (
+              <p className="text-xs text-muted-foreground bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-lg p-3">
+                ⚡ Acceso completo sin límites ni fecha de expiración. Ideal para partners y testers.
+              </p>
             )}
 
             {/* Admin notes */}

@@ -8,7 +8,7 @@ import type {
   SubscriptionWithLimits,
   FeatureId,
 } from '@/config/subscriptions';
-import { isTrialExpired, getTrialDaysRemaining, planHasFeature } from '@/config/subscriptions';
+import { isTrialExpired, isGiftExpired, getTrialDaysRemaining, planHasFeature } from '@/config/subscriptions';
 
 export function useSubscription() {
   const { user } = useAuth();
@@ -31,10 +31,11 @@ export function useSubscription() {
   const subscription = query.data?.subscription ?? null;
   const limits = query.data?.limits ?? null;
 
-  // If trial expired, treat as free plan for enforcement
+  // If trial/gift expired, treat as free plan for enforcement
   const effectivePlan: PlanId = (() => {
     if (!subscription) return 'free';
     if (subscription.plan === 'trial' && isTrialExpired(subscription)) return 'free';
+    if (isGiftExpired(subscription)) return 'free';
     if (subscription.status === 'suspended' || subscription.status === 'canceled') return 'free';
     return subscription.plan;
   })();
