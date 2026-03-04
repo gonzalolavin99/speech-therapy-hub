@@ -43,6 +43,7 @@ export function useSubscription() {
       return data as SubscriptionWithLimits;
     },
     enabled: !!user,
+    retry: false,
   });
 
   // Use clinic subscription if it exists and is better than own

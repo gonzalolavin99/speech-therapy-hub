@@ -60,12 +60,13 @@ export function useClinic() {
 
       const { data, error } = await supabase.rpc('get_my_clinic');
 
-      if (error) throw error;
+      if (error) return { clinic: null, membership: null, members: [], pending_invitations: [] };
       if (!data) return { clinic: null, membership: null, members: [], pending_invitations: [] };
 
       return data as ClinicData;
     },
     enabled: !!user,
+    retry: false,
   });
 
   const createClinic = useMutation({
