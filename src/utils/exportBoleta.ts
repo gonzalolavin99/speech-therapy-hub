@@ -420,7 +420,7 @@ export async function exportBoletaHonorariosPDF(data: BoletaHonorariosData) {
     doc.setFont('helvetica', 'bold');
     doc.text('PENDIENTE: Emita esta boleta en el portal del SII', margin + 6, y + 8);
     doc.setFont('helvetica', 'normal');
-    doc.text('https://loa.sii.cl/cgi_IMT/TRBHE_MENU.sh', margin + 6, y + 15);
+    doc.text('https://homer.sii.cl', margin + 6, y + 15);
     y += 28;
   }
 

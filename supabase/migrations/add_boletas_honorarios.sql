@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS boletas_honorarios (
   boleta_number TEXT NOT NULL,
   sii_folio TEXT,
   amount_bruto INTEGER NOT NULL,
-  retencion_percent NUMERIC(5,2) NOT NULL DEFAULT 13.75,
+  retencion_percent NUMERIC(5,2) NOT NULL DEFAULT 15.25,
   retencion_amount INTEGER NOT NULL,
   amount_liquido INTEGER NOT NULL,
   description TEXT NOT NULL,
