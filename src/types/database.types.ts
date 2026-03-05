@@ -200,6 +200,73 @@ export interface Database {
           updated_at?: string
         }
       }
+      boletas_honorarios: {
+        Row: {
+          id: string
+          user_id: string
+          payment_id: string | null
+          patient_id: string | null
+          boleta_number: string
+          sii_folio: string | null
+          amount_bruto: number
+          retencion_percent: number
+          retencion_amount: number
+          amount_liquido: number
+          description: string
+          service_date: string
+          emission_date: string | null
+          status: 'draft' | 'pending_sii' | 'emitted' | 'voided'
+          professional_rut: string | null
+          professional_name: string
+          patient_rut: string | null
+          patient_name: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          payment_id?: string | null
+          patient_id?: string | null
+          boleta_number: string
+          sii_folio?: string | null
+          amount_bruto: number
+          retencion_percent?: number
+          retencion_amount: number
+          amount_liquido: number
+          description: string
+          service_date: string
+          emission_date?: string | null
+          status?: 'draft' | 'pending_sii' | 'emitted' | 'voided'
+          professional_rut?: string | null
+          professional_name: string
+          patient_rut?: string | null
+          patient_name: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          payment_id?: string | null
+          patient_id?: string | null
+          boleta_number?: string
+          sii_folio?: string | null
+          amount_bruto?: number
+          retencion_percent?: number
+          retencion_amount?: number
+          amount_liquido?: number
+          description?: string
+          service_date?: string
+          emission_date?: string | null
+          status?: 'draft' | 'pending_sii' | 'emitted' | 'voided'
+          professional_rut?: string | null
+          professional_name?: string
+          patient_rut?: string | null
+          patient_name?: string
+          notes?: string | null
+        }
+      }
       test_results: {
         Row: {
           id: string
@@ -277,3 +344,7 @@ export type PlanningUpdate = Database['public']['Tables']['plannings']['Update']
 export type TestResult = Database['public']['Tables']['test_results']['Row']
 export type TestResultInsert = Database['public']['Tables']['test_results']['Insert']
 export type TestResultUpdate = Database['public']['Tables']['test_results']['Update']
+
+export type BoletaHonorarios = Database['public']['Tables']['boletas_honorarios']['Row']
+export type BoletaHonorariosInsert = Database['public']['Tables']['boletas_honorarios']['Insert']
+export type BoletaHonorariosUpdate = Database['public']['Tables']['boletas_honorarios']['Update']

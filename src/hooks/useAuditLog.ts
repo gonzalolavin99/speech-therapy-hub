@@ -13,13 +13,14 @@ export type AuditAction =
   | 'CONSENT_SIGNED'
   | 'TEST_COMPLETED';
 
-export type EntityType = 
-  | 'patient' 
-  | 'session' 
-  | 'test' 
-  | 'payment' 
+export type EntityType =
+  | 'patient'
+  | 'session'
+  | 'test'
+  | 'payment'
   | 'consent'
-  | 'user';
+  | 'user'
+  | 'boleta';
 
 interface AuditLogEntry {
   action: AuditAction;
@@ -129,6 +130,7 @@ export function formatEntityType(type: string): string {
     'payment': 'Pago',
     'consent': 'Consentimiento',
     'user': 'Usuario',
+    'boleta': 'Boleta de Honorarios',
   };
   return types[type] || type;
 }

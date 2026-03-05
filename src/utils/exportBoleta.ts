@@ -231,3 +231,236 @@ export function generateBoletaNumber(paymentId: string): string {
   const short = paymentId.slice(0, 6).toUpperCase();
   return `BH-${yy}${mm}-${short}`;
 }
+
+// ── Boleta de Honorarios con desglose de retención ──
+
+interface BoletaHonorariosData {
+  boletaNumber: string;
+  siiFolio?: string | null;
+  professional: {
+    name: string;
+    rut: string | null;
+    address: string | null;
+    city: string | null;
+  };
+  patient: {
+    name: string;
+    rut: string | null;
+  };
+  amountBruto: number;
+  retencionPercent: number;
+  retencionAmount: number;
+  amountLiquido: number;
+  description: string;
+  serviceDate: string;
+  emissionDate: string | null;
+  status: string;
+}
+
+export async function exportBoletaHonorariosPDF(data: BoletaHonorariosData) {
+  const { default: jsPDF } = await import('jspdf');
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 14;
+
+  // ── Header ──
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 50, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.text('BOLETA DE HONORARIOS', margin, 20);
+  doc.setFontSize(11);
+  doc.text(`N° ${data.boletaNumber}`, margin, 30);
+
+  if (data.siiFolio) {
+    doc.setFontSize(10);
+    doc.text(`Folio SII: ${data.siiFolio}`, margin, 38);
+  }
+
+  doc.setFontSize(10);
+  doc.text(`Fecha: ${formatDateCL(data.emissionDate || data.serviceDate)}`, pageWidth - margin, 20, { align: 'right' });
+
+  const statusLabels: Record<string, string> = {
+    draft: 'BORRADOR',
+    pending_sii: 'PENDIENTE EMISION SII',
+    emitted: 'EMITIDA EN SII',
+    voided: 'ANULADA',
+  };
+  doc.setFontSize(9);
+  doc.text(statusLabels[data.status] || data.status.toUpperCase(), pageWidth - margin, 30, { align: 'right' });
+  doc.text('Documento de referencia interna', pageWidth - margin, 38, { align: 'right' });
+
+  // ── Professional Info ──
+  doc.setTextColor(0, 0, 0);
+  let y = 62;
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('EMISOR (Profesional)', margin, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+
+  doc.text(`Nombre: ${data.professional.name}`, margin, y); y += 6;
+  if (data.professional.rut) {
+    doc.text(`RUT: ${data.professional.rut}`, margin, y); y += 6;
+  }
+  if (data.professional.address) {
+    const addr = data.professional.city
+      ? `${data.professional.address}, ${data.professional.city}`
+      : data.professional.address;
+    doc.text(`Direccion: ${addr}`, margin, y); y += 6;
+  }
+
+  // ── Patient Info ──
+  y += 6;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RECEPTOR (Paciente / Apoderado)', margin, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+
+  doc.text(`Nombre: ${data.patient.name}`, margin, y); y += 6;
+  if (data.patient.rut) {
+    doc.text(`RUT: ${data.patient.rut}`, margin, y); y += 6;
+  }
+
+  // ── Separator ──
+  y += 4;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 10;
+
+  // ── Service Detail ──
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DETALLE DEL SERVICIO', margin, y);
+  y += 10;
+
+  // Table header
+  doc.setFillColor(245, 245, 245);
+  doc.rect(margin, y - 5, pageWidth - margin * 2, 10, 'F');
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Descripcion', margin + 4, y + 1);
+  doc.text('Fecha Servicio', 120, y + 1);
+  doc.text('Monto Bruto', pageWidth - margin - 4, y + 1, { align: 'right' });
+  y += 12;
+
+  // Table row
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(data.description, margin + 4, y);
+  doc.text(formatDateCL(data.serviceDate), 120, y);
+  doc.setFont('helvetica', 'bold');
+  doc.text(formatCLP(data.amountBruto), pageWidth - margin - 4, y, { align: 'right' });
+  y += 12;
+
+  // ── Retention Breakdown ──
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 10;
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DESGLOSE TRIBUTARIO', margin, y);
+  y += 10;
+
+  // Breakdown box
+  const boxX = 90;
+  const boxW = pageWidth - margin - boxX;
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(220, 220, 220);
+  doc.roundedRect(boxX, y - 5, boxW, 42, 3, 3, 'FD');
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(80, 80, 80);
+
+  doc.text('Monto Bruto:', boxX + 6, y + 4);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(formatCLP(data.amountBruto), boxX + boxW - 6, y + 4, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 80, 60);
+  doc.text(`Retencion (${data.retencionPercent}%):`, boxX + 6, y + 14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`-${formatCLP(data.retencionAmount)}`, boxX + boxW - 6, y + 14, { align: 'right' });
+
+  // Separator line inside box
+  doc.setDrawColor(200, 200, 200);
+  doc.line(boxX + 6, y + 20, boxX + boxW - 6, y + 20);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235);
+  doc.text('Monto Liquido:', boxX + 6, y + 30);
+  doc.text(formatCLP(data.amountLiquido), boxX + boxW - 6, y + 30, { align: 'right' });
+
+  y += 50;
+
+  // Amount in words
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'italic');
+  const words = numberToWords(data.amountLiquido);
+  doc.text(`Monto liquido en palabras: ${words.charAt(0).toUpperCase() + words.slice(1)} pesos`, margin, y);
+  y += 10;
+
+  // ── SII Notice ──
+  if (data.status === 'pending_sii') {
+    doc.setFillColor(255, 250, 230);
+    doc.setDrawColor(245, 200, 80);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'FD');
+    doc.setTextColor(150, 100, 0);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PENDIENTE: Emita esta boleta en el portal del SII', margin + 6, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('https://loa.sii.cl/cgi_IMT/TRBHE_MENU.sh', margin + 6, y + 15);
+    y += 28;
+  }
+
+  if (data.status === 'emitted' && data.siiFolio) {
+    doc.setFillColor(230, 250, 230);
+    doc.setDrawColor(80, 200, 80);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 14, 3, 3, 'FD');
+    doc.setTextColor(30, 120, 30);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`EMITIDA EN SII - Folio: ${data.siiFolio}`, margin + 6, y + 9);
+    y += 22;
+  }
+
+  // ── Signature Area ──
+  y = Math.max(y + 15, 220);
+  doc.setDrawColor(150, 150, 150);
+  doc.line(margin, y, margin + 70, y);
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Firma Profesional', margin, y + 6);
+  doc.text(data.professional.name, margin, y + 12);
+
+  // ── Footer ──
+  const footerY = doc.internal.pageSize.getHeight() - 15;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(8);
+  doc.text(
+    'Este documento es un registro interno de referencia. NO constituye documento tributario valido ante el SII.',
+    pageWidth / 2, footerY, { align: 'center' }
+  );
+  doc.text(
+    `Generado por TherapyHub - ${new Date().toLocaleDateString('es-CL')}`,
+    pageWidth / 2, footerY + 5, { align: 'center' }
+  );
+
+  // Save
+  const fileName = `bhe_${data.boletaNumber}_${data.patient.name.replace(/\s+/g, '_')}.pdf`;
+  doc.save(fileName);
+}
