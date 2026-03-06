@@ -26,6 +26,9 @@ export interface Database {
           perinatal_history: string | null
           psychomotor_dev: string | null
           observations: string | null
+          address: string | null
+          region: string | null
+          comuna: string | null
           created_at: string
           updated_at: string
         }
@@ -45,6 +48,9 @@ export interface Database {
           perinatal_history?: string | null
           psychomotor_dev?: string | null
           observations?: string | null
+          address?: string | null
+          region?: string | null
+          comuna?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,6 +70,9 @@ export interface Database {
           perinatal_history?: string | null
           psychomotor_dev?: string | null
           observations?: string | null
+          address?: string | null
+          region?: string | null
+          comuna?: string | null
           created_at?: string
           updated_at?: string
         }

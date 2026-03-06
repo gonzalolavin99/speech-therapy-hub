@@ -138,6 +138,9 @@ export default function Pacientes() {
       perinatal_history: data.perinatalHistory || null,
       psychomotor_dev: data.psychomotorDev || null,
       observations: data.observations || null,
+      address: data.address || null,
+      region: data.region || null,
+      comuna: data.comuna || null,
     };
 
     if (formMode === "create") {
@@ -485,6 +488,9 @@ export default function Pacientes() {
                 perinatalHistory: editingPatient.perinatal_history,
                 psychomotorDev: editingPatient.psychomotor_dev,
                 observations: editingPatient.observations,
+                address: editingPatient.address,
+                region: editingPatient.region,
+                comuna: editingPatient.comuna,
               }
             : undefined
         }

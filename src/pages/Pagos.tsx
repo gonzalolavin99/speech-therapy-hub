@@ -57,6 +57,9 @@ export default function Pagos() {
     patientId: string;
     patientName: string;
     patientRut: string | null;
+    patientAddress: string | null;
+    patientRegion: string | null;
+    patientComuna: string | null;
     amount: number;
     sessionDate: string;
   } | null>(null);
@@ -193,6 +196,9 @@ export default function Pagos() {
       patientId: payment.patient_id,
       patientName: payment.patient_name || 'Paciente',
       patientRut: patient?.rut || null,
+      patientAddress: patient?.address || null,
+      patientRegion: patient?.region || null,
+      patientComuna: patient?.comuna || null,
       amount: payment.amount,
       sessionDate: payment.session_date,
     });
@@ -237,11 +243,15 @@ export default function Pagos() {
 
   const handleEditBoleta = (boleta: BoletaHonorarios) => {
     // Pre-fill dialog with existing boleta data for editing
+    const patient = patients.find(p => p.id === boleta.patient_id);
     setBoletaPaymentData({
       paymentId: boleta.payment_id || '',
       patientId: boleta.patient_id || '',
       patientName: boleta.patient_name,
       patientRut: boleta.patient_rut,
+      patientAddress: patient?.address || null,
+      patientRegion: patient?.region || null,
+      patientComuna: patient?.comuna || null,
       amount: boleta.amount_bruto,
       sessionDate: boleta.service_date,
     });
