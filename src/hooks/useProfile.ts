@@ -24,6 +24,10 @@ export interface ProfessionalProfile {
   tour_completed: boolean;
   profession: ProfessionId;
   approved: boolean;
+  slug: string | null;
+  public_profile_enabled: boolean;
+  public_phone: string | null;
+  public_email: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -44,6 +48,10 @@ export interface ProfileFormData {
   evaluation_price?: number;
   onboarding_completed?: boolean;
   profession?: ProfessionId;
+  slug?: string | null;
+  public_profile_enabled?: boolean;
+  public_phone?: string | null;
+  public_email?: string | null;
 }
 
 export function useProfile() {

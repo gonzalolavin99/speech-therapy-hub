@@ -373,6 +373,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      contact_requests: {
+        Row: {
+          id: string
+          professional_id: string
+          name: string
+          phone: string | null
+          email: string | null
+          message: string | null
+          service_type: string
+          status: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          professional_id: string
+          name: string
+          phone?: string | null
+          email?: string | null
+          message?: string | null
+          service_type?: string
+          status?: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          professional_id?: string
+          name?: string
+          phone?: string | null
+          email?: string | null
+          message?: string | null
+          service_type?: string
+          status?: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -414,3 +449,7 @@ export type BoletaHonorariosUpdate = Database['public']['Tables']['boletas_honor
 export type SessionPack = Database['public']['Tables']['session_packs']['Row']
 export type SessionPackInsert = Database['public']['Tables']['session_packs']['Insert']
 export type SessionPackUpdate = Database['public']['Tables']['session_packs']['Update']
+
+export type ContactRequest = Database['public']['Tables']['contact_requests']['Row']
+export type ContactRequestInsert = Database['public']['Tables']['contact_requests']['Insert']
+export type ContactRequestUpdate = Database['public']['Tables']['contact_requests']['Update']
