@@ -21,8 +21,19 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Upload,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PlanningFormDialog } from "@/components/forms/PlanningFormDialog";
 import { SessionFormDialog } from "@/components/forms/SessionFormDialog";
 import { usePlannings, PlanningFormData } from "@/hooks/usePlannings";
@@ -30,6 +41,9 @@ import { useSessions, SessionFormData } from "@/hooks/useSessions";
 import { usePatients } from "@/hooks/usePatients";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { toast } from "sonner";
+import { generatePlanningFromText, isAIConfigured } from "@/lib/ai-service";
+import { DialogDescription } from "@/components/ui/dialog";
 
 export default function Planificaciones() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +56,13 @@ export default function Planificaciones() {
   const [activePlanningForSession, setActivePlanningForSession] = useState<any>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
+
+  // Import state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importPatientId, setImportPatientId] = useState('');
+  const [importSessions, setImportSessions] = useState('12');
+  const [isImporting, setIsImporting] = useState(false);
 
   const { plannings, isLoading, createPlanning, updatePlanning } = usePlannings();
   const { sessions, createSession } = useSessions();
@@ -147,6 +168,91 @@ export default function Planificaciones() {
     }
   };
 
+  const handleImportWithAI = async () => {
+    if (!importPatientId) {
+      toast.error('Selecciona un paciente');
+      return;
+    }
+    if (!importText.trim()) {
+      toast.error('Ingresa el texto de la planificación');
+      return;
+    }
+    if (!isAIConfigured()) {
+      toast.error('IA no configurada', { description: 'Configura VITE_OPENAI_API_KEY en tu archivo .env' });
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const patient = patients.find(p => p.id === importPatientId);
+      const result = await generatePlanningFromText(
+        importText,
+        patient?.name,
+        patient?.age,
+        patient?.diagnosis
+      );
+
+      const planningData: PlanningFormData = {
+        patient_id: importPatientId,
+        intervention_approach: result.interventionApproach,
+        method: result.method,
+        general_objective: result.generalObjective,
+        specific_objectives: result.specificObjectives || null,
+        operational_objectives: result.operationalObjectives || null,
+        contents: result.contents || null,
+        general_plan: result.generalPlan || null,
+        total_sessions: parseInt(importSessions) || 12,
+        frequency: result.frequency || 'Semanal',
+        session_duration: result.sessionDuration || 45,
+        status: 'active',
+      };
+
+      await createPlanning.mutateAsync(planningData);
+      toast.success('Planificación importada con IA exitosamente');
+      setImportDialogOpen(false);
+      setImportText('');
+      setImportPatientId('');
+      setImportSessions('12');
+    } catch (error: any) {
+      toast.error('Error al importar', { description: error.message });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleImportManual = () => {
+    if (!importPatientId) {
+      toast.error('Selecciona un paciente');
+      return;
+    }
+    if (!importText.trim()) {
+      toast.error('Ingresa el texto de la planificación');
+      return;
+    }
+
+    // Pre-fill the planning form with the raw text as general plan
+    setEditingPlanning(null);
+    setFormMode('create');
+
+    const planningData: PlanningFormData = {
+      patient_id: importPatientId,
+      intervention_approach: 'Intervención importada',
+      method: 'Por definir',
+      general_objective: 'Por definir',
+      general_plan: importText,
+      total_sessions: parseInt(importSessions) || 12,
+      frequency: 'Semanal',
+      status: 'active',
+    };
+
+    createPlanning.mutate(planningData);
+    setImportDialogOpen(false);
+    setImportText('');
+    setImportPatientId('');
+    setImportSessions('12');
+    toast.success('Planificación importada. Edítala para completar los detalles.');
+  };
+
   const getPlanningSessions = (planningId: string) => {
     return sessions.filter(s => s.planning_id === planningId);
   };
@@ -170,28 +276,44 @@ export default function Planificaciones() {
 
   return (
     <AppLayout>
-      <div className="p-8 space-y-8">
+      <div className="p-4 md:p-8 space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Planificaciones</h1>
-            <p className="text-muted-foreground mt-1">
-              Gestiona las planificaciones de intervenci&oacute;n de tus pacientes
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">Planificaciones</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Gestiona las planificaciones de tus pacientes
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => {
-              const activePlannings = plannings.filter(p => p.status === 'active').length;
-              const check = canCreate('plannings', activePlannings);
-              if (!check.allowed) {
-                setUpgradeMsg({ title: 'Límite de planificaciones', desc: 'Has alcanzado el máximo de planificaciones activas de tu plan.', usage: check.message || '' });
-                setUpgradeOpen(true);
-                return;
-              }
-              setFormMode('create'); setEditingPlanning(null); setIsFormOpen(true);
-            }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Planificaci&oacute;n
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 sm:flex-none"
+              onClick={() => setImportDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Importar</span>
+              <span className="sm:hidden">Importar</span>
+            </Button>
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/90 flex-1 sm:flex-none"
+              onClick={() => {
+                const activePlannings = plannings.filter(p => p.status === 'active').length;
+                const check = canCreate('plannings', activePlannings);
+                if (!check.allowed) {
+                  setUpgradeMsg({ title: 'Limite de planificaciones', desc: 'Has alcanzado el maximo de planificaciones activas de tu plan.', usage: check.message || '' });
+                  setUpgradeOpen(true);
+                  return;
+                }
+                setFormMode('create'); setEditingPlanning(null); setIsFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Nueva
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -225,32 +347,37 @@ export default function Planificaciones() {
             >
               {/* Header */}
               <div
-                className="p-6 cursor-pointer hover:bg-muted/30 transition-colors"
+                className="p-4 md:p-6 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() =>
                   setExpandedId(expandedId === planning.id ? null : planning.id)
                 }
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-card-foreground">
-                        {planning.patient_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {planning.intervention_approach} - {planning.method}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <div className="flex items-center gap-4">
-                    {getStatusBadge(planning.status)}
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-card-foreground">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-card-foreground truncate">
+                          {planning.patient_name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">
+                          {planning.intervention_approach} - {planning.method}
+                        </p>
+                      </div>
+                      {expandedId === planning.id ? (
+                        <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {getStatusBadge(planning.status)}
+                      <span className="text-xs md:text-sm font-medium text-card-foreground">
                         {planning.completed_sessions}/{planning.total_sessions} sesiones
-                      </p>
-                      <div className="w-24 h-2 bg-muted rounded-full mt-1">
+                      </span>
+                      <div className="w-16 md:w-24 h-1.5 md:h-2 bg-muted rounded-full">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{
@@ -262,18 +389,13 @@ export default function Planificaciones() {
                         />
                       </div>
                     </div>
-                    {expandedId === planning.id ? (
-                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    )}
                   </div>
                 </div>
               </div>
 
               {/* Expanded Content */}
               {expandedId === planning.id && (
-                <div className="px-6 pb-6 pt-2 border-t">
+                <div className="px-4 md:px-6 pb-4 md:pb-6 pt-2 border-t">
                   {/* Info row */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-6">
                     <div className="bg-muted/30 rounded-lg p-3">
@@ -395,17 +517,17 @@ export default function Planificaciones() {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
-                    <Button variant="outline" size="sm" onClick={() => handleViewSessions(planning)}>
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Ver Sesiones ({getPlanningSessions(planning.id).length})
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => handleViewSessions(planning)}>
+                      <Calendar className="h-3.5 w-3.5 mr-1" />
+                      Sesiones ({getPlanningSessions(planning.id).length})
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEditPlanning(planning)}>
-                      Editar Planificaci&oacute;n
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEditPlanning(planning)}>
+                      Editar
                     </Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => handleRegisterSession(planning)}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Registrar Sesi&oacute;n
+                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs" onClick={() => handleRegisterSession(planning)}>
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Registrar Sesion
                     </Button>
                   </div>
                 </div>
@@ -512,6 +634,114 @@ export default function Planificaciones() {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={(open) => {
+        if (!isImporting) {
+          setImportDialogOpen(open);
+          if (!open) { setImportText(''); setImportPatientId(''); setImportSessions('12'); }
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" />
+              Importar Planificación Existente
+            </DialogTitle>
+            <DialogDescription>
+              Pega el texto de una planificación que ya tenías y la IA la estructurará automáticamente, o impórtala de forma manual.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Patient Select */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Paciente *</label>
+              <Select value={importPatientId} onValueChange={setImportPatientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Total sessions */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Total de sesiones planificadas</label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={importSessions}
+                onChange={(e) => setImportSessions(e.target.value)}
+                placeholder="12"
+              />
+            </div>
+
+            {/* Text area for plan */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Texto de la planificación *</label>
+              <Textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={"Pega aquí tu planificación existente...\n\nEjemplo:\nObjetivo general: Mejorar habilidades comunicativas...\nObjetivos específicos:\n1. Aumentar vocabulario expresivo\n2. Mejorar estructuración de oraciones\n\nContenidos: Semántica, Morfosintaxis...\nFrecuencia: 2 veces por semana\nDuración: 45 minutos"}
+                rows={10}
+                className="resize-y min-h-[150px]"
+              />
+              <p className="text-xs text-muted-foreground">
+                {importText.length > 0 ? `${importText.length} caracteres` : 'Pega cualquier formato: Word, PDF copiado, notas, etc.'}
+              </p>
+            </div>
+
+            {/* Tips */}
+            <div className="rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/50 p-3">
+              <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">💡 Tips para mejor resultado con IA:</p>
+              <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-0.5 list-disc list-inside">
+                <li>Incluye objetivos generales y específicos</li>
+                <li>Menciona el enfoque o método de intervención</li>
+                <li>Agrega frecuencia y duración de sesiones</li>
+                <li>Incluye contenidos o áreas a trabajar</li>
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleImportManual}
+                disabled={isImporting}
+              >
+                <FileText className="h-4 w-4 mr-1.5" />
+                Importar Manual
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleImportWithAI}
+                disabled={isImporting || !importText.trim() || !importPatientId}
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                    Procesando con IA...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-1.5" />
+                    Importar con IA
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

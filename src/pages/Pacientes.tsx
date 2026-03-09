@@ -19,18 +19,23 @@ import {
   Sparkles,
   Brain,
   ArrowLeft,
+  Upload,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
 import { ConsentDialog, ConsentBadge, ConsentData } from "@/components/consent/ConsentDialog";
 import { usePatients, Patient, PatientFormData } from "@/hooks/usePatients";
+import { PatientImportDialog } from "@/components/forms/PatientImportDialog";
 import { exportPatientToPDF } from "@/utils/exportPatient";
 import { PatientListSkeleton } from "@/components/ui/skeleton-card";
 import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 import { formatearEdad, calcularEdadEnAños } from "@/utils/age";
 import { useTestResults } from "@/hooks/useTestResults";
+import { useSessions } from "@/hooks/useSessions";
+import { usePlannings } from "@/hooks/usePlannings";
+import { PatientProgressChart } from "@/components/progress/PatientProgressChart";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
@@ -46,10 +51,13 @@ export default function Pacientes() {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
   const { testResults } = useTestResults();
+  const { sessions } = useSessions();
+  const { plannings } = usePlannings();
   const { canCreate, hasFeature } = useSubscription();
 
   const handleConsent = (patientId: string, data: ConsentData) => {
@@ -163,10 +171,16 @@ export default function Pacientes() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold text-card-foreground">Pacientes</h1>
-              <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleCreatePatient}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Paciente
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-1.5" />
+                  Importar
+                </Button>
+                <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleCreatePatient}>
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Nuevo
+                </Button>
+              </div>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -364,6 +378,19 @@ export default function Pacientes() {
                 </div>
               </div>
 
+              {/* Progress Charts */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-card-foreground mb-4">
+                  📊 Progreso del Paciente
+                </h3>
+                <PatientProgressChart
+                  sessions={sessions}
+                  plannings={plannings}
+                  patientId={selectedPatient.id}
+                  patientName={selectedPatient.name}
+                />
+              </div>
+
               {/* AI Summary Section */}
               {isAIConfigured() && (
                 <div className="bg-card rounded-xl border p-6 mb-6">
@@ -511,6 +538,29 @@ export default function Pacientes() {
           onConsent={handleConsent}
         />
       )}
+
+      <PatientImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        existingRuts={patients.map(p => p.rut.replace(/\./g, '').replace(/-/g, '').trim())}
+        onImport={async (importedPatients) => {
+          for (const p of importedPatients) {
+            await createPatient.mutateAsync({
+              name: p.name,
+              rut: p.rut || 'Por completar',
+              phone: p.phone || null,
+              email: p.email || null,
+              diagnosis: p.diagnosis || null,
+              birth_date: p.birth_date || null,
+              age: p.birth_date ? calcularEdadEnAños(p.birth_date) : null,
+              status: (p.status as 'active' | 'inactive' | 'completed') || 'active',
+              consult_reason: p.consult_reason || null,
+              referred_by: p.referred_by || null,
+              observations: p.observations || null,
+            });
+          }
+        }}
+      />
 
       <UpgradePrompt
         open={upgradeOpen}
