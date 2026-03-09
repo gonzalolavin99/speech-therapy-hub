@@ -49,13 +49,22 @@ export function usePublicProfile(slug: string | undefined) {
   const sendContactRequest = useMutation({
     mutationFn: async (request: ContactRequestData) => {
       const { data, error } = await supabase
-        .from('contact_requests')
-        .insert([request])
-        .select()
-        .single();
+        .rpc('submit_contact_request', {
+          p_professional_id: request.professional_id,
+          p_name: request.name,
+          p_phone: request.phone || null,
+          p_email: request.email || null,
+          p_message: request.message || null,
+          p_service_type: request.service_type || 'session',
+        });
 
       if (error) throw error;
-      return data;
+
+      // Check if the RPC returned an error in the JSON
+      const result = data as { error?: string; id?: string; status?: string };
+      if (result?.error) throw new Error(result.error);
+
+      return result;
     },
   });
 

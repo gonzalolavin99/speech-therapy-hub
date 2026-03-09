@@ -78,5 +78,44 @@ RETURNS JSON AS $$
     AND pp.public_profile_enabled = TRUE;
 $$ LANGUAGE sql SECURITY DEFINER;
 
+-- Función para enviar solicitud de contacto (acceso anónimo via SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION submit_contact_request(
+  p_professional_id UUID,
+  p_name TEXT,
+  p_phone TEXT DEFAULT NULL,
+  p_email TEXT DEFAULT NULL,
+  p_message TEXT DEFAULT NULL,
+  p_service_type TEXT DEFAULT 'session'
+)
+RETURNS JSON AS $$
+DECLARE
+  new_request contact_requests;
+BEGIN
+  -- Validar que el profesional existe y tiene perfil público habilitado
+  IF NOT EXISTS (
+    SELECT 1 FROM professional_profiles
+    WHERE user_id = p_professional_id
+      AND public_profile_enabled = TRUE
+  ) THEN
+    RETURN json_build_object('error', 'Perfil no encontrado o no público');
+  END IF;
+
+  -- Validar nombre requerido
+  IF p_name IS NULL OR trim(p_name) = '' THEN
+    RETURN json_build_object('error', 'Nombre requerido');
+  END IF;
+
+  INSERT INTO contact_requests (professional_id, name, phone, email, message, service_type)
+  VALUES (p_professional_id, trim(p_name), p_phone, p_email, p_message, COALESCE(p_service_type, 'session'))
+  RETURNING * INTO new_request;
+
+  RETURN json_build_object(
+    'id', new_request.id,
+    'status', 'success'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 COMMENT ON TABLE contact_requests IS 'Solicitudes de contacto desde perfiles públicos de profesionales';
 COMMENT ON FUNCTION get_public_profile IS 'Retorna datos públicos de un profesional por slug';
+COMMENT ON FUNCTION submit_contact_request IS 'Permite enviar solicitud de contacto a un profesional con perfil público';

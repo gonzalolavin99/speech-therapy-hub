@@ -36,6 +36,8 @@ import { useTestResults } from "@/hooks/useTestResults";
 import { useSessions } from "@/hooks/useSessions";
 import { usePlannings } from "@/hooks/usePlannings";
 import { PatientProgressChart } from "@/components/progress/PatientProgressChart";
+import { ProgressReportDialog } from "@/components/reports/ProgressReportDialog";
+import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
@@ -52,12 +54,14 @@ export default function Pacientes() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
   const { testResults } = useTestResults();
   const { sessions } = useSessions();
   const { plannings } = usePlannings();
+  const { profile } = useProfile();
   const { canCreate, hasFeature } = useSubscription();
 
   const handleConsent = (patientId: string, data: ConsentData) => {
@@ -299,8 +303,8 @@ export default function Pacientes() {
                     <span className="hidden sm:inline">Ver Tests</span>
                     <span className="sm:hidden">Tests</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="flex-shrink-0"
                     onClick={async () => {
@@ -320,6 +324,16 @@ export default function Pacientes() {
                     <Download className="h-4 w-4 mr-1 lg:mr-2" />
                     <span className="hidden sm:inline">Exportar</span>
                     <span className="sm:hidden">PDF</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                    onClick={() => setReportDialogOpen(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Informe</span>
+                    <span className="sm:hidden">Inf.</span>
                   </Button>
                   <Button size="sm" className="bg-primary hover:bg-primary/90 flex-shrink-0" onClick={handleEditPatient}>
                     <Edit className="h-4 w-4 mr-1 lg:mr-2" />
@@ -569,6 +583,18 @@ export default function Pacientes() {
         description={upgradeMsg.desc}
         currentUsage={upgradeMsg.usage || undefined}
       />
+
+      {selectedPatient && profile && (
+        <ProgressReportDialog
+          open={reportDialogOpen}
+          onOpenChange={setReportDialogOpen}
+          patient={selectedPatient}
+          professional={profile}
+          plannings={plannings}
+          sessions={sessions}
+          testResults={testResults}
+        />
+      )}
     </AppLayout>
   );
 }

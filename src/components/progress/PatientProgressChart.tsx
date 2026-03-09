@@ -264,17 +264,16 @@ export function PatientProgressChart({
         {statusDistribution.length > 0 && (
           <div className="bg-card rounded-xl border p-4">
             <h4 className="text-sm font-semibold text-card-foreground mb-4">Distribución de Sesiones</h4>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={statusDistribution}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
+                  cy="45%"
+                  innerRadius={45}
+                  outerRadius={70}
                   paddingAngle={3}
                   dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
                 >
                   {statusDistribution.map((entry, index) => {
                     const colorMap: Record<string, string> = {
@@ -294,6 +293,14 @@ export function PatientProgressChart({
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
+                  formatter={(value: number, name: string) => [`${value} sesiones`, name]}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value: string) => <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>{value}</span>}
                 />
               </PieChart>
             </ResponsiveContainer>

@@ -133,7 +133,7 @@ export function SessionPackFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
@@ -209,7 +209,7 @@ export function SessionPackFormDialog({
             />
 
             {/* Sessions & Price */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="totalSessions"
@@ -218,11 +218,16 @@ export function SessionPackFormDialog({
                     <FormLabel>Cantidad de sesiones *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min={1}
-                        max={100}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        value={field.value || ""}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          field.onChange(val ? parseInt(val, 10) : 0);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -235,13 +240,19 @@ export function SessionPackFormDialog({
                 name="originalPricePerSession"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Precio normal/sesion (CLP)</FormLabel>
+                    <FormLabel>Precio normal/sesión (CLP)</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        value={field.value || ""}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          field.onChange(val ? parseInt(val, 10) : 0);
+                        }}
                       />
                     </FormControl>
                     <FormDescription className="text-[11px]">
@@ -262,10 +273,16 @@ export function SessionPackFormDialog({
                   <FormLabel>Precio total del pack (CLP) *</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      min={0}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      value={field.value || ""}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        field.onChange(val ? parseInt(val, 10) : 0);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -282,37 +299,37 @@ export function SessionPackFormDialog({
                     Resumen del descuento
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Precio normal:</span>
-                    <p className="font-medium line-through text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">Precio normal:</span>
+                    <p className="font-medium line-through text-muted-foreground text-sm">
                       {formatCurrency(calculations.originalTotal)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Precio pack:</span>
-                    <p className="font-bold text-green-700 dark:text-green-400">
+                    <span className="text-xs text-muted-foreground">Precio pack:</span>
+                    <p className="font-bold text-green-700 dark:text-green-400 text-sm">
                       {formatCurrency(priceTotal)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Descuento:</span>
-                    <p className="font-bold text-green-700 dark:text-green-400">
+                    <span className="text-xs text-muted-foreground">Descuento:</span>
+                    <p className="font-bold text-green-700 dark:text-green-400 text-sm">
                       {calculations.discount}%
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Ahorro paciente:</span>
-                    <p className="font-bold text-green-700 dark:text-green-400">
+                    <span className="text-xs text-muted-foreground">Ahorro paciente:</span>
+                    <p className="font-bold text-green-700 dark:text-green-400 text-sm">
                       {formatCurrency(calculations.savings)}
                     </p>
                   </div>
                   <div className="col-span-2 pt-1 border-t border-green-200 dark:border-green-800">
-                    <span className="text-muted-foreground">Precio por sesion:</span>
-                    <span className="font-semibold ml-2">
+                    <span className="text-xs text-muted-foreground">Precio por sesión:</span>
+                    <span className="font-semibold ml-1 text-sm">
                       {formatCurrency(calculations.pricePerSession)}
                     </span>
-                    <span className="text-xs text-muted-foreground ml-1">
+                    <span className="text-[11px] text-muted-foreground ml-1">
                       (vs {formatCurrency(originalPrice)} normal)
                     </span>
                   </div>

@@ -15,7 +15,6 @@ import {
   User,
   MapPin,
   Clock,
-  DollarSign,
   MessageCircle,
   Send,
   Loader2,
@@ -239,12 +238,9 @@ export default function PublicProfile() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>{profile.session_duration} minutos</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-bold text-primary text-lg">
-                    {formatCLP(profile.session_price)}
-                  </span>
-                </div>
+                <p className="font-bold text-primary text-lg">
+                  {formatCLP(profile.session_price)}
+                </p>
               </div>
             </div>
 
@@ -264,12 +260,9 @@ export default function PublicProfile() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>60-90 minutos</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-bold text-violet-600 dark:text-violet-400 text-lg">
-                    {formatCLP(profile.evaluation_price)}
-                  </span>
-                </div>
+                <p className="font-bold text-violet-600 dark:text-violet-400 text-lg">
+                  {formatCLP(profile.evaluation_price)}
+                </p>
               </div>
             </div>
           </div>
