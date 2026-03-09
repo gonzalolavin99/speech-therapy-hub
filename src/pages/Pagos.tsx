@@ -24,15 +24,19 @@ import {
   FileText,
   Plus,
   Receipt,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentFormDialog } from "@/components/forms/PaymentFormDialog";
 import { BoletaHonorariosDialog } from "@/components/forms/BoletaHonorariosDialog";
+import { SessionPackFormDialog } from "@/components/forms/SessionPackFormDialog";
 import { BoletasList } from "@/components/boletas/BoletasList";
 import { BoletaSummaryCards } from "@/components/boletas/BoletaSummaryCards";
+import { SessionPacksList } from "@/components/packs/SessionPacksList";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 import { usePayments, Payment, PaymentFormData } from "@/hooks/usePayments";
 import { useBoletas, generateBoletaNumber, BoletaFormData, BoletaHonorarios } from "@/hooks/useBoletas";
+import { useSessionPacks, SessionPackFormData } from "@/hooks/useSessionPacks";
 import { usePatients } from "@/hooks/usePatients";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -67,8 +71,13 @@ export default function Pagos() {
   const [boletaSearchQuery, setBoletaSearchQuery] = useState("");
   const [boletaStatusFilter, setBoletaStatusFilter] = useState<string>("all");
 
+  // Packs state
+  const [isPackDialogOpen, setIsPackDialogOpen] = useState(false);
+  const [packStatusFilter, setPackStatusFilter] = useState<string>("all");
+
   const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
   const { boletas, createBoleta, updateBoleta, markAsEmitted, voidBoleta, deleteBoleta } = useBoletas();
+  const { packs, createPack, useSession: usePackSession, cancelPack, deletePack } = useSessionPacks();
   const { patients } = usePatients();
   const { profile } = useProfile();
   const { hasFeature } = useSubscription();
@@ -241,6 +250,26 @@ export default function Pagos() {
     deleteBoleta.mutate(boletaId);
   };
 
+  // ── Pack filters ──
+  const filteredPacks = packs.filter((pack) => {
+    return packStatusFilter === "all" || pack.status === packStatusFilter;
+  });
+
+  // ── Pack handlers ──
+  const handlePackSubmit = (data: any) => {
+    const packData: SessionPackFormData = {
+      patient_id: data.patientId,
+      name: data.name,
+      total_sessions: data.totalSessions,
+      price_total: data.priceTotal,
+      original_price_per_session: data.originalPricePerSession,
+      payment_status: data.paymentStatus,
+      notes: data.notes || null,
+      expires_at: data.expiresAt || null,
+    };
+    createPack.mutate(packData);
+  };
+
   const handleEditBoleta = (boleta: BoletaHonorarios) => {
     // Pre-fill dialog with existing boleta data for editing
     const patient = patients.find(p => p.id === boleta.patient_id);
@@ -276,6 +305,12 @@ export default function Pagos() {
                 Nuevo Pago
               </Button>
             )}
+            {activeTab === "packs" && (
+              <Button onClick={() => setIsPackDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Pack
+              </Button>
+            )}
           </div>
         </div>
 
@@ -286,9 +321,13 @@ export default function Pagos() {
               <DollarSign className="h-4 w-4" />
               Pagos
             </TabsTrigger>
+            <TabsTrigger value="packs" className="gap-2">
+              <Package className="h-4 w-4" />
+              Packs
+            </TabsTrigger>
             <TabsTrigger value="boletas" className="gap-2">
               <Receipt className="h-4 w-4" />
-              Boletas de Honorarios
+              Boletas
             </TabsTrigger>
           </TabsList>
 
@@ -488,6 +527,60 @@ export default function Pagos() {
             </div>
           </TabsContent>
 
+          {/* ════════════ TAB: PACKS ════════════ */}
+          <TabsContent value="packs" className="space-y-6 mt-6">
+            {/* Pack Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-card rounded-xl border p-5">
+                <p className="text-sm text-muted-foreground">Packs Activos</p>
+                <p className="text-2xl font-bold text-primary mt-1">
+                  {packs.filter(p => p.status === 'active').length}
+                </p>
+              </div>
+              <div className="bg-card rounded-xl border p-5">
+                <p className="text-sm text-muted-foreground">Sesiones Restantes</p>
+                <p className="text-2xl font-bold text-card-foreground mt-1">
+                  {packs.filter(p => p.status === 'active').reduce((acc, p) => acc + (p.total_sessions - p.used_sessions), 0)}
+                </p>
+              </div>
+              <div className="bg-card rounded-xl border p-5">
+                <p className="text-sm text-muted-foreground">Ingresos por Packs</p>
+                <p className="text-2xl font-bold text-success mt-1">
+                  {formatCurrency(packs.filter(p => p.payment_status === 'paid').reduce((acc, p) => acc + p.price_total, 0))}
+                </p>
+              </div>
+              <div className="bg-card rounded-xl border p-5">
+                <p className="text-sm text-muted-foreground">Por Cobrar</p>
+                <p className="text-2xl font-bold text-warning mt-1">
+                  {formatCurrency(packs.filter(p => p.payment_status !== 'paid' && p.status === 'active').reduce((acc, p) => acc + p.price_total, 0))}
+                </p>
+              </div>
+            </div>
+
+            {/* Pack Filters */}
+            <div className="flex flex-wrap gap-4">
+              <Select value={packStatusFilter} onValueChange={setPackStatusFilter}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Activos</SelectItem>
+                  <SelectItem value="completed">Completados</SelectItem>
+                  <SelectItem value="cancelled">Cancelados</SelectItem>
+                  <SelectItem value="expired">Expirados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <SessionPacksList
+              packs={filteredPacks}
+              onUseSession={(id) => usePackSession.mutate(id)}
+              onCancel={(id) => cancelPack.mutate(id)}
+              onDelete={(id) => deletePack.mutate(id)}
+            />
+          </TabsContent>
+
           {/* ════════════ TAB: BOLETAS ════════════ */}
           <TabsContent value="boletas" className="space-y-6 mt-6">
             {canUseBHE ? (
@@ -572,6 +665,14 @@ export default function Pagos() {
         professional={professionalData}
         paymentData={boletaPaymentData}
         professionId={professionId}
+      />
+
+      <SessionPackFormDialog
+        open={isPackDialogOpen}
+        onOpenChange={setIsPackDialogOpen}
+        onSubmit={handlePackSubmit}
+        patients={patientOptions}
+        defaultSessionPrice={profile?.session_price || 35000}
       />
 
       <UpgradePrompt

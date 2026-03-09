@@ -321,6 +321,59 @@ export interface Database {
         }
       }
     }
+      session_packs: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          name: string
+          total_sessions: number
+          used_sessions: number
+          price_total: number
+          price_per_session: number
+          original_price_per_session: number
+          discount_percent: number
+          status: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status: 'pending' | 'partial' | 'paid'
+          notes: string | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          name?: string
+          total_sessions: number
+          used_sessions?: number
+          price_total: number
+          original_price_per_session?: number
+          status?: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status?: 'pending' | 'partial' | 'paid'
+          notes?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          patient_id?: string
+          name?: string
+          total_sessions?: number
+          used_sessions?: number
+          price_total?: number
+          original_price_per_session?: number
+          status?: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status?: 'pending' | 'partial' | 'paid'
+          notes?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
     Views: {
       [_ in never]: never
     }
@@ -357,3 +410,7 @@ export type TestResultUpdate = Database['public']['Tables']['test_results']['Upd
 export type BoletaHonorarios = Database['public']['Tables']['boletas_honorarios']['Row']
 export type BoletaHonorariosInsert = Database['public']['Tables']['boletas_honorarios']['Insert']
 export type BoletaHonorariosUpdate = Database['public']['Tables']['boletas_honorarios']['Update']
+
+export type SessionPack = Database['public']['Tables']['session_packs']['Row']
+export type SessionPackInsert = Database['public']['Tables']['session_packs']['Insert']
+export type SessionPackUpdate = Database['public']['Tables']['session_packs']['Update']
