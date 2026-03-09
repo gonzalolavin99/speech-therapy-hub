@@ -27,6 +27,7 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const Planes = lazy(() => import("./pages/Planes"));
 const Clinica = lazy(() => import("./pages/Clinica"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/clinica" element={<ProtectedRoute><Clinica /></ProtectedRoute>} />
               {/* Public routes (no auth required) */}
               <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/portal/:token" element={<PatientPortal />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

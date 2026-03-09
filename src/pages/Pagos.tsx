@@ -25,6 +25,8 @@ import {
   Plus,
   Receipt,
   Package,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentFormDialog } from "@/components/forms/PaymentFormDialog";
@@ -43,6 +45,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useProfession } from "@/contexts/ProfessionContext";
 import { calculateRetencion } from "@/config/retencion";
 import { exportBoletaPDF, generateBoletaNumber as generateBoletaNumberLegacy } from "@/utils/exportBoleta";
+import { usePortalCharges, PortalChargeFormData } from "@/hooks/usePortalCharges";
+import { PortalChargeFormDialog } from "@/components/portal/PortalChargeFormDialog";
 import { toast } from "sonner";
 
 export default function Pagos() {
@@ -75,9 +79,14 @@ export default function Pagos() {
   const [isPackDialogOpen, setIsPackDialogOpen] = useState(false);
   const [packStatusFilter, setPackStatusFilter] = useState<string>("all");
 
+  // Cobros state
+  const [isChargeDialogOpen, setIsChargeDialogOpen] = useState(false);
+  const [chargeStatusFilter, setChargeStatusFilter] = useState<string>("all");
+
   const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
   const { boletas, createBoleta, updateBoleta, markAsEmitted, voidBoleta, deleteBoleta } = useBoletas();
   const { packs, createPack, useSession: usePackSession, cancelPack, deletePack } = useSessionPacks();
+  const { charges, createCharge, confirmCharge, cancelCharge } = usePortalCharges();
   const { patients } = usePatients();
   const { profile } = useProfile();
   const { hasFeature } = useSubscription();
@@ -311,6 +320,12 @@ export default function Pagos() {
                 Nuevo Pack
               </Button>
             )}
+            {activeTab === "cobros" && (
+              <Button onClick={() => setIsChargeDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Cobro
+              </Button>
+            )}
           </div>
         </div>
 
@@ -324,6 +339,10 @@ export default function Pagos() {
             <TabsTrigger value="packs" className="gap-2">
               <Package className="h-4 w-4" />
               Packs
+            </TabsTrigger>
+            <TabsTrigger value="cobros" className="gap-2">
+              <CreditCard className="h-4 w-4" />
+              Cobros
             </TabsTrigger>
             <TabsTrigger value="boletas" className="gap-2">
               <Receipt className="h-4 w-4" />
@@ -581,6 +600,142 @@ export default function Pagos() {
             />
           </TabsContent>
 
+          {/* ════════════ TAB: COBROS (Portal) ════════════ */}
+          <TabsContent value="cobros" className="space-y-6 mt-6">
+            {/* Cobros Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-card rounded-xl border p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cobros Pendientes</p>
+                    <p className="text-2xl font-bold text-warning mt-1">
+                      {formatCurrency(charges.filter(c => c.status === 'pending').reduce((acc, c) => acc + c.amount, 0))}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {charges.filter(c => c.status === 'pending').length} cobros
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-warning" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl border p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Por Confirmar</p>
+                    <p className="text-2xl font-bold text-blue-600 mt-1">
+                      {formatCurrency(charges.filter(c => c.status === 'paid').reduce((acc, c) => acc + c.amount, 0))}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {charges.filter(c => c.status === 'paid').length} pagos informados
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Banknote className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl border p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Confirmados</p>
+                    <p className="text-2xl font-bold text-success mt-1">
+                      {formatCurrency(charges.filter(c => c.status === 'confirmed').reduce((acc, c) => acc + c.amount, 0))}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {charges.filter(c => c.status === 'confirmed').length} cobros
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-success" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Cobros Filter */}
+            <div className="flex flex-wrap gap-4">
+              <Select value={chargeStatusFilter} onValueChange={setChargeStatusFilter}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendientes</SelectItem>
+                  <SelectItem value="paid">Pago informado</SelectItem>
+                  <SelectItem value="confirmed">Confirmados</SelectItem>
+                  <SelectItem value="cancelled">Anulados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cobros Table */}
+            <div className="bg-card rounded-xl border overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Paciente</th>
+                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Descripción</th>
+                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Monto</th>
+                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Estado</th>
+                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {charges.filter(c => chargeStatusFilter === 'all' || c.status === chargeStatusFilter).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center">
+                        <CreditCard className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+                        <p className="text-sm font-medium text-muted-foreground">No hay cobros</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">
+                          Crea un cobro para enviarlo al portal del paciente
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    charges.filter(c => chargeStatusFilter === 'all' || c.status === chargeStatusFilter).map((charge) => (
+                      <tr key={charge.id} className="border-b last:border-b-0 hover:bg-muted/30">
+                        <td className="p-4 font-medium text-card-foreground">{charge.patient_name}</td>
+                        <td className="p-4 text-muted-foreground text-sm">{charge.description}</td>
+                        <td className="p-4 font-medium text-card-foreground">{formatCurrency(charge.amount)}</td>
+                        <td className="p-4">
+                          <span className={cn("px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit", {
+                            'bg-warning/10 text-warning': charge.status === 'pending',
+                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': charge.status === 'paid',
+                            'bg-success/10 text-success': charge.status === 'confirmed',
+                            'bg-muted text-muted-foreground': charge.status === 'cancelled',
+                          })}>
+                            {charge.status === 'pending' && <><Clock className="h-3 w-3" /> Pendiente</>}
+                            {charge.status === 'paid' && <><Banknote className="h-3 w-3" /> Pago informado</>}
+                            {charge.status === 'confirmed' && <><CheckCircle className="h-3 w-3" /> Confirmado</>}
+                            {charge.status === 'cancelled' && <><XCircle className="h-3 w-3" /> Anulado</>}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex gap-2">
+                            {charge.status === 'paid' && (
+                              <Button size="sm" variant="outline" onClick={() => confirmCharge.mutate(charge.id)} className="text-success border-success/30 hover:bg-success/5">
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                Confirmar
+                              </Button>
+                            )}
+                            {charge.status === 'pending' && (
+                              <Button size="sm" variant="ghost" onClick={() => cancelCharge.mutate(charge.id)} className="text-destructive hover:text-destructive">
+                                <XCircle className="h-3.5 w-3.5 mr-1" />
+                                Anular
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+
           {/* ════════════ TAB: BOLETAS ════════════ */}
           <TabsContent value="boletas" className="space-y-6 mt-6">
             {canUseBHE ? (
@@ -673,6 +828,14 @@ export default function Pagos() {
         onSubmit={handlePackSubmit}
         patients={patientOptions}
         defaultSessionPrice={profile?.session_price || 35000}
+      />
+
+      <PortalChargeFormDialog
+        open={isChargeDialogOpen}
+        onOpenChange={setIsChargeDialogOpen}
+        onSubmit={(data) => createCharge.mutate(data)}
+        patients={patientOptions}
+        isSubmitting={createCharge.isPending}
       />
 
       <UpgradePrompt

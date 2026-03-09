@@ -21,6 +21,7 @@ import { formatPriceCLP } from "@/config/subscriptions";
 import type { PlanId, FeatureId } from "@/config/subscriptions";
 import { useNavigate } from "react-router-dom";
 import { PublicProfileSettings } from "@/components/profile/PublicProfileSettings";
+import { BankInfoForm } from "@/components/portal/BankInfoForm";
 
 export default function Perfil() {
   const { user } = useAuth();
@@ -507,6 +508,9 @@ export default function Perfil() {
             />
           </div>
         )}
+
+        {/* Bank Info for Portal */}
+        <BankInfoForm />
 
         {/* Save Button */}
         <div className="flex justify-between items-center">

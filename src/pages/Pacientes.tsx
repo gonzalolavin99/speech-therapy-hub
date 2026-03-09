@@ -20,6 +20,7 @@ import {
   Brain,
   ArrowLeft,
   Upload,
+  Link,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ import { ProgressReportDialog } from "@/components/reports/ProgressReportDialog"
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { PortalLinkDialog } from "@/components/portal/PortalLinkDialog";
 
 export default function Pacientes() {
   const isMobile = useIsMobile();
@@ -55,6 +57,7 @@ export default function Pacientes() {
   const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [portalDialogOpen, setPortalDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
@@ -335,6 +338,16 @@ export default function Pacientes() {
                     <span className="hidden sm:inline">Informe</span>
                     <span className="sm:hidden">Inf.</span>
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+                    onClick={() => setPortalDialogOpen(true)}
+                  >
+                    <Link className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Portal</span>
+                    <span className="sm:hidden">Portal</span>
+                  </Button>
                   <Button size="sm" className="bg-primary hover:bg-primary/90 flex-shrink-0" onClick={handleEditPatient}>
                     <Edit className="h-4 w-4 mr-1 lg:mr-2" />
                     Editar
@@ -593,6 +606,16 @@ export default function Pacientes() {
           plannings={plannings}
           sessions={sessions}
           testResults={testResults}
+        />
+      )}
+
+      {selectedPatient && (
+        <PortalLinkDialog
+          open={portalDialogOpen}
+          onOpenChange={setPortalDialogOpen}
+          patientId={selectedPatient.id}
+          patientName={selectedPatient.name}
+          patientPhone={selectedPatient.phone}
         />
       )}
     </AppLayout>

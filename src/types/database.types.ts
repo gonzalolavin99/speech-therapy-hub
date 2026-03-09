@@ -373,6 +373,106 @@ export interface Database {
           updated_at?: string
         }
       }
+      portal_charges: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          payment_id: string | null
+          session_id: string | null
+          description: string
+          amount: number
+          status: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method: string | null
+          payment_reference: string | null
+          patient_confirmed_at: string | null
+          professional_confirmed_at: string | null
+          due_date: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          payment_id?: string | null
+          session_id?: string | null
+          description: string
+          amount: number
+          status?: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method?: string | null
+          payment_reference?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          description?: string
+          amount?: number
+          status?: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method?: string | null
+          payment_reference?: string | null
+          patient_confirmed_at?: string | null
+          professional_confirmed_at?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+      }
+      portal_messages: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          sender_type: 'patient' | 'professional'
+          message: string
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          sender_type: 'patient' | 'professional'
+          message: string
+          read_at?: string | null
+        }
+        Update: {
+          read_at?: string | null
+        }
+      }
+      professional_bank_info: {
+        Row: {
+          id: string
+          user_id: string
+          bank_name: string
+          account_type: string
+          account_number: string
+          holder_rut: string
+          holder_name: string
+          email: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          bank_name: string
+          account_type: string
+          account_number: string
+          holder_rut: string
+          holder_name: string
+          email: string
+        }
+        Update: {
+          bank_name?: string
+          account_type?: string
+          account_number?: string
+          holder_rut?: string
+          holder_name?: string
+          email?: string
+        }
+      }
       contact_requests: {
         Row: {
           id: string
