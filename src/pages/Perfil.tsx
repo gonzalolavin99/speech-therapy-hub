@@ -22,6 +22,7 @@ import type { PlanId, FeatureId } from "@/config/subscriptions";
 import { useNavigate } from "react-router-dom";
 import { PublicProfileSettings } from "@/components/profile/PublicProfileSettings";
 import { BankInfoForm } from "@/components/portal/BankInfoForm";
+import { MercadoPagoConfig } from "@/components/portal/MercadoPagoConfig";
 
 export default function Perfil() {
   const { user } = useAuth();
@@ -511,6 +512,9 @@ export default function Perfil() {
 
         {/* Bank Info for Portal */}
         <BankInfoForm />
+
+        {/* MercadoPago Config */}
+        <MercadoPagoConfig />
 
         {/* Save Button */}
         <div className="flex justify-between items-center">

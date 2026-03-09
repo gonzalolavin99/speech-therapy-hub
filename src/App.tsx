@@ -28,6 +28,7 @@ const Planes = lazy(() => import("./pages/Planes"));
 const Clinica = lazy(() => import("./pages/Clinica"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PatientPortal = lazy(() => import("./pages/PatientPortal"));
+const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -76,6 +77,9 @@ const App = () => (
               {/* Public routes (no auth required) */}
               <Route path="/p/:slug" element={<PublicProfile />} />
               <Route path="/portal/:token" element={<PatientPortal />} />
+              <Route path="/portal-pago/success" element={<PaymentResult />} />
+              <Route path="/portal-pago/failure" element={<PaymentResult />} />
+              <Route path="/portal-pago/pending" element={<PaymentResult />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

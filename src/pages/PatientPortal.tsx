@@ -150,6 +150,8 @@ export default function PatientPortal() {
                 confirmPayment.mutate({ chargeId, reference })
               }
               isConfirming={confirmPayment.isPending}
+              portalToken={token}
+              mpEnabled={data.mp_enabled}
             />
           </TabsContent>
 

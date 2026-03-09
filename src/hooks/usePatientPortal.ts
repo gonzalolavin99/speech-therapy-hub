@@ -72,6 +72,7 @@ export interface PortalData {
   charges: PortalCharge[];
   messages: PortalMessage[];
   bank_info: PortalBankInfo | null;
+  mp_enabled?: boolean;
 }
 
 export function usePatientPortal(token: string | undefined) {
@@ -93,7 +94,17 @@ export function usePatientPortal(token: string | undefined) {
       }
       if (result?.error) throw new Error(result.error);
 
-      return result as PortalData;
+      // Check if MercadoPago is enabled for this professional
+      const portalData = result as PortalData;
+      try {
+        const { data: mpData } = await supabase
+          .rpc('get_mp_payment_link', { p_token: token, p_charge_id: portalData.charges[0]?.id || '00000000-0000-0000-0000-000000000000' });
+        portalData.mp_enabled = mpData?.mp_enabled === true;
+      } catch {
+        portalData.mp_enabled = false;
+      }
+
+      return portalData;
     },
     enabled: !!token,
     staleTime: 2 * 60 * 1000,

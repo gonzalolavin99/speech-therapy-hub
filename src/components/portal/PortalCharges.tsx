@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { PortalCharge, PortalBankInfo } from "@/hooks/usePatientPortal";
+import { usePortalMercadoPago } from "@/hooks/useMercadoPago";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import {
   Copy,
   Loader2,
   Banknote,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -28,11 +30,15 @@ interface Props {
   bankInfo: PortalBankInfo | null;
   onConfirmPayment: (chargeId: string, reference?: string) => void;
   isConfirming: boolean;
+  portalToken?: string;
+  mpEnabled?: boolean;
 }
 
-export function PortalCharges({ charges, bankInfo, onConfirmPayment, isConfirming }: Props) {
+export function PortalCharges({ charges, bankInfo, onConfirmPayment, isConfirming, portalToken, mpEnabled }: Props) {
   const [selectedCharge, setSelectedCharge] = useState<PortalCharge | null>(null);
   const [reference, setReference] = useState("");
+  const { payWithMercadoPago, isPending: isMpPending } = usePortalMercadoPago();
+  const [payingChargeId, setPayingChargeId] = useState<string | null>(null);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(amount);
@@ -47,6 +53,13 @@ export function PortalCharges({ charges, bankInfo, onConfirmPayment, isConfirmin
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copiado al portapapeles');
+  };
+
+  const handleMpPayment = async (charge: PortalCharge) => {
+    if (!portalToken) return;
+    setPayingChargeId(charge.id);
+    await payWithMercadoPago(charge.id, portalToken);
+    setPayingChargeId(null);
   };
 
   const statusConfig: Record<string, { label: string; icon: typeof Clock; className: string }> = {
@@ -137,28 +150,51 @@ export function PortalCharges({ charges, bankInfo, onConfirmPayment, isConfirmin
         <div>
           <h3 className="text-sm font-semibold text-foreground mb-3">Pendientes de pago</h3>
           <div className="space-y-2">
-            {pending.map((charge) => (
-              <div key={charge.id} className="bg-card rounded-lg border p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{charge.description}</p>
-                    <p className="text-lg font-bold text-warning mt-1">{formatCurrency(charge.amount)}</p>
-                    {charge.due_date && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Vence: {formatDate(charge.due_date)}
-                      </p>
-                    )}
+            {pending.map((charge) => {
+              const isPayingThis = payingChargeId === charge.id;
+              return (
+                <div key={charge.id} className="bg-card rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{charge.description}</p>
+                      <p className="text-lg font-bold text-warning mt-1">{formatCurrency(charge.amount)}</p>
+                      {charge.due_date && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Vence: {formatDate(charge.due_date)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {/* MercadoPago button */}
+                      {mpEnabled && portalToken && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMpPayment(charge)}
+                          disabled={isMpPending && isPayingThis}
+                          className="bg-[#009ee3] hover:bg-[#007eb5] text-white"
+                        >
+                          {isMpPending && isPayingThis ? (
+                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                          ) : (
+                            <Wallet className="h-4 w-4 mr-1.5" />
+                          )}
+                          Pagar con MP
+                        </Button>
+                      )}
+                      {/* Bank transfer button */}
+                      <Button
+                        size="sm"
+                        variant={mpEnabled ? "outline" : "default"}
+                        onClick={() => setSelectedCharge(charge)}
+                      >
+                        <Banknote className="h-4 w-4 mr-1.5" />
+                        {mpEnabled ? "Transferencia" : "Informar pago"}
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setSelectedCharge(charge)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    Informar pago
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -188,11 +224,11 @@ export function PortalCharges({ charges, bankInfo, onConfirmPayment, isConfirmin
         </div>
       )}
 
-      {/* Dialog para confirmar pago */}
+      {/* Dialog para confirmar pago por transferencia */}
       <Dialog open={!!selectedCharge} onOpenChange={(open) => !open && setSelectedCharge(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Informar pago</DialogTitle>
+            <DialogTitle>Informar pago por transferencia</DialogTitle>
             <DialogDescription>
               Confirma que realizaste la transferencia por{" "}
               <span className="font-semibold">{selectedCharge ? formatCurrency(selectedCharge.amount) : ''}</span>
