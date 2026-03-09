@@ -2,16 +2,20 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 // Paleta Lux Navia
 // Nordic Blue: #67869A - Primary
-// Misty Blue: #C6D1D9 - Secondary  
+// Misty Blue: #C6D1D9 - Secondary
 // Light Grey: #F1F1F1 - Background
 // Pale Blush: #F4EBE9 - Accent
 // Oak Wood: #E7E0D8 - Muted
 
 export type ColorTheme = "nordic" | "misty" | "blush" | "oak" | "ocean";
+export type DarkMode = "light" | "dark" | "system";
 
 interface ThemeContextType {
   colorTheme: ColorTheme;
   setColorTheme: (theme: ColorTheme) => void;
+  darkMode: DarkMode;
+  setDarkMode: (mode: DarkMode) => void;
+  isDark: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -87,26 +91,70 @@ const themeVariables: Record<ColorTheme, Record<string, string>> = {
   },
 };
 
+function getSystemDark(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     const saved = localStorage.getItem("color-theme") as ColorTheme;
-    // Si el tema guardado no es válido, usar nordic como default
     const validThemes: ColorTheme[] = ["nordic", "misty", "blush", "oak", "ocean"];
     return validThemes.includes(saved) ? saved : "nordic";
   });
 
+  const [darkMode, setDarkMode] = useState<DarkMode>(() => {
+    const saved = localStorage.getItem("dark-mode") as DarkMode;
+    const validModes: DarkMode[] = ["light", "dark", "system"];
+    return validModes.includes(saved) ? saved : "light";
+  });
+
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("dark-mode") as DarkMode;
+    if (saved === "dark") return true;
+    if (saved === "system") return getSystemDark();
+    return false;
+  });
+
+  // Apply color theme variables
   useEffect(() => {
     localStorage.setItem("color-theme", colorTheme);
     const root = document.documentElement;
     const variables = themeVariables[colorTheme];
-    
+
     Object.entries(variables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
   }, [colorTheme]);
 
+  // Apply dark mode class
+  useEffect(() => {
+    localStorage.setItem("dark-mode", darkMode);
+
+    const applyDark = (dark: boolean) => {
+      setIsDark(dark);
+      if (dark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+
+    if (darkMode === "dark") {
+      applyDark(true);
+    } else if (darkMode === "light") {
+      applyDark(false);
+    } else {
+      // System mode
+      applyDark(getSystemDark());
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = (e: MediaQueryListEvent) => applyDark(e.matches);
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }
+  }, [darkMode]);
+
   return (
-    <ThemeContext.Provider value={{ colorTheme, setColorTheme }}>
+    <ThemeContext.Provider value={{ colorTheme, setColorTheme, darkMode, setDarkMode, isDark }}>
       {children}
     </ThemeContext.Provider>
   );

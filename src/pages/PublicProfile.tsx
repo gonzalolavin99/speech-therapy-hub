@@ -238,9 +238,15 @@ export default function PublicProfile() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>{profile.session_duration} minutos</span>
                 </div>
-                <p className="font-bold text-primary text-lg">
-                  {formatCLP(profile.session_price)}
-                </p>
+                {profile.show_public_prices ? (
+                  <p className="font-bold text-primary text-lg">
+                    {formatCLP(profile.session_price)}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Consultar valor
+                  </p>
+                )}
               </div>
             </div>
 
@@ -260,9 +266,15 @@ export default function PublicProfile() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>60-90 minutos</span>
                 </div>
-                <p className="font-bold text-violet-600 dark:text-violet-400 text-lg">
-                  {formatCLP(profile.evaluation_price)}
-                </p>
+                {profile.show_public_prices ? (
+                  <p className="font-bold text-violet-600 dark:text-violet-400 text-lg">
+                    {formatCLP(profile.evaluation_price)}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Consultar valor
+                  </p>
+                )}
               </div>
             </div>
           </div>

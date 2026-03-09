@@ -12,6 +12,8 @@ import {
   Mail,
   Loader2,
   Eye,
+  EyeOff,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -34,6 +36,7 @@ export function PublicProfileSettings({
   const [enabled, setEnabled] = useState(profile.public_profile_enabled || false);
   const [publicPhone, setPublicPhone] = useState(profile.public_phone || "");
   const [publicEmail, setPublicEmail] = useState(profile.public_email || "");
+  const [showPrices, setShowPrices] = useState(profile.show_public_prices !== false);
   const [copied, setCopied] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
@@ -43,6 +46,7 @@ export function PublicProfileSettings({
     if (profile.public_profile_enabled !== undefined) setEnabled(profile.public_profile_enabled);
     if (profile.public_phone) setPublicPhone(profile.public_phone);
     if (profile.public_email) setPublicEmail(profile.public_email);
+    setShowPrices(profile.show_public_prices !== false);
   }, [profile]);
 
   // Auto-generate slug from name if empty
@@ -107,6 +111,7 @@ export function PublicProfileSettings({
       public_profile_enabled: enabled,
       public_phone: publicPhone || undefined,
       public_email: publicEmail || undefined,
+      show_public_prices: showPrices,
     } as any);
   };
 
@@ -211,6 +216,25 @@ export function PublicProfileSettings({
               Separado de tu email de cuenta para mayor privacidad
             </p>
           </div>
+        </div>
+
+        {/* Show prices toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              <DollarSign className="h-3.5 w-3.5" />
+              Mostrar precios en perfil público
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {showPrices
+                ? "Los precios de sesión y evaluación son visibles"
+                : "Los precios están ocultos — ideal si varían por paciente"}
+            </p>
+          </div>
+          <Switch
+            checked={showPrices}
+            onCheckedChange={setShowPrices}
+          />
         </div>
 
         {/* Preview link & Actions */}

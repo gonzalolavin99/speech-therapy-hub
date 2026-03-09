@@ -17,6 +17,7 @@ export interface PublicProfileData {
   slug: string;
   public_phone: string | null;
   public_email: string | null;
+  show_public_prices: boolean;
 }
 
 export interface ContactRequestData {

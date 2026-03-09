@@ -28,6 +28,7 @@ export interface ProfessionalProfile {
   public_profile_enabled: boolean;
   public_phone: string | null;
   public_email: string | null;
+  show_public_prices: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +53,7 @@ export interface ProfileFormData {
   public_profile_enabled?: boolean;
   public_phone?: string | null;
   public_email?: string | null;
+  show_public_prices?: boolean;
 }
 
 export function useProfile() {
