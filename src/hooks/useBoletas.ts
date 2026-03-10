@@ -69,6 +69,7 @@ export function useBoletas() {
       const { data, error } = await supabase
         .from('boletas_honorarios')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

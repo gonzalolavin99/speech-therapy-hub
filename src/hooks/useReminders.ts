@@ -44,6 +44,7 @@ export function useReminders() {
       const { data, error } = await supabase
         .from('reminders')
         .select('*')
+        .eq('user_id', user.id)
         .order('session_date', { ascending: true });
 
       if (error) throw error;
