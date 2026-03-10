@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionPayment } from "@/hooks/useSubscriptionPayment";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -10,7 +13,13 @@ import {
   Zap,
   Clock,
   ArrowRight,
+  Loader2,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { PlanId } from "@/config/subscriptions";
 import { formatPriceCLP, getTrialDaysRemaining } from "@/config/subscriptions";
 
@@ -74,7 +83,50 @@ const plans: {
 
 export default function Planes() {
   const { subscription, effectivePlan, trialDaysRemaining } = useSubscription();
+  const { checkout, isCheckingOut } = useSubscriptionPayment();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [checkingPlan, setCheckingPlan] = useState<PlanId | null>(null);
   const isTrialing = subscription?.plan === "trial";
+
+  // Handle payment result from MercadoPago redirect
+  useEffect(() => {
+    const paymentResult = searchParams.get("payment");
+    if (paymentResult) {
+      if (paymentResult === "success") {
+        toast.success("¡Pago exitoso!", {
+          description: "Tu suscripción se ha activado. Los cambios se reflejarán en unos segundos.",
+          duration: 8000,
+        });
+      } else if (paymentResult === "failure") {
+        toast.error("Pago no completado", {
+          description: "El pago no pudo ser procesado. Puedes intentar nuevamente.",
+        });
+      } else if (paymentResult === "pending") {
+        toast.info("Pago en proceso", {
+          description: "Tu pago está siendo procesado. Te notificaremos cuando se confirme.",
+          duration: 8000,
+        });
+      }
+      // Clean URL
+      searchParams.delete("payment");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleSubscribe = async (planId: PlanId) => {
+    if (planId === "free") return;
+
+    setCheckingPlan(planId);
+    try {
+      await checkout.mutateAsync({
+        plan: planId,
+        billingPeriod,
+      });
+    } finally {
+      setCheckingPlan(null);
+    }
+  };
 
   return (
     <AppLayout>
@@ -93,17 +145,49 @@ export default function Planes() {
           </p>
         </div>
 
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setBillingPeriod('monthly')}
+            className={cn(
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              billingPeriod === 'monthly'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Mensual
+          </button>
+          <button
+            onClick={() => setBillingPeriod('yearly')}
+            className={cn(
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors relative",
+              billingPeriod === 'yearly'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Anual
+            <span className="absolute -top-2 -right-2 bg-success text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              -25%
+            </span>
+          </button>
+        </div>
+
         {/* Plan Cards */}
         <div className="grid md:grid-cols-3 gap-6">
           {plans.map((plan) => {
             const isCurrent = effectivePlan === plan.id ||
               (isTrialing && plan.id === "professional");
-            const yearlyMonthly = plan.priceYearly > 0
+            const isCurrentPaid = !isTrialing && effectivePlan === plan.id && plan.priceMonthly > 0;
+            const displayPrice = billingPeriod === 'yearly' && plan.priceYearly > 0
               ? Math.round(plan.priceYearly / 12)
+              : plan.priceMonthly;
+            const totalPrice = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;
+            const yearlySaving = plan.priceMonthly > 0 && plan.priceYearly > 0
+              ? Math.round((1 - (plan.priceYearly / 12) / plan.priceMonthly) * 100)
               : 0;
-            const yearlySaving = plan.priceMonthly > 0
-              ? Math.round((1 - yearlyMonthly / plan.priceMonthly) * 100)
-              : 0;
+            const isLoading = checkingPlan === plan.id || (isCheckingOut && checkingPlan === plan.id);
 
             return (
               <div
@@ -149,10 +233,16 @@ export default function Planes() {
                   ) : (
                     <>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold">{formatPriceCLP(plan.priceMonthly)}</span>
+                        <span className="text-3xl font-bold">{formatPriceCLP(displayPrice)}</span>
                         <span className="text-sm text-muted-foreground">/mes</span>
                       </div>
-                      {plan.priceYearly > 0 && (
+                      {billingPeriod === 'yearly' && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatPriceCLP(totalPrice)} facturado anualmente
+                          <span className="ml-1 text-success font-medium">(-{yearlySaving}%)</span>
+                        </p>
+                      )}
+                      {billingPeriod === 'monthly' && plan.priceYearly > 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
                           o {formatPriceCLP(plan.priceYearly)}/año
                           <span className="ml-1 text-success font-medium">(-{yearlySaving}%)</span>
@@ -169,14 +259,25 @@ export default function Planes() {
                     plan.popular ? "" : "variant-outline"
                   )}
                   variant={plan.popular ? "default" : "outline"}
-                  disabled={isCurrent && !isTrialing}
+                  disabled={isCurrentPaid || isLoading || isCheckingOut}
+                  onClick={() => handleSubscribe(plan.id)}
                 >
-                  {isCurrent && !isTrialing ? (
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : isCurrentPaid ? (
                     "Plan actual"
+                  ) : plan.priceMonthly === 0 ? (
+                    <>
+                      Comenzar gratis
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </>
                   ) : (
                     <>
-                      {plan.priceMonthly === 0 ? "Comenzar gratis" : "Suscribirse"}
-                      <ArrowRight className="h-4 w-4 ml-1" />
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Suscribirse — {formatPriceCLP(totalPrice)}
                     </>
                   )}
                 </Button>
@@ -210,8 +311,12 @@ export default function Planes() {
           })}
         </div>
 
-        {/* FAQ / Note */}
+        {/* Payment Methods Note */}
         <div className="text-center space-y-2 pt-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <CreditCard className="h-4 w-4" />
+            <span>Pago seguro con MercadoPago — Tarjeta de crédito, débito, transferencia y más</span>
+          </div>
           <p className="text-sm text-muted-foreground">
             Todos los planes incluyen acceso al panel completo. Los precios están en CLP (pesos chilenos) e incluyen IVA.
           </p>
