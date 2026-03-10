@@ -48,39 +48,32 @@ export function useSubscriptionPayment() {
   // Create checkout and redirect to MercadoPago
   const checkout = useMutation({
     mutationFn: async ({ plan, billingPeriod }: { plan: PlanId; billingPeriod: 'monthly' | 'yearly' }) => {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-      // Get the user's session token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No hay sesión activa');
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/subscription-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+      // Use supabase.functions.invoke() which handles auth headers automatically
+      const { data, error } = await supabase.functions.invoke('subscription-checkout', {
+        body: {
           plan,
           billing_period: billingPeriod,
           success_url: `${window.location.origin}/planes?payment=success`,
           failure_url: `${window.location.origin}/planes?payment=failure`,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Error al crear checkout');
+      if (error) {
+        throw new Error(error.message || 'Error al crear checkout');
       }
 
-      return response.json() as Promise<{
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return data as {
         init_point: string;
         preference_id: string;
         payment_id: string;
         amount: number;
         plan: string;
         billing_period: string;
-      }>;
+      };
     },
     onSuccess: (data) => {
       // Redirect to MercadoPago
