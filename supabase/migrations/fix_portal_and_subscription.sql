@@ -172,8 +172,8 @@ BEGIN
     v_period_end := NOW() + INTERVAL '1 year';
   END IF;
 
-  -- Generate unique external reference using pgcrypto
-  v_ext_ref := 'thub_sub_' || encode(pgcrypto.gen_random_bytes(12), 'hex');
+  -- Generate unique external reference
+  v_ext_ref := 'thub_sub_' || replace(gen_random_uuid()::text, '-', '');
 
   -- Create payment record
   INSERT INTO subscription_payments (

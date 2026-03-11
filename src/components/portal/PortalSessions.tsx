@@ -7,9 +7,8 @@ interface Props {
 }
 
 export function PortalSessions({ sessions }: Props) {
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const formatDate = (isoStr: string) => {
+    const date = new Date(isoStr);
     return date.toLocaleDateString('es-CL', {
       weekday: 'long',
       day: 'numeric',
@@ -17,26 +16,37 @@ export function PortalSessions({ sessions }: Props) {
     });
   };
 
-  const formatTime = (time: string) => {
-    return time.substring(0, 5); // HH:MM
+  const formatTime = (isoStr: string) => {
+    const date = new Date(isoStr);
+    return date.toLocaleTimeString('es-CL', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getDurationMinutes = (start: string, end: string) => {
+    const diff = new Date(end).getTime() - new Date(start).getTime();
+    return Math.round(diff / 60000);
   };
 
   const typeLabels: Record<string, string> = {
     evaluation: 'Evaluación',
     therapy: 'Terapia',
+    followup: 'Seguimiento',
     follow_up: 'Seguimiento',
   };
 
   const statusConfig: Record<string, { label: string; className: string }> = {
     scheduled: { label: 'Agendada', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+    confirmed: { label: 'Confirmada', className: 'bg-primary/10 text-primary' },
     completed: { label: 'Completada', className: 'bg-success/10 text-success' },
     cancelled: { label: 'Cancelada', className: 'bg-destructive/10 text-destructive' },
     no_show: { label: 'No asistió', className: 'bg-warning/10 text-warning' },
   };
 
-  const today = new Date().toISOString().split('T')[0];
-  const upcoming = sessions.filter(s => s.date >= today && s.status === 'scheduled');
-  const past = sessions.filter(s => s.date < today || s.status !== 'scheduled');
+  const now = new Date().toISOString();
+  const upcoming = sessions.filter(s => s.start_time >= now && (s.status === 'scheduled' || s.status === 'confirmed'));
+  const past = sessions.filter(s => s.start_time < now || (s.status !== 'scheduled' && s.status !== 'confirmed'));
 
   if (sessions.length === 0) {
     return (
@@ -65,21 +75,24 @@ export function PortalSessions({ sessions }: Props) {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium text-foreground capitalize">
-                      {formatDate(session.date)}
+                      {formatDate(session.start_time)}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Clock className="h-3.5 w-3.5" />
-                        {formatTime(session.time)}
+                        {formatTime(session.start_time)}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {session.duration_minutes} min
+                        {getDurationMinutes(session.start_time, session.end_time)} min
                       </span>
                     </div>
+                    {session.title && (
+                      <p className="text-xs text-muted-foreground mt-1">{session.title}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                      {typeLabels[session.type] || session.type}
+                      {typeLabels[session.session_type] || session.session_type}
                     </span>
                   </div>
                 </div>
@@ -103,10 +116,10 @@ export function PortalSessions({ sessions }: Props) {
                 >
                   <div>
                     <p className="text-sm font-medium text-foreground capitalize">
-                      {formatDate(session.date)}
+                      {formatDate(session.start_time)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatTime(session.time)} · {typeLabels[session.type] || session.type}
+                      {formatTime(session.start_time)} · {typeLabels[session.session_type] || session.session_type}
                     </p>
                   </div>
                   <span className={cn("text-xs font-medium px-2 py-1 rounded-full", sc.className)}>

@@ -116,7 +116,7 @@ BEGIN
   END IF;
 
   -- Generate unique external reference
-  v_ext_ref := 'thub_sub_' || encode(gen_random_bytes(12), 'hex');
+  v_ext_ref := 'thub_sub_' || replace(gen_random_uuid()::text, '-', '');
 
   -- Create payment record
   INSERT INTO subscription_payments (

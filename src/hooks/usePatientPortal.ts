@@ -9,11 +9,11 @@ export interface PortalPatient {
 
 export interface PortalSession {
   id: string;
-  type: 'evaluation' | 'therapy' | 'follow_up';
-  date: string;
-  time: string;
-  duration_minutes: number;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  title: string;
+  session_type: 'evaluation' | 'therapy' | 'followup';
+  start_time: string;
+  end_time: string;
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
 }
 
