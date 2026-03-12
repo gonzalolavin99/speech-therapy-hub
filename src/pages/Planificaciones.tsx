@@ -192,27 +192,28 @@ export default function Planificaciones() {
         patient?.diagnosis
       );
 
-      const planningData: PlanningFormData = {
+      // Open the form pre-filled with AI-structured data for review
+      setEditingPlanning({
         patient_id: importPatientId,
-        intervention_approach: result.interventionApproach,
-        method: result.method,
-        general_objective: result.generalObjective,
-        specific_objectives: result.specificObjectives || null,
-        operational_objectives: result.operationalObjectives || null,
-        contents: result.contents || null,
-        general_plan: result.generalPlan || null,
+        intervention_approach: result.interventionApproach || '',
+        method: result.method || '',
+        modality: 'individual',
+        contents: result.contents || '',
+        general_objective: result.generalObjective || '',
+        specific_objectives: result.specificObjectives || '',
+        operational_objectives: result.operationalObjectives || '',
+        general_plan: result.generalPlan || '',
         total_sessions: parseInt(importSessions) || 12,
         frequency: result.frequency || 'Semanal',
         session_duration: result.sessionDuration || 45,
-        status: 'active',
-      };
-
-      await createPlanning.mutateAsync(planningData);
-      toast.success('Planificación importada con IA exitosamente');
+      });
+      setFormMode('create');
       setImportDialogOpen(false);
       setImportText('');
       setImportPatientId('');
       setImportSessions('12');
+      setIsFormOpen(true);
+      toast.success('IA estructuró la planificación. Revisa y ajusta antes de guardar.');
     } catch (error: any) {
       toast.error('Error al importar', { description: error.message });
     } finally {
@@ -230,27 +231,28 @@ export default function Planificaciones() {
       return;
     }
 
-    // Pre-fill the planning form with the raw text as general plan
-    setEditingPlanning(null);
-    setFormMode('create');
-
-    const planningData: PlanningFormData = {
+    // Open the planning form pre-filled with the raw text so user can organize it
+    setEditingPlanning({
       patient_id: importPatientId,
-      intervention_approach: 'Intervención importada',
-      method: 'Por definir',
-      general_objective: 'Por definir',
+      intervention_approach: '',
+      method: '',
+      modality: 'individual',
+      contents: '',
+      general_objective: '',
+      specific_objectives: '',
+      operational_objectives: '',
       general_plan: importText,
       total_sessions: parseInt(importSessions) || 12,
       frequency: 'Semanal',
-      status: 'active',
-    };
-
-    createPlanning.mutate(planningData);
+      session_duration: 45,
+    });
+    setFormMode('create');
     setImportDialogOpen(false);
     setImportText('');
     setImportPatientId('');
     setImportSessions('12');
-    toast.success('Planificación importada. Edítala para completar los detalles.');
+    setIsFormOpen(true);
+    toast.info('Completa los campos de la planificación con la información del texto importado.');
   };
 
   const getPlanningSessions = (planningId: string) => {

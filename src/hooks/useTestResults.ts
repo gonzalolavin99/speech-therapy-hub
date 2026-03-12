@@ -8,7 +8,7 @@ export interface TestResult {
   id: string;
   user_id: string;
   patient_id: string;
-  test_type: 'mbgr' | 'tar' | 'teprosif';
+  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif' | 'reel-3' | 'phq-9' | 'gad-7' | 'psc-17' | 'asrs' | 'snap-iv';
   test_name: string;
   evaluation_date: string;
   score: string | null;
@@ -23,7 +23,7 @@ export interface TestResult {
 
 export interface TestResultFormData {
   patient_id: string;
-  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif' | 'reel-3';
+  test_type: 'mbgr' | 'mmbgr-lactantes' | 'tar' | 'teprosif' | 'reel-3' | 'phq-9' | 'gad-7' | 'psc-17' | 'asrs' | 'snap-iv';
   test_name: string;
   evaluation_date: string;
   score?: string | null;

@@ -409,9 +409,9 @@ Responde ESTRICTAMENTE en JSON (sin markdown, solo JSON puro):
   "method": "Método identificado (ej: Pares mínimos, Ciclos, Modelado, Enfoque naturalista, etc.)",
   "generalObjective": "Objetivo general de la intervención",
   "specificObjectives": "Objetivo específico 1\\nObjetivo específico 2\\nObjetivo específico 3",
-  "operationalObjectives": "Objetivo operacional 1\\nObjetivo operacional 2\\nObjetivo operacional 3",
+  "operationalObjectives": "Op1a del obj específico 1\\nOp1b del obj específico 1|||Op2a del obj específico 2\\nOp2b del obj específico 2|||Op3a del obj específico 3\\nOp3b del obj específico 3",
   "contents": "Contenido 1\\nContenido 2\\nContenido 3",
-  "generalPlan": "Plan general de intervención en 2-3 párrafos",
+  "generalPlan": "Plan general de intervención en 2-3 párrafos (NO incluir objetivos aquí, solo el plan narrativo)",
   "frequency": "Frecuencia identificada (ej: 2 veces por semana, Semanal, etc.)",
   "sessionDuration": 45
 }
@@ -422,7 +422,10 @@ IMPORTANTE:
 - Si hay actividades descritas, inclúyelas en el plan general
 - Si no se menciona frecuencia, usa "Semanal" por defecto
 - Si no se menciona duración, usa 45 minutos por defecto
-- Separa cada objetivo/contenido con \\n (salto de línea)`;
+- Separa cada objetivo específico con \\n (salto de línea)
+- Para operationalObjectives: agrupa los objetivos operacionales de CADA objetivo específico separados por \\n, y separa los GRUPOS entre sí con ||| (tres pipes). Ejemplo: si hay 3 objetivos específicos con 2 operacionales cada uno: "op1a\\nop1b|||op2a\\nop2b|||op3a\\nop3b"
+- El número de grupos en operationalObjectives (separados por |||) DEBE coincidir con el número de objetivos específicos
+- generalPlan debe contener SOLO el plan narrativo, NO repetir los objetivos`;
 
   const response = await getAICompletion({
     messages: [
@@ -430,7 +433,7 @@ IMPORTANTE:
       { role: 'user', content: prompt },
     ],
     temperature: 0.3,
-    maxTokens: 2000,
+    maxTokens: 3000,
   });
 
   try {
