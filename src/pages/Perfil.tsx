@@ -21,6 +21,7 @@ import { formatPriceCLP } from "@/config/subscriptions";
 import type { PlanId, FeatureId } from "@/config/subscriptions";
 import { useNavigate } from "react-router-dom";
 import { PublicProfileSettings } from "@/components/profile/PublicProfileSettings";
+import { AvailabilitySettings } from "@/components/profile/AvailabilitySettings";
 import { BankInfoForm } from "@/components/portal/BankInfoForm";
 import { MercadoPagoConfig } from "@/components/portal/MercadoPagoConfig";
 
@@ -509,6 +510,11 @@ export default function Perfil() {
             />
           </div>
         )}
+
+        {/* Availability / Public Booking */}
+        <div className="mb-8">
+          <AvailabilitySettings />
+        </div>
 
         {/* Bank Info for Portal */}
         <BankInfoForm />

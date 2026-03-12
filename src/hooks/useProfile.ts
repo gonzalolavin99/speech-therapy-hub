@@ -29,6 +29,7 @@ export interface ProfessionalProfile {
   public_phone: string | null;
   public_email: string | null;
   show_public_prices?: boolean;
+  booking_enabled?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +55,7 @@ export interface ProfileFormData {
   public_phone?: string | null;
   public_email?: string | null;
   show_public_prices?: boolean;
+  booking_enabled?: boolean;
 }
 
 export function useProfile() {
@@ -116,6 +118,7 @@ export function useProfile() {
         const safeUpdates = { ...updates };
         // Remove fields that may not exist in DB yet
         delete safeUpdates.show_public_prices;
+        delete safeUpdates.booking_enabled;
 
         const { data: retryData, error: retryError } = await supabase
           .from('professional_profiles')

@@ -18,6 +18,7 @@ export interface PublicProfileData {
   public_phone: string | null;
   public_email: string | null;
   show_public_prices: boolean;
+  booking_enabled?: boolean;
 }
 
 export interface ContactRequestData {

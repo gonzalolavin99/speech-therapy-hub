@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { usePublicProfile, ContactRequestData } from "@/hooks/usePublicProfile";
+import { PublicBookingCalendar } from "@/components/booking/PublicBookingCalendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -279,6 +280,16 @@ export default function PublicProfile() {
             </div>
           </div>
         </section>
+
+        {/* Public Booking Calendar */}
+        {profile.booking_enabled && slug && (
+          <section>
+            <PublicBookingCalendar
+              slug={slug}
+              professionalName={profile.full_name}
+            />
+          </section>
+        )}
 
         {/* Contact Section */}
         <section className="border-t pt-8">
