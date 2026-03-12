@@ -113,12 +113,35 @@ export default function Planificaciones() {
       total_sessions: parseInt(data.totalSessions),
       frequency: data.frequency,
       session_duration: data.sessionDuration || null,
-      status: editingPlanning?.status || "active",
+      status: editingPlanning?.status === 'draft' ? 'active' : (editingPlanning?.status || "active"),
     };
     if (formMode === "edit" && editingPlanning) {
       updatePlanning.mutate({ id: editingPlanning.id, ...planningData });
     } else {
       createPlanning.mutate(planningData);
+    }
+  };
+
+  const handleSaveDraft = (data: any) => {
+    const draftData: PlanningFormData = {
+      patient_id: data.patientId,
+      intervention_approach: data.interventionApproach || 'Por definir',
+      method: data.method || 'Por definir',
+      modality: data.modality === "grupal" ? "group" : "individual",
+      contents: data.contents || null,
+      general_objective: data.generalObjective || 'Por definir',
+      specific_objectives: data.specificObjectives || null,
+      operational_objectives: data.operationalObjectives || null,
+      general_plan: data.generalPlan || null,
+      total_sessions: parseInt(data.totalSessions) || 12,
+      frequency: data.frequency || '2 veces por semana',
+      session_duration: data.sessionDuration || null,
+      status: 'draft',
+    };
+    if (formMode === "edit" && editingPlanning) {
+      updatePlanning.mutate({ id: editingPlanning.id, ...draftData });
+    } else {
+      createPlanning.mutate(draftData);
     }
   };
 
@@ -419,58 +442,42 @@ export default function Planificaciones() {
                   </div>
 
                   {/* Objetivo General */}
-                  <div className="mb-6 overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr className="bg-muted/50">
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">
-                            Objetivo General
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="p-3 border text-card-foreground">
-                            {planning.general_objective}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div className="mb-6">
+                    <div className="rounded-lg border overflow-hidden">
+                      <div className="bg-primary/10 dark:bg-primary/15 px-4 py-2">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wider">Objetivo General</p>
+                      </div>
+                      <div className="p-4 text-sm text-card-foreground">
+                        {planning.general_objective}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Contenidos */}
-                  <div className="mb-6 overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr className="bg-muted/50">
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider">
-                            Contenidos
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="p-3 border text-card-foreground">
-                            {(planning.contents || '').split('\n').filter(Boolean).map((c, i) => (
-                              <div key={i} className="flex gap-2 py-0.5">
-                                <span className="text-primary font-medium shrink-0">{i + 1}.</span>
-                                <span>{c.replace(/^\d+[\.\)\-]\s*/, '')}</span>
-                              </div>
-                            ))}
-                            {!(planning.contents || '').trim() && <span className="text-muted-foreground italic">-</span>}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div className="mb-6">
+                    <div className="rounded-lg border overflow-hidden">
+                      <div className="bg-primary/10 dark:bg-primary/15 px-4 py-2">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wider">Contenidos</p>
+                      </div>
+                      <div className="p-4 text-sm text-card-foreground">
+                        {(planning.contents || '').split('\n').filter(Boolean).map((c, i) => (
+                          <div key={i} className="flex gap-2 py-0.5">
+                            <span className="text-primary font-medium shrink-0">{i + 1}.</span>
+                            <span>{c.replace(/^\d+[\.\)\-]\s*/, '')}</span>
+                          </div>
+                        ))}
+                        {!(planning.contents || '').trim() && <span className="text-muted-foreground italic">-</span>}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Objectives Table */}
                   <div className="mb-6 overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                       <thead>
-                        <tr className="bg-muted/50">
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider w-[50%]">Objetivo Espec&iacute;fico</th>
-                          <th className="text-left p-3 font-semibold text-muted-foreground border text-xs uppercase tracking-wider w-[50%]">Objetivo Operacional</th>
+                        <tr>
+                          <th className="text-left px-4 py-2 font-semibold text-primary bg-primary/10 dark:bg-primary/15 text-xs uppercase tracking-wider w-[50%] border-b border-r border-border">Objetivo Espec&iacute;fico</th>
+                          <th className="text-left px-4 py-2 font-semibold text-primary bg-primary/10 dark:bg-primary/15 text-xs uppercase tracking-wider w-[50%] border-b border-border">Objetivo Operacional</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -483,8 +490,8 @@ export default function Planificaciones() {
                             : opRaw.split('\n').filter(Boolean);
                           const maxRows = Math.max(specifics.length, opRows.length, 1);
                           return Array.from({ length: maxRows }, (_, i) => (
-                            <tr key={i} className="border-b last:border-b-0">
-                              <td className="p-3 border align-top text-card-foreground">
+                            <tr key={i} className="border-b border-border last:border-b-0">
+                              <td className="p-3 border-r border-border align-top text-card-foreground">
                                 {specifics[i] ? (
                                   <span className="flex gap-2">
                                     <span className="text-primary font-medium shrink-0">{i + 1}.</span>
@@ -492,7 +499,7 @@ export default function Planificaciones() {
                                   </span>
                                 ) : <span className="text-muted-foreground italic">-</span>}
                               </td>
-                              <td className="p-3 border align-top text-card-foreground">
+                              <td className="p-3 align-top text-card-foreground">
                                 {(opRows[i] || '').trim() ? (
                                   <div className="space-y-0.5">
                                     {opRows[i].trim().split('\n').filter(Boolean).map((op, j) => (
@@ -520,17 +527,29 @@ export default function Planificaciones() {
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" className="text-xs" onClick={() => handleViewSessions(planning)}>
-                      <Calendar className="h-3.5 w-3.5 mr-1" />
-                      Sesiones ({getPlanningSessions(planning.id).length})
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEditPlanning(planning)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs" onClick={() => handleRegisterSession(planning)}>
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Registrar Sesion
-                    </Button>
+                    {planning.status === 'draft' ? (
+                      <>
+                        <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs" onClick={() => handleEditPlanning(planning)}>
+                          <FileText className="h-3.5 w-3.5 mr-1" />
+                          Continuar Editando
+                        </Button>
+                        <p className="text-xs text-muted-foreground self-center italic">Borrador — completa la planificación para activarla</p>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="outline" size="sm" className="text-xs" onClick={() => handleViewSessions(planning)}>
+                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                          Sesiones ({getPlanningSessions(planning.id).length})
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEditPlanning(planning)}>
+                          Editar
+                        </Button>
+                        <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs" onClick={() => handleRegisterSession(planning)}>
+                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          Registrar Sesion
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -543,8 +562,10 @@ export default function Planificaciones() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSubmit={handleFormSubmit}
+        onSaveDraft={handleSaveDraft}
         patients={patientOptions}
         mode={formMode}
+        isDraft={editingPlanning?.status === 'draft'}
         initialData={editingPlanning ? {
           patientId: editingPlanning.patient_id,
           interventionApproach: editingPlanning.intervention_approach,

@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Plus, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Plus, Trash2, Save } from "lucide-react";
 import { generatePlanningSuggestions, isAIConfigured } from "@/lib/ai-service";
 import { useProfession } from "@/contexts/ProfessionContext";
 
@@ -52,18 +52,22 @@ interface PlanningFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PlanningFormData) => void;
+  onSaveDraft?: (data: Partial<PlanningFormData>) => void;
   patients: { id: string; name: string; diagnosis?: string | null; age?: number | null }[];
   mode: "create" | "edit";
   initialData?: Partial<PlanningFormData>;
+  isDraft?: boolean;
 }
 
 export function PlanningFormDialog({
   open,
   onOpenChange,
   onSubmit,
+  onSaveDraft,
   patients,
   mode,
   initialData,
+  isDraft,
 }: PlanningFormDialogProps) {
   const { config: profConfig } = useProfession();
   const form = useForm<PlanningFormData>({
@@ -185,6 +189,20 @@ export function PlanningFormDialog({
     toast.success(mode === "create" ? "Planificación creada exitosamente" : "Planificación actualizada");
     onOpenChange(false);
     form.reset();
+  };
+
+  const handleSaveDraft = () => {
+    const values = form.getValues();
+    if (!values.patientId) {
+      toast.error("Selecciona un paciente para guardar el borrador");
+      return;
+    }
+    if (onSaveDraft) {
+      onSaveDraft(values);
+      toast.success("Borrador guardado exitosamente");
+      onOpenChange(false);
+      form.reset();
+    }
   };
 
   const handleAIGenerate = async () => {
@@ -569,13 +587,21 @@ export function PlanningFormDialog({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-between gap-3 flex-wrap">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">
-                {mode === "create" ? "Crear Planificación" : "Guardar Cambios"}
-              </Button>
+              <div className="flex gap-2">
+                {onSaveDraft && (
+                  <Button type="button" variant="secondary" onClick={handleSaveDraft}>
+                    <Save className="h-4 w-4 mr-1.5" />
+                    Guardar Borrador
+                  </Button>
+                )}
+                <Button type="submit">
+                  {mode === "create" ? "Crear Planificación" : isDraft ? "Publicar Planificación" : "Guardar Cambios"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>

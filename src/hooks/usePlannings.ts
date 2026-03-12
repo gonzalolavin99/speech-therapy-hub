@@ -19,7 +19,7 @@ export interface Planning {
   completed_sessions: number;
   frequency: string;
   session_duration: number | null;
-  status: 'active' | 'completed' | 'paused';
+  status: 'active' | 'completed' | 'paused' | 'draft';
   created_at: string;
   updated_at: string;
   // Joined field
@@ -39,7 +39,7 @@ export interface PlanningFormData {
   total_sessions: number;
   frequency: string;
   session_duration?: number;
-  status?: 'active' | 'completed' | 'paused';
+  status?: 'active' | 'completed' | 'paused' | 'draft';
 }
 
 export function usePlannings() {

@@ -78,7 +78,7 @@ export default function Perfil() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 md:p-8 max-w-4xl overflow-x-hidden">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
@@ -88,10 +88,10 @@ export default function Perfil() {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-card rounded-xl border p-8 mb-8">
-          <div className="flex items-start gap-6 mb-8">
-            <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-12 w-12 text-primary" />
+        <div className="bg-card rounded-xl border p-4 md:p-8 mb-8">
+          <div className="flex items-start gap-4 md:gap-6 mb-8">
+            <div className="h-16 w-16 md:h-24 md:w-24 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <User className="h-8 w-8 md:h-12 md:w-12 text-primary" />
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-card-foreground">
@@ -218,7 +218,7 @@ export default function Perfil() {
         </div>
 
         {/* Google Calendar Integration */}
-        <div className="bg-card rounded-xl border p-8 mb-8">
+        <div className="bg-card rounded-xl border p-4 md:p-8 mb-8">
           <h3 className="text-lg font-semibold text-card-foreground mb-4">
             <Calendar className="h-5 w-5 inline mr-2" />
             Integración con Google Calendar
@@ -257,7 +257,7 @@ export default function Perfil() {
         </div>
 
         {/* Subscription Section */}
-        <div className="bg-card rounded-xl border p-8 mb-8">
+        <div className="bg-card rounded-xl border p-4 md:p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
               <Crown className="h-5 w-5 text-primary" />
@@ -462,7 +462,7 @@ export default function Perfil() {
         </div>
 
         {/* Session Settings */}
-        <div className="bg-card rounded-xl border p-8 mb-8">
+        <div className="bg-card rounded-xl border p-4 md:p-8 mb-8">
           <h3 className="text-lg font-semibold text-card-foreground mb-6">
             Configuración de Sesiones
           </h3>
