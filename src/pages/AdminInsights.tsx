@@ -358,25 +358,37 @@ export default function AdminInsights() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-end gap-[3px] h-32">
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i.toString().padStart(2, "0");
-                      const count = stats.hourlyDistribution[hour] || 0;
-                      const height = maxHourly > 0 ? (count / maxHourly) * 100 : 0;
-                      return (
-                        <div key={hour} className="flex-1 flex flex-col items-center gap-1" title={`${hour}:00 — ${count} acciones`}>
-                          <div className="w-full rounded-t" style={{ height: `${Math.max(height, 2)}%`, backgroundColor: count > 0 ? "hsl(var(--primary))" : "hsl(var(--muted))" }} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-muted-foreground">00:00</span>
-                    <span className="text-[10px] text-muted-foreground">06:00</span>
-                    <span className="text-[10px] text-muted-foreground">12:00</span>
-                    <span className="text-[10px] text-muted-foreground">18:00</span>
-                    <span className="text-[10px] text-muted-foreground">23:00</span>
-                  </div>
+                  {Object.keys(stats.hourlyDistribution).length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Sin datos de actividad en este período</p>
+                  ) : (
+                    <>
+                      <div className="flex items-end gap-[3px] h-32">
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const hour = i.toString().padStart(2, "0");
+                          const count = stats.hourlyDistribution[hour] || 0;
+                          const heightPx = maxHourly > 0 ? Math.max((count / maxHourly) * 128, count > 0 ? 4 : 1) : 1;
+                          return (
+                            <div key={hour} className="flex-1 h-full flex flex-col justify-end items-center" title={`${hour}:00 — ${count} acciones`}>
+                              <div
+                                className="w-full rounded-t transition-all duration-500"
+                                style={{
+                                  height: `${heightPx}px`,
+                                  backgroundColor: count > 0 ? "hsl(var(--primary))" : "hsl(var(--muted))",
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px] text-muted-foreground">00:00</span>
+                        <span className="text-[10px] text-muted-foreground">06:00</span>
+                        <span className="text-[10px] text-muted-foreground">12:00</span>
+                        <span className="text-[10px] text-muted-foreground">18:00</span>
+                        <span className="text-[10px] text-muted-foreground">23:00</span>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 

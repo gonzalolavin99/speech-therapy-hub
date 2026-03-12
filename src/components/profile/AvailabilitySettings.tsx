@@ -102,7 +102,7 @@ export function AvailabilitySettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-card rounded-xl border p-8">
+      <div className="bg-card rounded-xl border p-4 sm:p-8">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Cargando disponibilidad...</span>
@@ -112,8 +112,8 @@ export function AvailabilitySettings() {
   }
 
   return (
-    <div className="bg-card rounded-xl border p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-card rounded-xl border p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-primary" />
@@ -179,10 +179,10 @@ export function AvailabilitySettings() {
               {days.map((day) => (
                 <div
                   key={day.day_of_week}
-                  className={`flex flex-wrap items-center gap-2 sm:gap-3 p-3 rounded-lg border transition-colors ${
+                  className={`flex flex-wrap items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-colors ${
                     day.is_active
                       ? 'bg-background border-border'
-                      : 'bg-muted/30 border-transparent'
+                      : 'bg-muted/20 dark:bg-muted/10 border-transparent'
                   }`}
                 >
                   <Switch
@@ -190,7 +190,7 @@ export function AvailabilitySettings() {
                     onCheckedChange={(v) => handleDayToggle(day.day_of_week, v)}
                   />
                   <span
-                    className={`w-20 sm:w-24 text-sm font-medium ${
+                    className={`w-16 sm:w-24 text-xs sm:text-sm font-medium ${
                       day.is_active ? 'text-foreground' : 'text-muted-foreground'
                     }`}
                   >

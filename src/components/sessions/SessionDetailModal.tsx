@@ -168,7 +168,7 @@ export function SessionDetailModal({
 
           <div className="space-y-4 py-4">
             {/* Información del paciente */}
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-muted/30 dark:bg-muted/10 rounded-lg border border-border/50">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-5 w-5 text-primary" />
               </div>
@@ -272,7 +272,7 @@ export function SessionDetailModal({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 min-h-[60px]">
+                <p className="text-sm text-muted-foreground bg-muted/20 dark:bg-muted/10 rounded-lg p-3 min-h-[60px] border border-border/30">
                   {session.notes || "Sin notas"}
                 </p>
               )}
@@ -298,7 +298,7 @@ export function SessionDetailModal({
                 {(session.status === 'scheduled' || session.status === 'confirmed') && (
                   <Button
                     variant="outline"
-                    className="justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                    className="justify-start text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                     onClick={handleComplete}
                     disabled={isLoading}
                   >
@@ -310,7 +310,7 @@ export function SessionDetailModal({
                 {(session.status === 'scheduled' || session.status === 'confirmed') && (
                   <Button
                     variant="outline"
-                    className="justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    className="justify-start text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/30"
                     onClick={() => setShowCancelAlert(true)}
                     disabled={isLoading}
                   >
