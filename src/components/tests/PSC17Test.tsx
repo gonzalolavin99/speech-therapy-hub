@@ -114,7 +114,7 @@ export function PSC17Test({ patientName, onComplete, onCancel }: PSC17TestProps)
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full text-xs">
+            <span className="px-2 py-0.5 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary rounded-full text-xs font-medium">
               {getSubscaleLabel(currentIndex)}
             </span>
           </div>

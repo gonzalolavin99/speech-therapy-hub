@@ -274,7 +274,7 @@ export default function Tests() {
                   {test.categories.map((category) => (
                     <span
                       key={category}
-                      className="px-2 py-1 bg-secondary text-secondary-foreground rounded-full text-xs"
+                      className="px-2 py-1 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary rounded-full text-xs font-medium"
                     >
                       {category}
                     </span>
