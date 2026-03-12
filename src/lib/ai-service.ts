@@ -369,6 +369,89 @@ Responde ESTRICTAMENTE en JSON (sin markdown):
 }
 
 // ============================================================
+// Import Planning: Parse unstructured text into planning data
+// ============================================================
+
+export interface ImportedPlanningData {
+  interventionApproach: string;
+  method: string;
+  generalObjective: string;
+  specificObjectives: string;
+  operationalObjectives: string;
+  contents: string;
+  generalPlan: string;
+  frequency: string;
+  sessionDuration: number;
+}
+
+export async function generatePlanningFromText(
+  rawText: string,
+  patientName?: string,
+  patientAge?: number | null,
+  diagnosis?: string | null
+): Promise<ImportedPlanningData> {
+  const prompt = `Eres un experto en planificaciones de intervención clínica. El profesional tiene una planificación existente escrita de forma libre y necesita importarla al sistema.
+
+Analiza el siguiente texto y extrae/estructura la información en el formato requerido. Si algún campo no se puede inferir del texto, genera contenido apropiado basado en el contexto.
+
+${patientName ? `PACIENTE: ${patientName}` : ''}
+${patientAge ? `EDAD: ${patientAge} años` : ''}
+${diagnosis ? `DIAGNÓSTICO: ${diagnosis}` : ''}
+
+TEXTO DE LA PLANIFICACIÓN A IMPORTAR:
+---
+${rawText}
+---
+
+Responde ESTRICTAMENTE en JSON (sin markdown, solo JSON puro):
+{
+  "interventionApproach": "Enfoque de intervención identificado (ej: Enfoque fonológico, Terapia de lenguaje, Estimulación temprana, etc.)",
+  "method": "Método identificado (ej: Pares mínimos, Ciclos, Modelado, Enfoque naturalista, etc.)",
+  "generalObjective": "Objetivo general de la intervención",
+  "specificObjectives": "Objetivo específico 1\\nObjetivo específico 2\\nObjetivo específico 3",
+  "operationalObjectives": "Objetivo operacional 1\\nObjetivo operacional 2\\nObjetivo operacional 3",
+  "contents": "Contenido 1\\nContenido 2\\nContenido 3",
+  "generalPlan": "Plan general de intervención en 2-3 párrafos",
+  "frequency": "Frecuencia identificada (ej: 2 veces por semana, Semanal, etc.)",
+  "sessionDuration": 45
+}
+
+IMPORTANTE:
+- Mantén el contenido original lo más fiel posible
+- Si el texto menciona objetivos, úsalos directamente
+- Si hay actividades descritas, inclúyelas en el plan general
+- Si no se menciona frecuencia, usa "Semanal" por defecto
+- Si no se menciona duración, usa 45 minutos por defecto
+- Separa cada objetivo/contenido con \\n (salto de línea)`;
+
+  const response = await getAICompletion({
+    messages: [
+      { role: 'system', content: getSystemPrompt() },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.3,
+    maxTokens: 2000,
+  });
+
+  try {
+    const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleaned) as ImportedPlanningData;
+  } catch {
+    return {
+      interventionApproach: 'Intervención importada',
+      method: 'Por definir',
+      generalObjective: rawText.substring(0, 200),
+      specificObjectives: '',
+      operationalObjectives: '',
+      contents: '',
+      generalPlan: rawText,
+      frequency: 'Semanal',
+      sessionDuration: 45,
+    };
+  }
+}
+
+// ============================================================
 // Helper: Build human-readable test context from raw results
 // ============================================================
 

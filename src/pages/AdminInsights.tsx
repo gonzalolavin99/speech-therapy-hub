@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PlatformMPConfig } from "@/components/admin/PlatformMPConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -535,6 +536,9 @@ export default function AdminInsights() {
             </Card>
           </>
         )}
+
+        {/* Platform Payment Config */}
+        <PlatformMPConfig />
       </div>
     </AppLayout>
   );

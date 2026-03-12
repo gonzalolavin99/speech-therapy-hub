@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { WeeklyCalendar } from "@/components/calendar/WeeklyCalendar";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ReminderWidget } from "@/components/dashboard/ReminderWidget";
+import { ContactRequestsWidget } from "@/components/dashboard/ContactRequestsWidget";
 import { Users, Calendar, CheckCircle, Clock, Sparkles, Loader2, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePatients } from "@/hooks/usePatients";
@@ -346,6 +347,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Contact Requests */}
+        <ContactRequestsWidget />
 
         {/* Calendar */}
         <div>

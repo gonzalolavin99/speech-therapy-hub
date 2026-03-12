@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { validateRUT, sanitizeName, sanitizeText } from "@/utils/validation";
 import { useProfession } from "@/contexts/ProfessionContext";
+import { CHILE_REGIONS, getComunasByRegion } from "@/config/chile-regions";
 
 const patientSchema = z.object({
   name: z.string()
@@ -43,6 +44,8 @@ const patientSchema = z.object({
   phone: z.string().min(9, "Teléfono inválido").max(15),
   email: z.string().email("Email inválido").max(255),
   address: z.string().max(200).optional().transform((val) => val ? sanitizeText(val) : val),
+  region: z.string().max(100).optional(),
+  comuna: z.string().max(100).optional(),
   guardianName: z.string().max(100).optional().transform((val) => val ? sanitizeName(val) : val),
   guardianPhone: z.string().max(15).optional(),
   diagnosis: z.string().min(1, "Diagnóstico requerido").transform(sanitizeText),
@@ -81,6 +84,8 @@ export function PatientFormDialog({
       phone: initialData?.phone || "",
       email: initialData?.email || "",
       address: initialData?.address || "",
+      region: initialData?.region || "",
+      comuna: initialData?.comuna || "",
       guardianName: initialData?.guardianName || "",
       guardianPhone: initialData?.guardianPhone || "",
       diagnosis: initialData?.diagnosis || "",
@@ -198,6 +203,71 @@ export function PatientFormDialog({
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="region"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Región</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          form.setValue('comuna', '');
+                        }}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar región" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CHILE_REGIONS.map((r) => (
+                            <SelectItem key={r.name} value={r.name}>
+                              {r.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="comuna"
+                  render={({ field }) => {
+                    const selectedRegion = form.watch('region');
+                    const comunas = selectedRegion ? getComunasByRegion(selectedRegion) : [];
+                    return (
+                      <FormItem>
+                        <FormLabel>Comuna</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                          disabled={!selectedRegion}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={selectedRegion ? "Seleccionar comuna" : "Selecciona región primero"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {comunas.map((c) => (
+                              <SelectItem key={c} value={c}>
+                                {c}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

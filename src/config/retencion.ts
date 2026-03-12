@@ -10,7 +10,7 @@ export const RETENCION_RATES: Record<number, number> = {
   2028: 17.00,
 };
 
-export const SII_BHE_PORTAL_URL = 'https://homer.sii.cl';
+export const SII_BHE_PORTAL_URL = 'https://loa.sii.cl/cgi_IMT/TMBECN_ValidaTimbrajeContrib.cgi?modo=1&dummy=1461943054813';
 
 export function getRetencionRate(year?: number): number {
   const y = year || new Date().getFullYear();

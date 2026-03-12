@@ -20,6 +20,9 @@ import { useClinic } from "@/hooks/useClinic";
 import { formatPriceCLP } from "@/config/subscriptions";
 import type { PlanId, FeatureId } from "@/config/subscriptions";
 import { useNavigate } from "react-router-dom";
+import { PublicProfileSettings } from "@/components/profile/PublicProfileSettings";
+import { BankInfoForm } from "@/components/portal/BankInfoForm";
+import { MercadoPagoConfig } from "@/components/portal/MercadoPagoConfig";
 
 export default function Perfil() {
   const { user } = useAuth();
@@ -495,6 +498,23 @@ export default function Perfil() {
             </div>
           </div>
         </div>
+
+        {/* Public Profile Settings */}
+        {profile && (
+          <div className="mb-8">
+            <PublicProfileSettings
+              profile={profile}
+              onUpdate={(updates) => updateProfile.mutate(updates)}
+              isUpdating={updateProfile.isPending}
+            />
+          </div>
+        )}
+
+        {/* Bank Info for Portal */}
+        <BankInfoForm />
+
+        {/* MercadoPago Config */}
+        <MercadoPagoConfig />
 
         {/* Save Button */}
         <div className="flex justify-between items-center">

@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -21,8 +21,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { RutInput } from "@/components/ui/rut-input";
-import { ExternalLink, FileText, Save } from "lucide-react";
+import { ExternalLink, Save, Copy, Check } from "lucide-react";
 import { calculateRetencion, SII_BHE_PORTAL_URL } from "@/config/retencion";
+import { toast } from "sonner";
 import type { ProfessionId } from "@/config/professions";
 
 const boletaSchema = z.object({
@@ -51,6 +52,9 @@ interface BoletaHonorariosDialogProps {
     patientId: string;
     patientName: string;
     patientRut: string | null;
+    patientAddress: string | null;
+    patientRegion: string | null;
+    patientComuna: string | null;
     amount: number;
     sessionDate: string;
   } | null;
@@ -67,6 +71,46 @@ function formatCurrency(amount: number) {
     style: "currency",
     currency: "CLP",
   }).format(amount);
+}
+
+// ── Componente para copiar un campo al portapapeles ──
+function CopyField({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Error al copiar');
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2 py-1.5">
+      <div className="min-w-0 flex-1">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <p className="text-sm font-medium truncate">{value || '-'}</p>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0 flex-shrink-0"
+        onClick={handleCopy}
+        disabled={!value}
+        title={`Copiar ${label}`}
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-green-600" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+        )}
+      </Button>
+    </div>
+  );
 }
 
 export function BoletaHonorariosDialog({
@@ -107,6 +151,9 @@ export function BoletaHonorariosDialog({
   }, [open, paymentData, defaultDescription, form]);
 
   const watchedAmount = form.watch("amountBruto");
+  const watchedName = form.watch("patientName");
+  const watchedRut = form.watch("patientRut");
+  const watchedDescription = form.watch("description");
 
   const retencion = useMemo(() => {
     const amount = typeof watchedAmount === 'number' && watchedAmount > 0 ? watchedAmount : 0;
@@ -125,21 +172,38 @@ export function BoletaHonorariosDialog({
       // Abrir portal SII en nueva pestaña
       const newWindow = window.open(SII_BHE_PORTAL_URL, '_blank', 'noopener,noreferrer');
       if (!newWindow) {
-        // Si el popup fue bloqueado, dar enlace alternativo
-        import('sonner').then(({ toast }) => {
-          toast.info('No se pudo abrir el portal del SII automáticamente', {
-            description: 'Haz clic aquí para abrir manualmente',
-            action: {
-              label: 'Abrir SII',
-              onClick: () => window.open(SII_BHE_PORTAL_URL, '_blank'),
-            },
-            duration: 10000,
-          });
+        toast.info('No se pudo abrir el portal del SII automáticamente', {
+          description: 'Haz clic aquí para abrir manualmente',
+          action: {
+            label: 'Abrir SII',
+            onClick: () => window.open(SII_BHE_PORTAL_URL, '_blank'),
+          },
+          duration: 10000,
         });
       }
       onOpenChange(false);
       form.reset();
     })();
+  };
+
+  const handleCopyAll = async () => {
+    const lines = [
+      `RUT Destinatario: ${watchedRut || '-'}`,
+      `Nombre Destinatario: ${watchedName || '-'}`,
+      `Domicilio: ${paymentData?.patientAddress || '-'}`,
+      `Region: ${paymentData?.patientRegion || '-'}`,
+      `Comuna: ${paymentData?.patientComuna || '-'}`,
+      `Descripcion: ${watchedDescription || '-'}`,
+      `Monto Bruto: ${watchedAmount || 0}`,
+      `Retencion (${retencion.percent}%): ${retencion.retencionAmount}`,
+      `Monto Liquido: ${retencion.amountLiquido}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      toast.success('Todos los datos copiados al portapapeles');
+    } catch {
+      toast.error('Error al copiar');
+    }
   };
 
   return (
@@ -284,6 +348,39 @@ export function BoletaHonorariosDialog({
                   <span className="text-lg font-bold text-primary">{formatCurrency(retencion.amountLiquido)}</span>
                 </div>
               </div>
+            </div>
+
+            {/* ── Copiar datos para SII ── */}
+            <div className="rounded-lg border-2 border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                  Datos para copiar al SII
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-950"
+                  onClick={handleCopyAll}
+                >
+                  <Copy className="h-3 w-3 mr-1" />
+                  Copiar todo
+                </Button>
+              </div>
+
+              <CopyField label="RUT Destinatario" value={watchedRut || ''} />
+              <CopyField label="Nombre Destinatario" value={watchedName || ''} />
+              <CopyField label="Domicilio" value={paymentData?.patientAddress || ''} />
+              <CopyField label="Region" value={paymentData?.patientRegion || ''} />
+              <CopyField label="Comuna" value={paymentData?.patientComuna || ''} />
+              <CopyField label="Descripcion del servicio" value={watchedDescription || ''} />
+              <CopyField label="Monto Bruto" value={watchedAmount?.toString() || '0'} />
+
+              {(!paymentData?.patientAddress || !paymentData?.patientRegion || !paymentData?.patientComuna) && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 italic">
+                  Faltan datos de direccion del paciente. Puedes agregarlos editando el paciente en la seccion Pacientes.
+                </p>
+              )}
             </div>
 
             {/* Notes */}

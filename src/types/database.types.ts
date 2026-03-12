@@ -26,6 +26,9 @@ export interface Database {
           perinatal_history: string | null
           psychomotor_dev: string | null
           observations: string | null
+          address: string | null
+          region: string | null
+          comuna: string | null
           created_at: string
           updated_at: string
         }
@@ -45,6 +48,9 @@ export interface Database {
           perinatal_history?: string | null
           psychomotor_dev?: string | null
           observations?: string | null
+          address?: string | null
+          region?: string | null
+          comuna?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,6 +70,9 @@ export interface Database {
           perinatal_history?: string | null
           psychomotor_dev?: string | null
           observations?: string | null
+          address?: string | null
+          region?: string | null
+          comuna?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -312,6 +321,194 @@ export interface Database {
         }
       }
     }
+      session_packs: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          name: string
+          total_sessions: number
+          used_sessions: number
+          price_total: number
+          price_per_session: number
+          original_price_per_session: number
+          discount_percent: number
+          status: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status: 'pending' | 'partial' | 'paid'
+          notes: string | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          name?: string
+          total_sessions: number
+          used_sessions?: number
+          price_total: number
+          original_price_per_session?: number
+          status?: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status?: 'pending' | 'partial' | 'paid'
+          notes?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          patient_id?: string
+          name?: string
+          total_sessions?: number
+          used_sessions?: number
+          price_total?: number
+          original_price_per_session?: number
+          status?: 'active' | 'completed' | 'cancelled' | 'expired'
+          payment_status?: 'pending' | 'partial' | 'paid'
+          notes?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      portal_charges: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          payment_id: string | null
+          session_id: string | null
+          description: string
+          amount: number
+          status: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method: string | null
+          payment_reference: string | null
+          patient_confirmed_at: string | null
+          professional_confirmed_at: string | null
+          due_date: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          payment_id?: string | null
+          session_id?: string | null
+          description: string
+          amount: number
+          status?: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method?: string | null
+          payment_reference?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          description?: string
+          amount?: number
+          status?: 'pending' | 'paid' | 'confirmed' | 'cancelled'
+          payment_method?: string | null
+          payment_reference?: string | null
+          patient_confirmed_at?: string | null
+          professional_confirmed_at?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+      }
+      portal_messages: {
+        Row: {
+          id: string
+          user_id: string
+          patient_id: string
+          sender_type: 'patient' | 'professional'
+          message: string
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          patient_id: string
+          sender_type: 'patient' | 'professional'
+          message: string
+          read_at?: string | null
+        }
+        Update: {
+          read_at?: string | null
+        }
+      }
+      professional_bank_info: {
+        Row: {
+          id: string
+          user_id: string
+          bank_name: string
+          account_type: string
+          account_number: string
+          holder_rut: string
+          holder_name: string
+          email: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          bank_name: string
+          account_type: string
+          account_number: string
+          holder_rut: string
+          holder_name: string
+          email: string
+        }
+        Update: {
+          bank_name?: string
+          account_type?: string
+          account_number?: string
+          holder_rut?: string
+          holder_name?: string
+          email?: string
+        }
+      }
+      contact_requests: {
+        Row: {
+          id: string
+          professional_id: string
+          name: string
+          phone: string | null
+          email: string | null
+          message: string | null
+          service_type: string
+          status: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          professional_id: string
+          name: string
+          phone?: string | null
+          email?: string | null
+          message?: string | null
+          service_type?: string
+          status?: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          professional_id?: string
+          name?: string
+          phone?: string | null
+          email?: string | null
+          message?: string | null
+          service_type?: string
+          status?: 'pending' | 'read' | 'contacted' | 'archived'
+          created_at?: string
+        }
+      }
+    }
     Views: {
       [_ in never]: never
     }
@@ -348,3 +545,11 @@ export type TestResultUpdate = Database['public']['Tables']['test_results']['Upd
 export type BoletaHonorarios = Database['public']['Tables']['boletas_honorarios']['Row']
 export type BoletaHonorariosInsert = Database['public']['Tables']['boletas_honorarios']['Insert']
 export type BoletaHonorariosUpdate = Database['public']['Tables']['boletas_honorarios']['Update']
+
+export type SessionPack = Database['public']['Tables']['session_packs']['Row']
+export type SessionPackInsert = Database['public']['Tables']['session_packs']['Insert']
+export type SessionPackUpdate = Database['public']['Tables']['session_packs']['Update']
+
+export type ContactRequest = Database['public']['Tables']['contact_requests']['Row']
+export type ContactRequestInsert = Database['public']['Tables']['contact_requests']['Insert']
+export type ContactRequestUpdate = Database['public']['Tables']['contact_requests']['Update']

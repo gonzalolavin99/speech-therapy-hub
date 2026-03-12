@@ -19,20 +19,29 @@ import {
   Sparkles,
   Brain,
   ArrowLeft,
+  Upload,
+  Link,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { PatientFormDialog } from "@/components/forms/PatientFormDialog";
 import { ConsentDialog, ConsentBadge, ConsentData } from "@/components/consent/ConsentDialog";
 import { usePatients, Patient, PatientFormData } from "@/hooks/usePatients";
+import { PatientImportDialog } from "@/components/forms/PatientImportDialog";
 import { exportPatientToPDF } from "@/utils/exportPatient";
 import { PatientListSkeleton } from "@/components/ui/skeleton-card";
 import { toast } from "sonner";
 import { generatePatientSummary, isAIConfigured } from "@/lib/ai-service";
 import { formatearEdad, calcularEdadEnAños } from "@/utils/age";
 import { useTestResults } from "@/hooks/useTestResults";
+import { useSessions } from "@/hooks/useSessions";
+import { usePlannings } from "@/hooks/usePlannings";
+import { PatientProgressChart } from "@/components/progress/PatientProgressChart";
+import { ProgressReportDialog } from "@/components/reports/ProgressReportDialog";
+import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { PortalLinkDialog } from "@/components/portal/PortalLinkDialog";
 
 export default function Pacientes() {
   const isMobile = useIsMobile();
@@ -46,10 +55,16 @@ export default function Pacientes() {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState({ title: '', desc: '', usage: '' });
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [portalDialogOpen, setPortalDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { patients, isLoading, createPatient, updatePatient } = usePatients();
   const { testResults } = useTestResults();
+  const { sessions } = useSessions();
+  const { plannings } = usePlannings();
+  const { profile } = useProfile();
   const { canCreate, hasFeature } = useSubscription();
 
   const handleConsent = (patientId: string, data: ConsentData) => {
@@ -138,6 +153,9 @@ export default function Pacientes() {
       perinatal_history: data.perinatalHistory || null,
       psychomotor_dev: data.psychomotorDev || null,
       observations: data.observations || null,
+      address: data.address || null,
+      region: data.region || null,
+      comuna: data.comuna || null,
     };
 
     if (formMode === "create") {
@@ -160,10 +178,16 @@ export default function Pacientes() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold text-card-foreground">Pacientes</h1>
-              <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleCreatePatient}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Paciente
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-1.5" />
+                  Importar
+                </Button>
+                <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={handleCreatePatient}>
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Nuevo
+                </Button>
+              </div>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -282,8 +306,8 @@ export default function Pacientes() {
                     <span className="hidden sm:inline">Ver Tests</span>
                     <span className="sm:hidden">Tests</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="flex-shrink-0"
                     onClick={async () => {
@@ -303,6 +327,26 @@ export default function Pacientes() {
                     <Download className="h-4 w-4 mr-1 lg:mr-2" />
                     <span className="hidden sm:inline">Exportar</span>
                     <span className="sm:hidden">PDF</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                    onClick={() => setReportDialogOpen(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Informe</span>
+                    <span className="sm:hidden">Inf.</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+                    onClick={() => setPortalDialogOpen(true)}
+                  >
+                    <Link className="h-4 w-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Portal</span>
+                    <span className="sm:hidden">Portal</span>
                   </Button>
                   <Button size="sm" className="bg-primary hover:bg-primary/90 flex-shrink-0" onClick={handleEditPatient}>
                     <Edit className="h-4 w-4 mr-1 lg:mr-2" />
@@ -359,6 +403,19 @@ export default function Pacientes() {
                 <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                   <p className="text-primary font-medium">{selectedPatient.diagnosis}</p>
                 </div>
+              </div>
+
+              {/* Progress Charts */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-card-foreground mb-4">
+                  📊 Progreso del Paciente
+                </h3>
+                <PatientProgressChart
+                  sessions={sessions}
+                  plannings={plannings}
+                  patientId={selectedPatient.id}
+                  patientName={selectedPatient.name}
+                />
               </div>
 
               {/* AI Summary Section */}
@@ -485,6 +542,9 @@ export default function Pacientes() {
                 perinatalHistory: editingPatient.perinatal_history,
                 psychomotorDev: editingPatient.psychomotor_dev,
                 observations: editingPatient.observations,
+                address: editingPatient.address,
+                region: editingPatient.region,
+                comuna: editingPatient.comuna,
               }
             : undefined
         }
@@ -506,6 +566,29 @@ export default function Pacientes() {
         />
       )}
 
+      <PatientImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        existingRuts={patients.map(p => p.rut.replace(/\./g, '').replace(/-/g, '').trim())}
+        onImport={async (importedPatients) => {
+          for (const p of importedPatients) {
+            await createPatient.mutateAsync({
+              name: p.name,
+              rut: p.rut || 'Por completar',
+              phone: p.phone || null,
+              email: p.email || null,
+              diagnosis: p.diagnosis || null,
+              birth_date: p.birth_date || null,
+              age: p.birth_date ? calcularEdadEnAños(p.birth_date) : null,
+              status: (p.status as 'active' | 'inactive' | 'completed') || 'active',
+              consult_reason: p.consult_reason || null,
+              referred_by: p.referred_by || null,
+              observations: p.observations || null,
+            });
+          }
+        }}
+      />
+
       <UpgradePrompt
         open={upgradeOpen}
         onOpenChange={setUpgradeOpen}
@@ -513,6 +596,28 @@ export default function Pacientes() {
         description={upgradeMsg.desc}
         currentUsage={upgradeMsg.usage || undefined}
       />
+
+      {selectedPatient && profile && (
+        <ProgressReportDialog
+          open={reportDialogOpen}
+          onOpenChange={setReportDialogOpen}
+          patient={selectedPatient}
+          professional={profile}
+          plannings={plannings}
+          sessions={sessions}
+          testResults={testResults}
+        />
+      )}
+
+      {selectedPatient && (
+        <PortalLinkDialog
+          open={portalDialogOpen}
+          onOpenChange={setPortalDialogOpen}
+          patientId={selectedPatient.id}
+          patientName={selectedPatient.name}
+          patientPhone={selectedPatient.phone}
+        />
+      )}
     </AppLayout>
   );
 }

@@ -24,6 +24,9 @@ export interface Patient {
   consent_date: string | null;
   consent_guardian_name: string | null;
   consent_guardian_rut: string | null;
+  address: string | null;
+  region: string | null;
+  comuna: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +49,9 @@ export interface PatientFormData {
   consent_date?: string | null;
   consent_guardian_name?: string | null;
   consent_guardian_rut?: string | null;
+  address?: string | null;
+  region?: string | null;
+  comuna?: string | null;
 }
 
 export function usePatients() {

@@ -24,6 +24,11 @@ export interface ProfessionalProfile {
   tour_completed: boolean;
   profession: ProfessionId;
   approved: boolean;
+  slug: string | null;
+  public_profile_enabled: boolean;
+  public_phone: string | null;
+  public_email: string | null;
+  show_public_prices?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -44,6 +49,11 @@ export interface ProfileFormData {
   evaluation_price?: number;
   onboarding_completed?: boolean;
   profession?: ProfessionId;
+  slug?: string | null;
+  public_profile_enabled?: boolean;
+  public_phone?: string | null;
+  public_email?: string | null;
+  show_public_prices?: boolean;
 }
 
 export function useProfile() {
@@ -92,13 +102,31 @@ export function useProfile() {
   const updateProfile = useMutation({
     mutationFn: async (updates: Partial<ProfileFormData>) => {
       if (!user) throw new Error('No user');
-      
+
+      // Try update with all fields first
       const { data, error } = await supabase
         .from('professional_profiles')
         .update(updates)
         .eq('user_id', user.id)
         .select()
         .single();
+
+      // If a column doesn't exist yet (migration pending), retry without it
+      if (error && error.message?.includes('schema cache')) {
+        const safeUpdates = { ...updates };
+        // Remove fields that may not exist in DB yet
+        delete safeUpdates.show_public_prices;
+
+        const { data: retryData, error: retryError } = await supabase
+          .from('professional_profiles')
+          .update(safeUpdates)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (retryError) throw retryError;
+        return retryData as ProfessionalProfile;
+      }
 
       if (error) throw error;
       return data as ProfessionalProfile;
