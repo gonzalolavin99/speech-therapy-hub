@@ -139,9 +139,9 @@ export function AvailabilitySettings() {
         <div className="space-y-6">
           {/* Link info */}
           {profile?.slug && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-              <Globe className="h-4 w-4 text-primary shrink-0" />
-              <p className="text-sm text-muted-foreground">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+              <Globe className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground break-all">
                 Los pacientes podrán agendar desde:{" "}
                 <span className="font-medium text-primary">
                   {window.location.origin}/p/{profile.slug}
@@ -151,7 +151,7 @@ export function AvailabilitySettings() {
           )}
 
           {/* Slot Duration */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <Label className="text-sm font-medium">Duración de cada bloque:</Label>
@@ -179,7 +179,7 @@ export function AvailabilitySettings() {
               {days.map((day) => (
                 <div
                   key={day.day_of_week}
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                  className={`flex flex-wrap items-center gap-2 sm:gap-3 p-3 rounded-lg border transition-colors ${
                     day.is_active
                       ? 'bg-background border-border'
                       : 'bg-muted/30 border-transparent'
@@ -190,7 +190,7 @@ export function AvailabilitySettings() {
                     onCheckedChange={(v) => handleDayToggle(day.day_of_week, v)}
                   />
                   <span
-                    className={`w-24 text-sm font-medium ${
+                    className={`w-20 sm:w-24 text-sm font-medium ${
                       day.is_active ? 'text-foreground' : 'text-muted-foreground'
                     }`}
                   >
@@ -198,14 +198,14 @@ export function AvailabilitySettings() {
                   </span>
 
                   {day.is_active ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Select
                         value={day.start_time}
                         onValueChange={(v) =>
                           handleTimeChange(day.day_of_week, 'start_time', v)
                         }
                       >
-                        <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectTrigger className="w-[76px] sm:w-24 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -223,7 +223,7 @@ export function AvailabilitySettings() {
                           handleTimeChange(day.day_of_week, 'end_time', v)
                         }
                       >
-                        <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectTrigger className="w-[76px] sm:w-24 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

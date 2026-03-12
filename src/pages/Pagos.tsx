@@ -331,20 +331,20 @@ export default function Pagos() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="pagos" className="gap-2">
+          <TabsList className="w-full overflow-x-auto flex-nowrap">
+            <TabsTrigger value="pagos" className="gap-2 shrink-0">
               <DollarSign className="h-4 w-4" />
               Pagos
             </TabsTrigger>
-            <TabsTrigger value="packs" className="gap-2">
+            <TabsTrigger value="packs" className="gap-2 shrink-0">
               <Package className="h-4 w-4" />
               Packs
             </TabsTrigger>
-            <TabsTrigger value="cobros" className="gap-2">
+            <TabsTrigger value="cobros" className="gap-2 shrink-0">
               <CreditCard className="h-4 w-4" />
               Cobros
             </TabsTrigger>
-            <TabsTrigger value="boletas" className="gap-2">
+            <TabsTrigger value="boletas" className="gap-2 shrink-0">
               <Receipt className="h-4 w-4" />
               Boletas
             </TabsTrigger>
@@ -624,7 +624,7 @@ export default function Pagos() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Por Confirmar</p>
-                    <p className="text-2xl font-bold text-blue-600 mt-1">
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
                       {formatCurrency(charges.filter(c => c.status === 'paid').reduce((acc, c) => acc + c.amount, 0))}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -632,7 +632,7 @@ export default function Pagos() {
                     </p>
                   </div>
                   <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Banknote className="h-6 w-6 text-blue-600" />
+                    <Banknote className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
               </div>

@@ -98,27 +98,27 @@ export function SessionDetailModal({
     const config: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
       scheduled: {
         label: "Agendada",
-        className: "bg-blue-100 text-blue-700",
+        className: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
         icon: Calendar,
       },
       confirmed: {
         label: "Confirmada",
-        className: "bg-green-100 text-green-700",
+        className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
         icon: CheckCircle2,
       },
       completed: {
         label: "Completada",
-        className: "bg-emerald-100 text-emerald-700",
+        className: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
         icon: CheckCircle2,
       },
       cancelled: {
         label: "Cancelada",
-        className: "bg-red-100 text-red-700",
+        className: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
         icon: XCircle,
       },
       no_show: {
         label: "No asistió",
-        className: "bg-orange-100 text-orange-700",
+        className: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
         icon: XCircle,
       },
     };
@@ -246,7 +246,7 @@ export function SessionDetailModal({
                           }
                         }}
                         disabled={isGeneratingNotes}
-                        className="text-xs border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+                        className="text-xs border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
                       >
                         {isGeneratingNotes ? (
                           <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -286,7 +286,7 @@ export function SessionDetailModal({
                 {session.status === 'scheduled' && (
                   <Button
                     variant="outline"
-                    className="justify-start text-green-600 hover:text-green-700 hover:bg-green-50"
+                    className="justify-start text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30"
                     onClick={handleConfirm}
                     disabled={isLoading}
                   >

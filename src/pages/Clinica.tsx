@@ -455,7 +455,7 @@ export default function Clinica() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-amber-600 hover:bg-amber-50"
+                                  className="text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                                   onClick={() => updateMember.mutate({ memberId: member.id, status: "suspended" })}
                                   disabled={updateMember.isPending}
                                 >

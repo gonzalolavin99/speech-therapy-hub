@@ -24,10 +24,10 @@ const SESSION_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  pending: { label: 'Pendiente', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/30', icon: Clock },
-  confirmed: { label: 'Confirmada', color: 'text-green-600 bg-green-50 dark:bg-green-950/30', icon: CheckCircle2 },
-  rejected: { label: 'Rechazada', color: 'text-red-600 bg-red-50 dark:bg-red-950/30', icon: XCircle },
-  cancelled: { label: 'Cancelada', color: 'text-gray-600 bg-gray-50 dark:bg-gray-950/30', icon: CalendarX },
+  pending: { label: 'Pendiente', color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30', icon: Clock },
+  confirmed: { label: 'Confirmada', color: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30', icon: CheckCircle2 },
+  rejected: { label: 'Rechazada', color: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30', icon: XCircle },
+  cancelled: { label: 'Cancelada', color: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-950/30', icon: CalendarX },
 };
 
 function formatDate(dateStr: string) {
@@ -82,7 +82,7 @@ export function BookingRequestsWidget() {
     <div className="rounded-xl border bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
-          <CalendarClock className="h-5 w-5 text-amber-600" />
+          <CalendarClock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           Solicitudes de Cita
           <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
             {pendingCount}
@@ -145,7 +145,7 @@ function BookingRequestCard({
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-sm">{booking.patient_name}</span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <CalendarCheck className="h-3 w-3" />
               {formatDate(booking.requested_date)} a las {formatTime(booking.requested_start_time)}
@@ -154,7 +154,7 @@ function BookingRequestCard({
               {SESSION_TYPE_LABELS[booking.session_type] || booking.session_type}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {booking.patient_phone && (
               <span className="flex items-center gap-1">
                 <Phone className="h-3 w-3" />
@@ -162,16 +162,16 @@ function BookingRequestCard({
               </span>
             )}
             {booking.patient_email && (
-              <span className="flex items-center gap-1">
-                <Mail className="h-3 w-3" />
+              <span className="flex items-center gap-1 break-all">
+                <Mail className="h-3 w-3 shrink-0" />
                 {booking.patient_email}
               </span>
             )}
           </div>
           {booking.notes && (
-            <p className="text-xs text-muted-foreground flex items-start gap-1 mt-1">
+            <p className="text-xs text-muted-foreground/80 dark:text-muted-foreground flex items-start gap-1 mt-1">
               <MessageCircle className="h-3 w-3 mt-0.5 shrink-0" />
-              {booking.notes}
+              <span className="line-clamp-2">{booking.notes}</span>
             </p>
           )}
         </div>
