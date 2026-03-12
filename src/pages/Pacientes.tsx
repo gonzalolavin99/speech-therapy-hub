@@ -569,7 +569,7 @@ export default function Pacientes() {
       <PatientImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        existingRuts={patients.map(p => p.rut.replace(/\./g, '').replace(/-/g, '').trim())}
+        existingRuts={patients.map(p => (p.rut || '').replace(/\./g, '').replace(/-/g, '').trim())}
         onImport={async (importedPatients) => {
           for (const p of importedPatients) {
             await createPatient.mutateAsync({
