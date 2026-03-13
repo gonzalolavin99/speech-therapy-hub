@@ -166,7 +166,7 @@ export function MercadoPagoConfig() {
         </div>
 
         {/* How it works */}
-        <div className="rounded-lg bg-muted/50 p-4">
+        <div className="rounded-lg bg-muted/30 dark:bg-muted/15 border p-4">
           <p className="text-xs font-medium text-foreground mb-2">¿Cómo funciona?</p>
           <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Creas un cobro para tu paciente desde la pestaña Cobros</li>

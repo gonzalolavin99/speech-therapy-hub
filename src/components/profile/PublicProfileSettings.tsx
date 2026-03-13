@@ -148,8 +148,8 @@ export function PublicProfileSettings({
         <div className="space-y-2">
           <Label className="text-sm font-medium">URL de tu perfil</Label>
           <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-0 rounded-md border bg-muted/30 overflow-hidden">
-              <span className="px-3 text-xs text-muted-foreground whitespace-nowrap bg-muted/50 py-2 border-r">
+            <div className="flex-1 flex items-center gap-0 rounded-md border bg-muted/20 dark:bg-muted/10 overflow-hidden">
+              <span className="px-3 text-xs text-muted-foreground whitespace-nowrap bg-muted/40 dark:bg-muted/20 py-2 border-r">
                 {window.location.origin}/p/
               </span>
               <Input

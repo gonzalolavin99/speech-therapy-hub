@@ -133,7 +133,7 @@ export function PhoneInput({ value, onChange, id, className }: PhoneInputProps) 
           type="button"
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className={cn(
-            "flex items-center gap-1 h-10 px-2.5 border border-r-0 rounded-l-md bg-muted/50 hover:bg-muted transition-colors text-sm whitespace-nowrap",
+            "flex items-center gap-1 h-10 px-2.5 border border-r-0 rounded-l-md bg-muted/40 dark:bg-muted/20 hover:bg-muted/70 dark:hover:bg-muted/30 transition-colors text-sm whitespace-nowrap",
             "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
           )}
         >

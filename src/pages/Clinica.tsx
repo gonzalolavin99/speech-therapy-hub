@@ -386,7 +386,7 @@ export default function Clinica() {
             <div className="bg-card rounded-xl border overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/50 dark:bg-muted/20">
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Profesional</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Rol</th>

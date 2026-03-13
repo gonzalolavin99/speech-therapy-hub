@@ -331,7 +331,7 @@ export default function Pagos() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full overflow-x-auto flex-nowrap">
+          <TabsList className="w-full overflow-x-auto flex-nowrap bg-muted/60 dark:bg-muted/30">
             <TabsTrigger value="pagos" className="gap-2 shrink-0">
               <DollarSign className="h-4 w-4" />
               Pagos
@@ -440,7 +440,7 @@ export default function Pagos() {
             <div className="bg-card rounded-xl border overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/50 dark:bg-muted/20">
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Paciente</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Fecha Sesion</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Fecha Pago</th>
@@ -674,7 +674,7 @@ export default function Pagos() {
             <div className="bg-card rounded-xl border overflow-x-auto">
               <table className="w-full min-w-[600px]">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/50 dark:bg-muted/20">
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Paciente</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Descripción</th>
                     <th className="text-left p-4 text-sm font-medium text-muted-foreground">Monto</th>

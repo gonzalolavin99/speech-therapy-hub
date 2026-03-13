@@ -76,7 +76,7 @@ export default function AuditLogs() {
       'CONSENT_SIGNED': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
       'TEST_COMPLETED': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
     };
-    return colors[action] || 'bg-gray-100 text-gray-800';
+    return colors[action] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   };
 
   const getEntityIcon = (type: string) => {
@@ -164,7 +164,7 @@ export default function AuditLogs() {
           <CardHeader>
             <CardTitle className="text-lg">
               Historial de Actividad
-              <Badge variant="secondary" className="ml-2">
+              <Badge className="ml-2 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary border-0">
                 {filteredLogs.length} registros
               </Badge>
             </CardTitle>

@@ -135,7 +135,7 @@ export function BoletasList({
       <div className="bg-card rounded-xl border overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead>
-            <tr className="border-b bg-muted/50">
+            <tr className="border-b bg-muted/50 dark:bg-muted/20">
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">N. Boleta</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Paciente</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Fecha</th>
@@ -274,7 +274,7 @@ export function BoletasList({
           </DialogHeader>
           <div className="space-y-4">
             {selectedBoleta && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <div className="bg-muted/30 dark:bg-muted/15 rounded-lg border p-3 space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Boleta:</span>
                   <span className="font-mono font-medium">{selectedBoleta.boleta_number}</span>
