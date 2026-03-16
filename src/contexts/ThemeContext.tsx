@@ -28,66 +28,151 @@ export const themeColors: Record<ColorTheme, { name: string; preview: string }> 
   ocean: { name: "Ocean Deep", preview: "#4A6B7C" },
 };
 
-const themeVariables: Record<ColorTheme, Record<string, string>> = {
+interface ThemeVars {
+  light: Record<string, string>;
+  dark: Record<string, string>;
+}
+
+const themeVariables: Record<ColorTheme, ThemeVars> = {
   nordic: {
-    // Nordic Blue #67869A como primario
-    "--primary": "204 22% 50%",
-    "--ring": "204 22% 50%",
-    "--sidebar-primary": "204 22% 50%",
-    "--sidebar-ring": "204 22% 50%",
-    "--sidebar-background": "204 18% 96%",
-    "--sidebar-accent": "204 18% 90%",
-    "--secondary": "204 18% 81%",
-    "--muted": "32 24% 88%",
-    "--accent": "11 28% 93%",
+    light: {
+      "--primary": "204 22% 50%",
+      "--ring": "204 22% 50%",
+      "--sidebar-primary": "204 22% 50%",
+      "--sidebar-ring": "204 22% 50%",
+      "--sidebar-background": "204 18% 96%",
+      "--sidebar-accent": "204 18% 90%",
+      "--sidebar-accent-foreground": "204 22% 25%",
+      "--secondary": "204 18% 81%",
+      "--muted": "32 24% 88%",
+      "--accent": "11 28% 93%",
+      "--accent-foreground": "204 22% 25%",
+    },
+    dark: {
+      "--primary": "204 22% 55%",
+      "--ring": "204 22% 55%",
+      "--sidebar-primary": "204 22% 55%",
+      "--sidebar-ring": "204 22% 55%",
+      "--sidebar-background": "204 25% 8%",
+      "--sidebar-accent": "204 18% 18%",
+      "--sidebar-accent-foreground": "204 18% 85%",
+      "--secondary": "204 18% 22%",
+      "--muted": "32 15% 18%",
+      "--accent": "204 18% 20%",
+      "--accent-foreground": "204 18% 90%",
+    },
   },
   misty: {
-    // Misty Blue #C6D1D9 como primario (más suave)
-    "--primary": "204 18% 63%",
-    "--ring": "204 18% 63%",
-    "--sidebar-primary": "204 18% 58%",
-    "--sidebar-ring": "204 18% 58%",
-    "--sidebar-background": "204 15% 96%",
-    "--sidebar-accent": "204 15% 90%",
-    "--secondary": "204 22% 75%",
-    "--muted": "32 20% 90%",
-    "--accent": "11 25% 94%",
+    light: {
+      "--primary": "204 18% 63%",
+      "--ring": "204 18% 63%",
+      "--sidebar-primary": "204 18% 58%",
+      "--sidebar-ring": "204 18% 58%",
+      "--sidebar-background": "204 15% 96%",
+      "--sidebar-accent": "204 15% 90%",
+      "--sidebar-accent-foreground": "204 22% 25%",
+      "--secondary": "204 22% 75%",
+      "--muted": "32 20% 90%",
+      "--accent": "11 25% 94%",
+      "--accent-foreground": "204 22% 25%",
+    },
+    dark: {
+      "--primary": "204 18% 60%",
+      "--ring": "204 18% 60%",
+      "--sidebar-primary": "204 18% 55%",
+      "--sidebar-ring": "204 18% 55%",
+      "--sidebar-background": "204 20% 8%",
+      "--sidebar-accent": "204 15% 18%",
+      "--sidebar-accent-foreground": "204 15% 85%",
+      "--secondary": "204 22% 22%",
+      "--muted": "32 15% 18%",
+      "--accent": "204 15% 20%",
+      "--accent-foreground": "204 15% 90%",
+    },
   },
   blush: {
-    // Pale Blush #F4EBE9 inspirado
-    "--primary": "11 35% 65%",
-    "--ring": "11 35% 65%",
-    "--sidebar-primary": "11 35% 60%",
-    "--sidebar-ring": "11 35% 60%",
-    "--sidebar-background": "11 28% 96%",
-    "--sidebar-accent": "11 25% 92%",
-    "--secondary": "11 20% 85%",
-    "--muted": "32 20% 88%",
-    "--accent": "204 18% 90%",
+    light: {
+      "--primary": "11 35% 65%",
+      "--ring": "11 35% 65%",
+      "--sidebar-primary": "11 35% 60%",
+      "--sidebar-ring": "11 35% 60%",
+      "--sidebar-background": "11 28% 96%",
+      "--sidebar-accent": "11 25% 92%",
+      "--sidebar-accent-foreground": "11 22% 25%",
+      "--secondary": "11 20% 85%",
+      "--muted": "32 20% 88%",
+      "--accent": "204 18% 90%",
+      "--accent-foreground": "204 22% 25%",
+    },
+    dark: {
+      "--primary": "11 35% 60%",
+      "--ring": "11 35% 60%",
+      "--sidebar-primary": "11 35% 55%",
+      "--sidebar-ring": "11 35% 55%",
+      "--sidebar-background": "11 20% 8%",
+      "--sidebar-accent": "11 18% 18%",
+      "--sidebar-accent-foreground": "11 20% 85%",
+      "--secondary": "11 18% 22%",
+      "--muted": "32 15% 18%",
+      "--accent": "11 18% 20%",
+      "--accent-foreground": "11 20% 90%",
+    },
   },
   oak: {
-    // Oak Wood #E7E0D8 inspirado (cálido)
-    "--primary": "32 30% 55%",
-    "--ring": "32 30% 55%",
-    "--sidebar-primary": "32 30% 50%",
-    "--sidebar-ring": "32 30% 50%",
-    "--sidebar-background": "32 24% 96%",
-    "--sidebar-accent": "32 20% 90%",
-    "--secondary": "32 18% 82%",
-    "--muted": "32 15% 88%",
-    "--accent": "11 20% 92%",
+    light: {
+      "--primary": "32 30% 55%",
+      "--ring": "32 30% 55%",
+      "--sidebar-primary": "32 30% 50%",
+      "--sidebar-ring": "32 30% 50%",
+      "--sidebar-background": "32 24% 96%",
+      "--sidebar-accent": "32 20% 90%",
+      "--sidebar-accent-foreground": "32 22% 25%",
+      "--secondary": "32 18% 82%",
+      "--muted": "32 15% 88%",
+      "--accent": "11 20% 92%",
+      "--accent-foreground": "32 22% 25%",
+    },
+    dark: {
+      "--primary": "32 30% 55%",
+      "--ring": "32 30% 55%",
+      "--sidebar-primary": "32 30% 50%",
+      "--sidebar-ring": "32 30% 50%",
+      "--sidebar-background": "32 18% 8%",
+      "--sidebar-accent": "32 15% 18%",
+      "--sidebar-accent-foreground": "32 18% 85%",
+      "--secondary": "32 15% 22%",
+      "--muted": "32 10% 18%",
+      "--accent": "32 15% 20%",
+      "--accent-foreground": "32 18% 90%",
+    },
   },
   ocean: {
-    // Versión más oscura de Nordic Blue
-    "--primary": "204 25% 40%",
-    "--ring": "204 25% 40%",
-    "--sidebar-primary": "204 25% 35%",
-    "--sidebar-ring": "204 25% 35%",
-    "--sidebar-background": "204 20% 95%",
-    "--sidebar-accent": "204 18% 88%",
-    "--secondary": "204 18% 75%",
-    "--muted": "32 20% 88%",
-    "--accent": "11 25% 92%",
+    light: {
+      "--primary": "204 25% 40%",
+      "--ring": "204 25% 40%",
+      "--sidebar-primary": "204 25% 35%",
+      "--sidebar-ring": "204 25% 35%",
+      "--sidebar-background": "204 20% 95%",
+      "--sidebar-accent": "204 18% 88%",
+      "--sidebar-accent-foreground": "204 25% 25%",
+      "--secondary": "204 18% 75%",
+      "--muted": "32 20% 88%",
+      "--accent": "11 25% 92%",
+      "--accent-foreground": "204 25% 25%",
+    },
+    dark: {
+      "--primary": "204 25% 50%",
+      "--ring": "204 25% 50%",
+      "--sidebar-primary": "204 25% 45%",
+      "--sidebar-ring": "204 25% 45%",
+      "--sidebar-background": "204 22% 8%",
+      "--sidebar-accent": "204 18% 18%",
+      "--sidebar-accent-foreground": "204 18% 85%",
+      "--secondary": "204 18% 22%",
+      "--muted": "32 15% 18%",
+      "--accent": "204 18% 20%",
+      "--accent-foreground": "204 18% 90%",
+    },
   },
 };
 
@@ -115,16 +200,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return false;
   });
 
-  // Apply color theme variables
+  // Apply color theme variables (selecting light or dark set based on current mode)
   useEffect(() => {
     localStorage.setItem("color-theme", colorTheme);
     const root = document.documentElement;
-    const variables = themeVariables[colorTheme];
+    const mode = isDark ? "dark" : "light";
+    const variables = themeVariables[colorTheme][mode];
 
     Object.entries(variables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
-  }, [colorTheme]);
+  }, [colorTheme, isDark]);
 
   // Apply dark mode class
   useEffect(() => {

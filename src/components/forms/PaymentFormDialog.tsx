@@ -33,7 +33,7 @@ const paymentSchema = z.object({
   sessionDate: z.string().min(1, "Fecha de sesión requerida"),
   paymentDate: z.string().optional(),
   amount: z.number().min(0, "Monto inválido"),
-  paymentMethod: z.string().min(1, "Seleccione un método de pago"),
+  paymentMethod: z.string().optional(),
   status: z.enum(["paid", "pending", "overdue"]),
   notes: z.string().max(500).optional(),
 });
