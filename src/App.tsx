@@ -12,7 +12,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Home = lazy(() => import("./pages/Home"));
 const Pacientes = lazy(() => import("./pages/Pacientes"));
 const Tests = lazy(() => import("./pages/Tests"));
 const Planificaciones = lazy(() => import("./pages/Planificaciones"));
@@ -62,7 +62,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={<Home />} />
               <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
               <Route path="/tests" element={<ProtectedRoute><Tests /></ProtectedRoute>} />
               <Route path="/planificaciones" element={<ProtectedRoute><Planificaciones /></ProtectedRoute>} />
