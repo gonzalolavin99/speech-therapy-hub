@@ -50,9 +50,10 @@ interface PlanFeature {
 }
 
 const features: PlanFeature[] = [
-  { label: "Pacientes activos", free: "5", professional: "Ilimitados", clinic: "Ilimitados" },
+  { label: "Pacientes activos", free: "3", professional: "Ilimitados", clinic: "Ilimitados" },
+  { label: "Sesiones por mes", free: "15", professional: "Ilimitadas", clinic: "Ilimitadas" },
   { label: "Tests disponibles", free: "2 básicos", professional: "Todos (+10)", clinic: "Todos (+10)" },
-  { label: "Consultas IA por mes", free: "5", professional: "50", clinic: "Ilimitadas" },
+  { label: "Consultas IA por mes", free: "3", professional: "50", clinic: "Ilimitadas" },
   { label: "Boletas PDF", free: false, professional: true, clinic: true },
   { label: "Google Calendar", free: false, professional: true, clinic: true },
   { label: "Multi-profesional", free: "1 cuenta", professional: "1 cuenta", clinic: "Hasta 5" },
@@ -171,7 +172,7 @@ export function PricingSection() {
                   variant={plan.popular ? "default" : "outline"}
                   className="w-full mb-4"
                 >
-                  <Link to="/login">
+                  <Link to="/registro">
                     {price === 0 ? "Comenzar Gratis" : "Comenzar Ahora"}
                   </Link>
                 </Button>

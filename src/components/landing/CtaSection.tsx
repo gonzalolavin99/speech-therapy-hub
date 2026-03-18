@@ -18,7 +18,7 @@ export function CtaSection() {
           asChild
           className="text-base font-semibold"
         >
-          <Link to="/login">
+          <Link to="/registro">
             Crear Cuenta Gratis
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>

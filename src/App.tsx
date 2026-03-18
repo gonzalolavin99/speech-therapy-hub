@@ -29,6 +29,7 @@ const Clinica = lazy(() => import("./pages/Clinica"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
+const Registro = lazy(() => import("./pages/Registro"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -61,6 +62,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Registro />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<Home />} />
               <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />

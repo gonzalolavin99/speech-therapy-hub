@@ -31,11 +31,11 @@ interface PlanFeature {
 }
 
 const features: PlanFeature[] = [
-  { label: "Pacientes activos", free: "5", professional: "Ilimitados", clinic: "Ilimitados" },
-  { label: "Sesiones por mes", free: "20", professional: "Ilimitadas", clinic: "Ilimitadas" },
+  { label: "Pacientes activos", free: "3", professional: "Ilimitados", clinic: "Ilimitados" },
+  { label: "Sesiones por mes", free: "15", professional: "Ilimitadas", clinic: "Ilimitadas" },
   { label: "Tests disponibles", free: "2 básicos", professional: "Todos", clinic: "Todos" },
-  { label: "Planificaciones activas", free: "3", professional: "Ilimitadas", clinic: "Ilimitadas" },
-  { label: "Consultas IA por mes", free: "5", professional: "50", clinic: "Ilimitadas" },
+  { label: "Planificaciones activas", free: "2", professional: "Ilimitadas", clinic: "Ilimitadas" },
+  { label: "Consultas IA por mes", free: "3", professional: "50", clinic: "Ilimitadas" },
   { label: "Boletas PDF", free: false, professional: true, clinic: true },
   { label: "Exportar ficha paciente", free: false, professional: true, clinic: true },
   { label: "Google Calendar", free: false, professional: true, clinic: true },

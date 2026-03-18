@@ -46,7 +46,7 @@ export function HeroSection() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button size="lg" asChild className="text-base">
-              <Link to="/login">
+              <Link to="/registro">
                 Comenzar Gratis
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

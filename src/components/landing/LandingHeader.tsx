@@ -52,7 +52,7 @@ export function LandingHeader() {
             <Link to="/login">Iniciar Sesión</Link>
           </Button>
           <Button asChild>
-            <Link to="/login">Comenzar Gratis</Link>
+            <Link to="/registro">Comenzar Gratis</Link>
           </Button>
         </div>
 
@@ -89,7 +89,7 @@ export function LandingHeader() {
               <Link to="/login">Iniciar Sesión</Link>
             </Button>
             <Button asChild className="w-full">
-              <Link to="/login">Comenzar Gratis</Link>
+              <Link to="/registro">Comenzar Gratis</Link>
             </Button>
           </div>
         </div>

@@ -4,25 +4,25 @@ import { cn } from "@/lib/utils";
 interface ComparisonRow {
   feature: string;
   therapyHub: boolean;
-  encuadrado: boolean;
+  others: boolean;
   highlight?: boolean;
 }
 
 const comparisons: ComparisonRow[] = [
-  { feature: "Calendario y agenda", therapyHub: true, encuadrado: true },
-  { feature: "Gestión de pacientes", therapyHub: true, encuadrado: true },
-  { feature: "Portal del paciente", therapyHub: true, encuadrado: true },
-  { feature: "Cobros y pagos online", therapyHub: true, encuadrado: true },
-  { feature: "Boletas de honorarios", therapyHub: true, encuadrado: true },
-  { feature: "Perfil público profesional", therapyHub: true, encuadrado: true },
-  { feature: "Multi-profesional / clínica", therapyHub: true, encuadrado: true },
-  { feature: "Google Calendar", therapyHub: true, encuadrado: true },
-  { feature: "Reserva online de citas", therapyHub: true, encuadrado: true },
-  { feature: "Tests clínicos estandarizados (+10)", therapyHub: true, encuadrado: false, highlight: true },
-  { feature: "Análisis con inteligencia artificial", therapyHub: true, encuadrado: false, highlight: true },
-  { feature: "Planificación terapéutica completa", therapyHub: true, encuadrado: false, highlight: true },
-  { feature: "Registro de auditoría", therapyHub: true, encuadrado: false, highlight: true },
-  { feature: "Modo oscuro", therapyHub: true, encuadrado: false, highlight: true },
+  { feature: "Calendario y agenda", therapyHub: true, others: true },
+  { feature: "Gestión de pacientes", therapyHub: true, others: true },
+  { feature: "Portal del paciente", therapyHub: true, others: true },
+  { feature: "Cobros y pagos online", therapyHub: true, others: true },
+  { feature: "Boletas de honorarios", therapyHub: true, others: true },
+  { feature: "Perfil público profesional", therapyHub: true, others: true },
+  { feature: "Multi-profesional / clínica", therapyHub: true, others: true },
+  { feature: "Google Calendar", therapyHub: true, others: true },
+  { feature: "Reserva online de citas", therapyHub: true, others: true },
+  { feature: "Tests clínicos estandarizados (+10)", therapyHub: true, others: false, highlight: true },
+  { feature: "Análisis con inteligencia artificial", therapyHub: true, others: false, highlight: true },
+  { feature: "Planificación terapéutica completa", therapyHub: true, others: false, highlight: true },
+  { feature: "Registro de auditoría", therapyHub: true, others: false, highlight: true },
+  { feature: "Modo oscuro", therapyHub: true, others: false, highlight: true },
 ];
 
 function StatusIcon({ available }: { available: boolean }) {
@@ -47,11 +47,11 @@ export function ComparisonSection() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-            TherapyHub vs la competencia
+            Más que una agenda online
           </h2>
           <p className="text-muted-foreground text-lg">
-            Todo lo que otros ofrecen, más herramientas clínicas que nadie más
-            tiene.
+            Todo lo que ofrecen otras plataformas, más herramientas clínicas
+            especializadas que no encontrarás en ningún otro lugar.
           </p>
         </div>
 
@@ -67,12 +67,12 @@ export function ComparisonSection() {
                   TherapyHub
                 </th>
                 <th className="text-center py-4 px-6 font-semibold text-muted-foreground">
-                  Encuadrado
+                  Otras plataformas
                 </th>
               </tr>
             </thead>
             <tbody>
-              {comparisons.map((row, i) => (
+              {comparisons.map((row) => (
                 <tr
                   key={row.feature}
                   className={cn(
@@ -94,7 +94,7 @@ export function ComparisonSection() {
                     <StatusIcon available={row.therapyHub} />
                   </td>
                   <td className="py-3 px-6 text-center">
-                    <StatusIcon available={row.encuadrado} />
+                    <StatusIcon available={row.others} />
                   </td>
                 </tr>
               ))}
@@ -102,32 +102,26 @@ export function ComparisonSection() {
           </table>
         </div>
 
-        {/* Mobile cards */}
+        {/* Mobile cards - only show highlights (TherapyHub exclusives) */}
         <div className="md:hidden space-y-3">
+          <p className="text-sm text-muted-foreground mb-4">
+            Funcionalidades exclusivas de TherapyHub:
+          </p>
           {comparisons
             .filter((row) => row.highlight)
             .map((row) => (
               <div
                 key={row.feature}
-                className="rounded-xl border bg-primary/5 dark:bg-primary/10 p-4 flex items-center justify-between gap-3"
+                className="rounded-xl border bg-primary/5 dark:bg-primary/10 p-4 flex items-center gap-3"
               >
+                <StatusIcon available={true} />
                 <span className="text-sm font-medium text-foreground">
                   {row.feature}
                 </span>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-center">
-                    <StatusIcon available={row.therapyHub} />
-                    <p className="text-[10px] text-primary mt-1">TH</p>
-                  </div>
-                  <div className="text-center">
-                    <StatusIcon available={row.encuadrado} />
-                    <p className="text-[10px] text-muted-foreground mt-1">Enc</p>
-                  </div>
-                </div>
               </div>
             ))}
           <p className="text-xs text-center text-muted-foreground pt-2">
-            Ambas plataformas incluyen: calendario, gestión de pacientes, portal,
+            Además incluye: calendario, gestión de pacientes, portal,
             cobros, boletas, perfil público, multi-profesional y Google Calendar.
           </p>
         </div>
