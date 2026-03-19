@@ -31,7 +31,7 @@ export async function getAICompletion({ messages, temperature = 0.7, maxTokens =
       model: OPENAI_MODEL,
       messages,
       temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
     }),
   });
 
