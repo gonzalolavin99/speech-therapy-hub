@@ -31,6 +31,7 @@ const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const Registro = lazy(() => import("./pages/Registro"));
 const Recordatorios = lazy(() => import("./pages/Recordatorios"));
+const Ejercicios = lazy(() => import("./pages/Ejercicios"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/planes" element={<ProtectedRoute><Planes /></ProtectedRoute>} />
               <Route path="/clinica" element={<ProtectedRoute><Clinica /></ProtectedRoute>} />
               <Route path="/recordatorios" element={<ProtectedRoute><Recordatorios /></ProtectedRoute>} />
+              <Route path="/ejercicios" element={<ProtectedRoute><Ejercicios /></ProtectedRoute>} />
               {/* Public routes (no auth required) */}
               <Route path="/p/:slug" element={<PublicProfile />} />
               <Route path="/portal/:token" element={<PatientPortal />} />
