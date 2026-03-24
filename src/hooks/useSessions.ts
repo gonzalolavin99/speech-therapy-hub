@@ -73,8 +73,22 @@ export function useSessions() {
       if (error) throw error;
       return data as Session;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Update planning counter if session is linked and completed
+      if (data.planning_id && data.status === 'completed') {
+        const { count } = await supabase
+          .from('sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('planning_id', data.planning_id)
+          .eq('status', 'completed');
+
+        await supabase
+          .from('plannings')
+          .update({ completed_sessions: count || 0 })
+          .eq('id', data.planning_id);
+      }
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['plannings'] });
       toast.success('Cita creada exitosamente');
       log({
         action: 'CREATE',
@@ -91,6 +105,13 @@ export function useSessions() {
 
   const updateSession = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<SessionFormData> & { id: string }) => {
+      // Get the current session to check previous status
+      const { data: currentSession } = await supabase
+        .from('sessions')
+        .select('status, planning_id')
+        .eq('id', id)
+        .single();
+
       const { data, error } = await supabase
         .from('sessions')
         .update(updates)
@@ -99,10 +120,31 @@ export function useSessions() {
         .single();
 
       if (error) throw error;
+
+      // Update planning completed_sessions counter
+      const newStatus = updates.status || data.status;
+      const oldStatus = currentSession?.status;
+      const planningId = data.planning_id;
+
+      if (planningId && oldStatus !== newStatus) {
+        // Count actual completed sessions for this planning
+        const { count } = await supabase
+          .from('sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('planning_id', planningId)
+          .eq('status', 'completed');
+
+        await supabase
+          .from('plannings')
+          .update({ completed_sessions: count || 0 })
+          .eq('id', planningId);
+      }
+
       return data as Session;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['plannings'] });
       toast.success('Cita actualizada');
       log({
         action: 'UPDATE',
@@ -119,6 +161,13 @@ export function useSessions() {
 
   const deleteSession = useMutation({
     mutationFn: async (id: string) => {
+      // Get the session before deleting to check planning_id
+      const { data: sessionToDelete } = await supabase
+        .from('sessions')
+        .select('planning_id, status')
+        .eq('id', id)
+        .single();
+
       // Primero eliminar pagos asociados a esta sesión
       const { error: paymentError } = await supabase
         .from('payments')
@@ -136,10 +185,25 @@ export function useSessions() {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Update planning counter if session was linked and completed
+      if (sessionToDelete?.planning_id && sessionToDelete.status === 'completed') {
+        const { count } = await supabase
+          .from('sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('planning_id', sessionToDelete.planning_id)
+          .eq('status', 'completed');
+
+        await supabase
+          .from('plannings')
+          .update({ completed_sessions: count || 0 })
+          .eq('id', sessionToDelete.planning_id);
+      }
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['plannings'] });
       toast.success('Cita y pagos asociados eliminados');
       log({
         action: 'DELETE',

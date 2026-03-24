@@ -32,6 +32,7 @@ const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const Registro = lazy(() => import("./pages/Registro"));
 const Recordatorios = lazy(() => import("./pages/Recordatorios"));
 const Ejercicios = lazy(() => import("./pages/Ejercicios"));
+const Reportes = lazy(() => import("./pages/Reportes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/clinica" element={<ProtectedRoute><Clinica /></ProtectedRoute>} />
               <Route path="/recordatorios" element={<ProtectedRoute><Recordatorios /></ProtectedRoute>} />
               <Route path="/ejercicios" element={<ProtectedRoute><Ejercicios /></ProtectedRoute>} />
+              <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
               {/* Public routes (no auth required) */}
               <Route path="/p/:slug" element={<PublicProfile />} />
               <Route path="/portal/:token" element={<PatientPortal />} />

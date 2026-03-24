@@ -61,7 +61,7 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --info: 204 22% 50%;
+    --info: 250 55% 58%;
     --info-foreground: 0 0% 100%;
   }
 
@@ -112,7 +112,7 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
-    --info: 204 22% 55%;
+    --info: 250 55% 65%;
     --info-foreground: 0 0% 100%;
   }
 }

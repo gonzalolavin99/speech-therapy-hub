@@ -10,6 +10,7 @@ import {
   Info,
   Bell,
   Dumbbell,
+  FileBarChart,
   Shield,
   BarChart3,
   UserCheck,
@@ -37,6 +38,7 @@ const mainNav = [
 const moreNav = [
   { name: "Recordatorios", href: "/recordatorios", icon: Bell, adminOnly: false, clinicOnly: false },
   { name: "Ejercicios", href: "/ejercicios", icon: Dumbbell, adminOnly: false, clinicOnly: false },
+  { name: "Reportes", href: "/reportes", icon: FileBarChart, adminOnly: false, clinicOnly: false },
   { name: "Pagos", href: "/pagos", icon: CreditCard, adminOnly: false, clinicOnly: false },
   { name: "Planes", href: "/planes", icon: Crown, adminOnly: false, clinicOnly: false },
   { name: "Clínica", href: "/clinica", icon: Building, adminOnly: false, clinicOnly: true },

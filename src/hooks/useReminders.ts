@@ -198,7 +198,7 @@ export function useReminders() {
         }
 
         const sessionStart = new Date(session.start_time);
-        const timeStr = sessionStart.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+        const timeStr = sessionStart.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false });
         const dateStr = sessionStart.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
 
         const message = messageTemplate
