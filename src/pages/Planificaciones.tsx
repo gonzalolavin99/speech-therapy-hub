@@ -282,6 +282,10 @@ export default function Planificaciones() {
     return sessions.filter(s => s.planning_id === planningId);
   };
 
+  const getCompletedSessionsCount = (planningId: string) => {
+    return sessions.filter(s => s.planning_id === planningId && s.status === 'completed').length;
+  };
+
   const getSessionStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle2 className="h-4 w-4 text-success" />;
@@ -400,14 +404,14 @@ export default function Planificaciones() {
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       {getStatusBadge(planning.status)}
                       <span className="text-xs md:text-sm font-medium text-card-foreground">
-                        {planning.completed_sessions}/{planning.total_sessions} sesiones
+                        {getCompletedSessionsCount(planning.id)}/{planning.total_sessions} sesiones
                       </span>
                       <div className="w-16 md:w-24 h-1.5 md:h-2 bg-muted rounded-full">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{
                             width: `${getProgress(
-                              planning.completed_sessions,
+                              getCompletedSessionsCount(planning.id),
                               planning.total_sessions
                             )}%`,
                           }}
