@@ -1,6 +1,6 @@
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +17,7 @@ export interface CalendarSession {
   session_type: 'evaluation' | 'therapy' | 'followup';
   status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   title: string;
+  meeting_url?: string | null;
 }
 
 const timeSlots = [
@@ -200,6 +201,7 @@ export function WeeklyCalendar({ currentDate, onDateChange, sessions = [], onSes
                               <div className="flex items-center gap-1">
                                 {getStatusIcon(session.status)}
                                 <p className="font-medium truncate flex-1">{session.patient_name || session.title}</p>
+                                {session.meeting_url && <Video className="h-3 w-3 shrink-0 opacity-70" />}
                               </div>
                               <p className="opacity-75">{getSessionTypeLabel(session.session_type)}</p>
                               {session.status === 'cancelled' && onDeleteSession && (

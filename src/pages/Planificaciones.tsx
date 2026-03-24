@@ -173,6 +173,7 @@ export default function Planificaciones() {
       start_time: startDate.toISOString(),
       end_time: endDate.toISOString(),
       notes: data.notes || null,
+      meeting_url: data.meeting_url || null,
     };
     createSession.mutate(sessionData);
   };

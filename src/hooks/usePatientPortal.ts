@@ -15,6 +15,7 @@ export interface PortalSession {
   end_time: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
+  meeting_url: string | null;
 }
 
 export interface PortalPlanning {

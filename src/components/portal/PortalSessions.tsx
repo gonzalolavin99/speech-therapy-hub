@@ -1,5 +1,5 @@
 import type { PortalSession } from "@/hooks/usePatientPortal";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Video, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -96,6 +96,18 @@ export function PortalSessions({ sessions }: Props) {
                     </span>
                   </div>
                 </div>
+                {session.meeting_url && (
+                  <a
+                    href={session.meeting_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <Video className="h-4 w-4" />
+                    Unirse a videollamada
+                    <ExternalLink className="h-3.5 w-3.5 ml-auto" />
+                  </a>
+                )}
               </div>
             ))}
           </div>

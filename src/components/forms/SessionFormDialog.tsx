@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, UserPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, UserPlus, ChevronDown, ChevronUp, Video } from "lucide-react";
 
 interface SessionFormDialogProps {
   open: boolean;
@@ -53,6 +53,7 @@ export function SessionFormDialog({
     start_time: "09:00",
     end_time: "09:45",
     notes: "",
+    meeting_url: "",
   });
 
   const [showQuickCreate, setShowQuickCreate] = useState(false);
@@ -76,6 +77,7 @@ export function SessionFormDialog({
         start_time: initialData.start_time || "09:00",
         end_time: initialData.end_time || "09:45",
         notes: initialData.notes || "",
+        meeting_url: "",
       });
     } else {
       setFormData({
@@ -86,6 +88,7 @@ export function SessionFormDialog({
         start_time: "09:00",
         end_time: "09:45",
         notes: "",
+        meeting_url: "",
       });
     }
     setShowQuickCreate(false);
@@ -288,6 +291,20 @@ export function SessionFormDialog({
               value={formData.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
               rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meeting_url" className="flex items-center gap-1.5">
+              <Video className="h-3.5 w-3.5" />
+              Enlace de videollamada
+            </Label>
+            <Input
+              id="meeting_url"
+              type="url"
+              placeholder="https://meet.google.com/... o https://zoom.us/..."
+              value={formData.meeting_url}
+              onChange={(e) => handleChange("meeting_url", e.target.value)}
             />
           </div>
 

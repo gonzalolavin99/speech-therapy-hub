@@ -147,8 +147,9 @@ export default function Dashboard() {
       start_time: startDateTime,
       end_time: endDateTime,
       notes: data.notes || null,
+      meeting_url: data.meeting_url || null,
     };
-    
+
     createSession.mutate(sessionData, {
       onSuccess: async () => {
         // Sync to Google Calendar if connected

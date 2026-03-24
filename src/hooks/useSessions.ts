@@ -15,6 +15,7 @@ export interface Session {
   end_time: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
+  meeting_url: string | null;
   created_at: string;
   updated_at: string;
   // Joined fields
@@ -30,6 +31,7 @@ export interface SessionFormData {
   end_time: string;
   status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes?: string | null;
+  meeting_url?: string | null;
 }
 
 export function useSessions() {

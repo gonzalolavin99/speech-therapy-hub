@@ -32,6 +32,8 @@ import {
   MessageSquare,
   Loader2,
   Sparkles,
+  Video,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateSessionNotes, isAIConfigured } from "@/lib/ai-service";
@@ -47,6 +49,7 @@ interface Session {
   end_time: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
+  meeting_url?: string | null;
 }
 
 interface SessionDetailModalProps {
@@ -193,6 +196,22 @@ export function SessionDetailModal({
                 </span>
               </div>
             </div>
+
+            {/* Videollamada */}
+            {session.meeting_url && (
+              <div className="flex items-center gap-2 p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20">
+                <Video className="h-4 w-4 text-primary shrink-0" />
+                <a
+                  href={session.meeting_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-primary hover:underline flex items-center gap-1 truncate"
+                >
+                  Unirse a videollamada
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                </a>
+              </div>
+            )}
 
             {/* Notas */}
             <div className="space-y-2">
