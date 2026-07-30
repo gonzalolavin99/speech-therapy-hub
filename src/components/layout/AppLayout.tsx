@@ -45,7 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         "transition-all duration-300",
         isMobile ? "pl-0 pb-16" : isCollapsed ? "pl-16" : "pl-64"
       )}>
-        <div className="min-h-screen">{children}</div>
+        <div className="min-h-screen animate-fade-in-up">{children}</div>
       </main>
       {isMobile && <BottomNav />}
       {!isLoading && <OnboardingDialog open={needsOnboarding} />}

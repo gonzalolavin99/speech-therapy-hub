@@ -37,8 +37,11 @@ const Estadisticas = lazy(() => import("./pages/Estadisticas"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  <div className="flex flex-col items-center justify-center gap-4 h-screen bg-background">
+    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/75 shadow-lift animate-pulse">
+      <Loader2 className="h-7 w-7 animate-spin text-primary-foreground" />
+    </div>
+    <p className="text-sm font-medium text-muted-foreground">Cargando…</p>
   </div>
 );
 

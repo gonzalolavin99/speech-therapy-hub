@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Mail, ArrowLeft, CheckCircle, XCircle, Eye, EyeOff, Shield } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, XCircle, Eye, EyeOff, Shield, Mic2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PASSWORD_RULES = [
@@ -111,10 +111,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">TherapyHub</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-accent/40 p-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lift animate-fade-in-up">
+        <CardHeader className="text-center space-y-3">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/75 shadow-card">
+            <Mic2 className="h-7 w-7 text-primary-foreground" />
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">TherapyHub</CardTitle>
           <CardDescription>
             Plataforma de gestión clínica para profesionales de la salud
           </CardDescription>
@@ -358,6 +361,14 @@ export default function Login() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Nota de confianza */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 pointer-events-none">
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="h-3.5 w-3.5" />
+          Tus datos están protegidos según la Ley 19.628 y 20.584
+        </p>
+      </div>
     </div>
   );
 }

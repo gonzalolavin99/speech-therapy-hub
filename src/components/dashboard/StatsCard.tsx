@@ -30,11 +30,11 @@ export function StatsCard({
   };
 
   return (
-    <div className="bg-card rounded-xl border p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-bold text-card-foreground">{value}</p>
+    <div className="group bg-card rounded-2xl border p-5 sm:p-6 shadow-soft hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2 min-w-0">
+          <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
+          <p className="text-3xl font-bold tracking-tight tabular-nums text-card-foreground">{value}</p>
           {description && (
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
@@ -49,7 +49,10 @@ export function StatsCard({
             </p>
           )}
         </div>
-        <div className={cn("p-3 rounded-xl", iconStyles[variant])}>
+        <div className={cn(
+          "p-3 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110",
+          iconStyles[variant]
+        )}>
           <Icon className="h-6 w-6" />
         </div>
       </div>

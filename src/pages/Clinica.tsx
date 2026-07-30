@@ -162,7 +162,7 @@ export default function Clinica() {
   if (!isClinicMember && pendingInvitations.length > 0) {
     return (
       <AppLayout>
-        <div className="p-8 max-w-2xl mx-auto space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6 sm:space-y-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <Building className="h-6 w-6 text-primary" />
@@ -206,7 +206,7 @@ export default function Clinica() {
   if (!isClinicMember && !clinic) {
     return (
       <AppLayout>
-        <div className="p-8 max-w-2xl mx-auto space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6 sm:space-y-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <Building className="h-6 w-6 text-primary" />
@@ -322,7 +322,7 @@ export default function Clinica() {
   // User is a clinic member (admin or regular)
   return (
     <AppLayout>
-      <div className="p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

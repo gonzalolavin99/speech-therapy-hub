@@ -72,8 +72,11 @@ export function BottomNav() {
     <>
       {/* "Más" overlay menu */}
       {showMore && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)}>
-          <div className="absolute bottom-16 left-0 right-0 bg-card border-t border-border shadow-lg rounded-t-2xl animate-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowMore(false)}>
+          <div
+            className="absolute bottom-16 left-0 right-0 bg-card border-t border-border shadow-lift rounded-t-3xl animate-in slide-in-from-bottom-4 duration-200 max-h-[70vh] overflow-y-auto scrollbar-thin"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-4 space-y-1">
               <div className="flex items-center justify-between mb-3 px-2">
                 <span className="text-sm font-semibold text-muted-foreground">Más opciones</span>
@@ -117,7 +120,7 @@ export function BottomNav() {
       )}
 
       {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/85 backdrop-blur-lg border-t border-border safe-area-bottom" aria-label="Navegación principal">
         <div className="flex items-center justify-around h-16 px-1">
           {mainNav.map((item) => {
             const isMore = item.href === "#more";
@@ -130,6 +133,8 @@ export function BottomNav() {
                 <button
                   key={item.name}
                   onClick={() => setShowMore(!showMore)}
+                  aria-expanded={showMore}
+                  aria-label="Más opciones"
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
                     isActive ? "text-primary" : "text-muted-foreground"

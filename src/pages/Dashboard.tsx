@@ -5,7 +5,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ReminderWidget } from "@/components/dashboard/ReminderWidget";
 import { ContactRequestsWidget } from "@/components/dashboard/ContactRequestsWidget";
 import { BookingRequestsWidget } from "@/components/booking/BookingRequestsList";
-import { Users, Calendar, CheckCircle, Clock, Sparkles, Loader2, Brain } from "lucide-react";
+import { Users, Calendar, CheckCircle, Clock, Sparkles, Loader2, Brain, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePatients } from "@/hooks/usePatients";
 import { usePlannings } from "@/hooks/usePlannings";
@@ -240,19 +240,19 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               {getGreeting()}, {userName} 👋
             </h1>
             <p className="text-muted-foreground mt-1">
               Aquí está el resumen de tu actividad
             </p>
           </div>
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          <Button
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-card hover:shadow-lift transition-all"
             onClick={() => {
               const thisMonthSessions = sessions.filter(s => {
                 const d = new Date(s.start_time);
@@ -268,7 +268,8 @@ export default function Dashboard() {
               setIsSessionFormOpen(true);
             }}
           >
-            + Nueva Cita
+            <Plus className="h-4 w-4 mr-1.5" />
+            Nueva Cita
           </Button>
         </div>
 
@@ -277,7 +278,7 @@ export default function Dashboard() {
         <ClinicInviteBanner />
 
         {/* Stats Grid with Reminders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 sm:gap-5">
           <StatsCard
             title="Pacientes Activos"
             value={activePatients}
@@ -311,7 +312,7 @@ export default function Dashboard() {
 
         {/* AI Insight */}
         {isAIConfigured() && (
-          <div className="rounded-xl border bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 p-5">
+          <div className="rounded-2xl border shadow-soft bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Brain className="h-5 w-5 text-violet-600" />
@@ -358,7 +359,7 @@ export default function Dashboard() {
 
         {/* Calendar */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground mb-4">
             Calendario Semanal
           </h2>
           <WeeklyCalendar
@@ -371,7 +372,7 @@ export default function Dashboard() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm rounded-xl border bg-card px-4 py-3 shadow-soft w-fit">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-info" />
             <span className="text-muted-foreground">Evaluación</span>
