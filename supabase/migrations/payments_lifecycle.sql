@@ -780,17 +780,29 @@ END;
 $$;
 
 -- ------------------------------------------------------------
--- 9. (Opcional) Programar la reconciliación cada 15 minutos
+-- 9. Programar la reconciliación cada 15 minutos (aplicado en producción)
 -- ------------------------------------------------------------
--- Requiere las extensiones pg_cron y pg_net (Dashboard → Database → Extensions)
--- y el secreto CRON_SECRET configurado en las Edge Functions.
+-- Requiere pg_cron y pg_net. El secreto compartido se guarda en Supabase Vault
+-- (nombre 'payments_cron_secret', mismo valor que el secreto CRON_SECRET de las
+-- Edge Functions) y el job lo lee en cada ejecución: no queda escrito en cron.job.
 --
+-- SELECT vault.create_secret('<CRON_SECRET>', 'payments_cron_secret');
+-- CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- SELECT cron.schedule(
 --   'payments-reconcile',
 --   '*/15 * * * *',
---   $$ SELECT net.http_post(
---        url := 'https://<project-ref>.supabase.co/functions/v1/payments-reconcile',
---        headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', '<CRON_SECRET>'),
---        body := '{}'::jsonb
---      ) $$
+--   $job$
+--   SELECT net.http_post(
+--     url := 'https://<project-ref>.supabase.co/functions/v1/payments-reconcile',
+--     headers := jsonb_build_object(
+--       'Content-Type', 'application/json',
+--       'x-cron-secret', (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'payments_cron_secret')
+--     ),
+--     body := '{}'::jsonb,
+--     timeout_milliseconds := 30000
+--   );
+--   $job$
 -- );
+--
+-- Verificar: SELECT jobname, schedule, active FROM cron.job;
+--            SELECT status_code, content FROM net._http_response ORDER BY created DESC LIMIT 5;

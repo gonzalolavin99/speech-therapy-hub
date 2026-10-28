@@ -1,0 +1,36 @@
+# Configuración de Supabase CLI (solo lo necesario para desplegar Edge Functions)
+project_id = "therapyhub"
+
+# Todas las funciones validan la autenticación dentro del código:
+# - webhooks: los llama MercadoPago sin JWT (se valida firma HMAC)
+# - checkout / IA / reembolsos: validan el JWT del usuario con auth.getUser()
+# - portal: el paciente no tiene cuenta (se valida el token del portal)
+# - reconcile / emails: secreto compartido o service role
+# Si verify_jwt quedara en true, el gateway rechazaría los webhooks de MercadoPago.
+
+[functions.ai-completion]
+verify_jwt = false
+
+[functions.mercadopago-create-preference]
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+[functions.subscription-checkout]
+verify_jwt = false
+
+[functions.subscription-webhook]
+verify_jwt = false
+
+[functions.payments-refund]
+verify_jwt = false
+
+[functions.payments-reconcile]
+verify_jwt = false
+
+[functions.notify-admin-signup]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
