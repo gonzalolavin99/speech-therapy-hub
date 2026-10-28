@@ -6,6 +6,7 @@ import {
   newIdempotencyKey,
   latestPaymentByCharge,
   PAYMENT_STATE_LABELS,
+  describeVerifyResult,
   type GatewayPayment,
 } from "@/utils/payments";
 import { isValidIdempotencyKey } from "../../../supabase/functions/_shared/payments.ts";
@@ -93,5 +94,29 @@ describe("PAYMENT_STATE_LABELS", () => {
   it("tiene etiqueta en español para cada estado", () => {
     expect(Object.keys(PAYMENT_STATE_LABELS)).toHaveLength(12);
     expect(PAYMENT_STATE_LABELS.partially_refunded).toBe("Reembolso parcial");
+  });
+});
+
+describe("describeVerifyResult", () => {
+  it("confirma la activación solo si el backend verificó un pago exitoso", () => {
+    expect(describeVerifyResult({ status: "verified", state: "succeeded", fulfillment: "subscription_activated" }))
+      .toMatchObject({ kind: "success", title: "¡Suscripción activada!" });
+  });
+
+  it("no promete activación si no se pudo verificar", () => {
+    expect(describeVerifyResult(null).kind).toBe("info");
+    expect(describeVerifyResult({ status: "unverified" }).title).toBe("Estamos confirmando tu pago");
+    expect(describeVerifyResult({ status: "forbidden" }).kind).toBe("info");
+  });
+
+  it("avisa cuando se mantuvo el plan VIP", () => {
+    expect(describeVerifyResult({ status: "verified", state: "succeeded", fulfillment: "kept_existing_plan" }))
+      .toMatchObject({ kind: "warning", title: "Ya tienes un plan activo" });
+  });
+
+  it("distingue pagos en proceso, en revisión y rechazados", () => {
+    expect(describeVerifyResult({ status: "verified", state: "processing" }).title).toBe("Pago en proceso");
+    expect(describeVerifyResult({ status: "verified", state: "under_review" }).kind).toBe("warning");
+    expect(describeVerifyResult({ status: "verified", state: "failed" }).kind).toBe("error");
   });
 });

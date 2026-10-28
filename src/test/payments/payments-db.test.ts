@@ -212,6 +212,33 @@ describe("apply_gateway_payment: suscripciones", () => {
     expect((await db.query(`SELECT 1 FROM subscriptions`)).rows).toHaveLength(1);
   });
 
+  it("no reemplaza un plan VIP o asignado por admin; registra el pago y alerta", async () => {
+    await db.query(
+      `INSERT INTO subscriptions (user_id, plan, status, admin_override, admin_notes, current_period_end)
+       VALUES ($1, 'vip', 'active', true, 'Partner', now() + interval '100 years')`,
+      [SUB_USER]
+    );
+    const result = await applyPayment({ ref: SUB_REF, paymentId: "mp_sub", amount: 15000, owner: null });
+    expect(result).toMatchObject({ to: "succeeded", fulfillment: "kept_existing_plan" });
+
+    const sub = (await db.query<Row>(`SELECT plan, status, admin_override FROM subscriptions WHERE user_id = $1`, [SUB_USER])).rows[0];
+    expect(sub).toEqual({ plan: "vip", status: "active", admin_override: true });
+    expect(await gatewayState("mp_sub")).toBe("succeeded");
+
+    await db.query(`INSERT INTO admin_users (email) VALUES ('admin@test.cl')`);
+    await db.query(`SELECT set_config('request.jwt.claims', '{"email":"admin@test.cl"}', false)`);
+    const alerts = (await db.query<Row>(`SELECT alert FROM get_payment_alerts()`)).rows.map((r) => r.alert);
+    expect(alerts).toContain("kept_existing_plan");
+  });
+
+  it("sí reemplaza un plan normal (free/trial) al pagar", async () => {
+    await db.query(`INSERT INTO subscriptions (user_id, plan, status) VALUES ($1, 'trial', 'active')`, [SUB_USER]);
+    expect(await applyPayment({ ref: SUB_REF, paymentId: "mp_sub", amount: 15000, owner: null }))
+      .toMatchObject({ fulfillment: "subscription_activated" });
+    const sub = (await db.query<Row>(`SELECT plan FROM subscriptions WHERE user_id = $1`, [SUB_USER])).rows[0];
+    expect(sub.plan).toBe("professional");
+  });
+
   it("no activa la suscripción si el monto pagado es menor al del plan", async () => {
     await applyPayment({ ref: SUB_REF, paymentId: "mp_sub", amount: 100, owner: null });
     expect((await db.query(`SELECT 1 FROM subscriptions`)).rows).toHaveLength(0);

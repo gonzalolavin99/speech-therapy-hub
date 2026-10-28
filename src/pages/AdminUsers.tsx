@@ -254,7 +254,7 @@ export default function AdminUsers() {
           .select('id')
           .eq('user_id', params.userId)
           .in('status', ['active', 'invited'])
-          .single();
+          .maybeSingle();
 
         if (existing) {
           // Update existing

@@ -8,7 +8,7 @@
 // 5. Responde 5xx en fallos transitorios para que MercadoPago reintente;
 //    la reconciliación periódica cubre los eventos que nunca lleguen.
 
-import { callGateway, checkMpPayment, verifyMpSignature, type MpPayment } from './payments.ts';
+import { buildMpManifest, callGateway, checkMpPayment, parseMpSignature, verifyMpSignature, type MpPayment } from './payments.ts';
 
 // Subconjunto del cliente de supabase-js que se usa aquí. Tipado estructural para
 // no importar desde esm.sh y poder testear el handler con un cliente falso en Vitest.
@@ -55,24 +55,39 @@ export async function handleMpWebhook(req: Request, supabaseAdmin: AdminClient, 
     return text('Not configured', 200);
   }
 
-  // 1. Firma: con secreto configurado, una firma inválida se rechaza
-  const secret = credentials.length === 1 ? credentials[0].webhookSecret : null;
+  // 1. Firma: con secreto configurado, una firma inválida se rechaza.
+  // Se aceptan varios secretos separados por coma (p.ej. modo de prueba y productivo).
+  const secrets = (credentials.length === 1 ? credentials[0].webhookSecret ?? '' : '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
   let signatureValid: boolean | null = null;
-  if (secret) {
-    const check = await verifyMpSignature({
-      secret,
-      signatureHeader: req.headers.get('x-signature'),
-      requestId: req.headers.get('x-request-id'),
-      dataId,
-    });
+  if (secrets.length > 0) {
+    const signatureHeader = req.headers.get('x-signature');
+    const signedRequestId = req.headers.get('x-request-id');
+    let check = { valid: false, reason: 'missing' } as Awaited<ReturnType<typeof verifyMpSignature>>;
+    for (const secret of secrets) {
+      check = await verifyMpSignature({ secret, signatureHeader, requestId: signedRequestId, dataId });
+      if (check.valid) break;
+    }
     signatureValid = check.valid;
     if (!check.valid) {
+      // Diagnóstico sin datos sensibles: qué llegó y qué manifest se firmó (nunca el secreto)
+      const ts = parseMpSignature(signatureHeader)?.ts ?? null;
+      const diagnostics = {
+        reason: `signature_${check.reason}`,
+        query_keys: [...url.searchParams.keys()],
+        data_id_source: url.searchParams.has('data.id') ? 'query' : 'body',
+        has_signature: !!signatureHeader,
+        has_request_id: !!signedRequestId,
+        ts,
+        manifest: ts ? buildMpManifest(dataId, signedRequestId, ts) : null,
+        secrets_tried: secrets.length,
+      };
       await supabaseAdmin.from('payment_webhook_events').upsert({
         endpoint: config.endpoint, request_id: requestId, topic, resource_id: dataId,
-        signature_valid: false, status: 'ignored', result: { reason: `signature_${check.reason}` },
+        signature_valid: false, status: 'ignored', result: diagnostics,
         processed_at: new Date().toISOString(),
       }, { onConflict: 'provider,endpoint,request_id', ignoreDuplicates: true });
-      console.warn(`[${config.endpoint}] firma inválida (${check.reason}) para el pago ${dataId}`);
+      console.warn(`[${config.endpoint}] firma inválida para el pago ${dataId}:`, JSON.stringify(diagnostics));
       return text('Invalid signature', 401);
     }
   }

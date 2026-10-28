@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { PlanId } from '@/config/subscriptions';
+import type { VerifyReturnResult } from '@/utils/payments';
 
 export interface SubscriptionPayment {
   id: string;
@@ -88,7 +89,28 @@ export function useSubscriptionPayment() {
     },
   });
 
+  // Al volver del checkout: el backend verifica el pago contra MercadoPago y lo aplica.
+  // Nunca se confía en ?status=approved de la URL.
+  const verifyReturn = useMutation({
+    mutationFn: async (paymentId: string): Promise<VerifyReturnResult> => {
+      const { data, error } = await supabase.functions.invoke<VerifyReturnResult>('payments-verify', {
+        body: { payment_id: paymentId },
+      });
+      if (error) {
+        const context = (error as { context?: Response }).context;
+        const body = context ? await context.json().catch(() => null) : null;
+        return (body?.status ? body : { status: 'unverified' }) as VerifyReturnResult;
+      }
+      return data ?? { status: 'unverified' };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-payments'] });
+    },
+  });
+
   return {
+    verifyReturn,
     payments: paymentsQuery.data || [],
     isLoadingPayments: paymentsQuery.isLoading,
     checkout,

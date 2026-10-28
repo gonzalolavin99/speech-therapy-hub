@@ -222,6 +222,7 @@ DECLARE
   v_review_reason TEXT;
   v_payment_id UUID;
   v_fulfillment TEXT := 'none';
+  v_current subscriptions%ROWTYPE;
 BEGIN
   -- Identificar la orden por la referencia (la generó el backend)
   IF p_external_reference LIKE 'thub\_sub\_%' THEN
@@ -337,6 +338,18 @@ BEGIN
           status = 'approved',
           updated_at = NOW()
         WHERE id = v_sub.id;
+
+        -- Un plan VIP o asignado por un admin no se reemplaza con un plan pagado:
+        -- el pago queda registrado y se alerta para reembolsarlo
+        SELECT * INTO v_current FROM subscriptions WHERE user_id = v_sub.user_id FOR UPDATE;
+        IF FOUND AND v_current.status = 'active' AND (v_current.admin_override OR v_current.plan = 'vip') THEN
+          UPDATE gateway_payments SET review_reason = 'kept_existing_plan: ' || v_current.plan
+          WHERE id = v_payment_id;
+          RETURN json_build_object(
+            'status', 'applied', 'payment_id', v_payment_id, 'from', v_from, 'to', v_to,
+            'fulfillment', 'kept_existing_plan', 'review_reason', 'kept_existing_plan: ' || v_current.plan
+          );
+        END IF;
 
         UPDATE subscriptions SET
           plan = v_sub.plan,
@@ -732,6 +745,10 @@ BEGIN
       WHERE g2.state IN ('succeeded', 'partially_refunded')
       GROUP BY g2.external_reference HAVING COUNT(*) > 1
     )
+  UNION ALL
+  SELECT 'kept_existing_plan', gp.id, gp.external_reference, gp.state,
+         'Pagó un plan teniendo uno VIP/asignado por admin: reembolsar'::TEXT, gp.updated_at
+  FROM gateway_payments gp WHERE gp.review_reason LIKE 'kept_existing_plan%'
   UNION ALL
   SELECT 'stuck_refund', r.gateway_payment_id, gp.external_reference, r.status,
          'Reembolso pendiente hace más de 1 h'::TEXT, r.created_at

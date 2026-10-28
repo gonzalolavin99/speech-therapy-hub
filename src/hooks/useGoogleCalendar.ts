@@ -43,7 +43,7 @@ export function useGoogleCalendar() {
         .from('professional_profiles')
         .select('google_calendar_token')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // cuenta nueva sin perfil: null en vez de 406
 
       if (data?.google_calendar_token) {
         const tokenInfo = data.google_calendar_token as GoogleTokenInfo;
@@ -141,7 +141,7 @@ export function useGoogleCalendar() {
       .from('professional_profiles')
       .select('google_calendar_token')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!data?.google_calendar_token) return null;
 

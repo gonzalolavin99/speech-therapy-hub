@@ -40,6 +40,10 @@ MercadoPago ──webhook──▶ mercadopago-webhook
                                ├─ máquina de estados (sin retrocesos por eventos fuera de orden)
                                ├─ historial en payment_state_transitions
                                └─ entrega idempotente (confirma el cobro una sola vez)
+Paciente/profesional vuelve del checkout ──▶ payments-verify (suscripciones)
+                          ├─ solo el payment_id de la URL; estado desde GET /v1/payments/{id}
+                          ├─ el pago debe ser de una orden del usuario logueado
+                          └─ apply_gateway_payment (activación inmediata, sin esperar webhook)
 pg_cron cada 15 min ──▶ payments-reconcile
                           ├─ órdenes abiertas → /v1/payments/search → apply_gateway_payment
                           └─ reembolsos pendientes → reenvío con la misma clave
@@ -80,6 +84,8 @@ un test compara ambas en los 144 pares posibles.
 | Webhook que nunca llega | Reconciliación busca el pago por `external_reference` |
 | Proceso caído con clave `in_progress` | La clave se libera tras 60 s |
 | Dos pagos exitosos para el mismo cobro | El segundo no entrega; alerta `duplicate_payment` para reembolsar |
+| Pago de un plan teniendo VIP/plan asignado por admin | No se reemplaza el plan; alerta `kept_existing_plan` para reembolsar |
+| Webhook con firma inválida | 401 con diagnóstico en `payment_webhook_events.result` (sin el secreto); `payments-verify` y la reconciliación activan igual |
 
 ## Alertas (`get_payment_alerts()`, solo admins)
 
@@ -90,7 +96,7 @@ un test compara ambas en los 144 pares posibles.
 
 | Secreto | Uso |
 |---|---|
-| `MP_WEBHOOK_SECRET` | Firma de webhooks de suscripciones (cuenta de la plataforma) |
+| `MP_WEBHOOK_SECRET` | Firma de webhooks de suscripciones (cuenta de la plataforma). Acepta varios valores separados por coma (modo de prueba y productivo) |
 | `mercadopago_config.webhook_secret` | Firma de webhooks de cada profesional (columna en BD) |
 | `CRON_SECRET` | Autoriza a pg_cron a invocar `payments-reconcile` |
 | `APP_URL` | Origen permitido para URLs de retorno del checkout |

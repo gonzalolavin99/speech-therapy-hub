@@ -20,6 +20,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { describeVerifyResult, type PaymentNotice } from "@/utils/payments";
 import type { PlanId } from "@/config/subscriptions";
 import { formatPriceCLP, getTrialDaysRemaining } from "@/config/subscriptions";
 
@@ -83,36 +84,48 @@ const plans: {
 
 export default function Planes() {
   const { subscription, effectivePlan, trialDaysRemaining } = useSubscription();
-  const { checkout, isCheckingOut } = useSubscriptionPayment();
+  const { checkout, isCheckingOut, verifyReturn } = useSubscriptionPayment();
   const [searchParams, setSearchParams] = useSearchParams();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [checkingPlan, setCheckingPlan] = useState<PlanId | null>(null);
   const isTrialing = subscription?.plan === "trial";
+  // Plan VIP o asignado por un admin: no se ofrece pagar otro plan
+  const hasManagedPlan = effectivePlan === "vip" || (!!subscription?.admin_override && subscription?.status === "active");
 
-  // Handle payment result from MercadoPago redirect
+  // Resultado del checkout de MercadoPago: la URL solo aporta el payment_id;
+  // el estado real lo verifica el backend (payments-verify) antes de avisar
   useEffect(() => {
     const paymentResult = searchParams.get("payment");
-    if (paymentResult) {
-      if (paymentResult === "success") {
-        toast.success("¡Pago exitoso!", {
-          description: "Tu suscripción se ha activado. Los cambios se reflejarán en unos segundos.",
-          duration: 8000,
-        });
-      } else if (paymentResult === "failure") {
-        toast.error("Pago no completado", {
-          description: "El pago no pudo ser procesado. Puedes intentar nuevamente.",
-        });
-      } else if (paymentResult === "pending") {
-        toast.info("Pago en proceso", {
-          description: "Tu pago está siendo procesado. Te notificaremos cuando se confirme.",
-          duration: 8000,
-        });
-      }
-      // Clean URL
-      searchParams.delete("payment");
-      setSearchParams(searchParams, { replace: true });
+    if (!paymentResult) return;
+
+    const paymentId = searchParams.get("payment_id");
+    const showNotice = (notice: PaymentNotice) => {
+      const options = { description: notice.description, duration: 8000 };
+      if (notice.kind === "success") toast.success(notice.title, options);
+      else if (notice.kind === "warning") toast.warning(notice.title, options);
+      else if (notice.kind === "error") toast.error(notice.title, options);
+      else toast.info(notice.title, options);
+    };
+
+    if (paymentResult === "failure") {
+      showNotice({ kind: "error", title: "Pago no completado", description: "El pago no pudo ser procesado. Puedes intentar nuevamente." });
+    } else if (paymentId && /^\d+$/.test(paymentId)) {
+      toast.loading("Confirmando tu pago con MercadoPago...", { id: "payment-verify" });
+      verifyReturn.mutate(paymentId, {
+        onSuccess: (result) => { toast.dismiss("payment-verify"); showNotice(describeVerifyResult(result)); },
+        onError: () => { toast.dismiss("payment-verify"); showNotice(describeVerifyResult(null)); },
+      });
+    } else {
+      showNotice(describeVerifyResult(null));
     }
-  }, [searchParams, setSearchParams]);
+
+    // Limpiar la URL para no repetir la verificación al recargar
+    const mpParams = ["payment", "payment_id", "collection_id", "collection_status", "status", "external_reference",
+      "payment_type", "merchant_order_id", "preference_id", "site_id", "processing_mode", "merchant_account_id"];
+    mpParams.forEach((key) => searchParams.delete(key));
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al volver del checkout
+  }, [searchParams]);
 
   const handleSubscribe = async (planId: PlanId) => {
     if (planId === "free") return;
@@ -144,6 +157,13 @@ export default function Planes() {
             )}
           </p>
         </div>
+
+        {hasManagedPlan && (
+          <div className="mx-auto max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-center text-sm text-foreground">
+            <Crown className="mr-1 inline h-4 w-4 text-primary" />
+            Tienes un plan {effectivePlan === "vip" ? "VIP" : "asignado por TherapyHub"} con todas las funciones. No necesitas suscribirte.
+          </div>
+        )}
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center gap-3">
@@ -259,7 +279,7 @@ export default function Planes() {
                     plan.popular ? "" : "variant-outline"
                   )}
                   variant={plan.popular ? "default" : "outline"}
-                  disabled={isCurrentPaid || isLoading || isCheckingOut}
+                  disabled={isCurrentPaid || isLoading || isCheckingOut || (hasManagedPlan && plan.priceMonthly > 0)}
                   onClick={() => handleSubscribe(plan.id)}
                 >
                   {isLoading ? (
@@ -269,6 +289,8 @@ export default function Planes() {
                     </>
                   ) : isCurrentPaid ? (
                     "Plan actual"
+                  ) : hasManagedPlan && plan.priceMonthly > 0 ? (
+                    "Incluido en tu plan"
                   ) : plan.priceMonthly === 0 ? (
                     <>
                       Comenzar gratis

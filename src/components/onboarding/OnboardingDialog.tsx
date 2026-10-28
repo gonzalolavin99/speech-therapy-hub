@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfile, ProfileFormData } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Mic2, Brain, Check, User, Briefcase, Settings, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Mic2, Brain, Check, User, Briefcase, Settings, ChevronRight, ChevronLeft, LogOut } from "lucide-react";
 import { professionOptions, getProfessionConfig, type ProfessionId } from "@/config/professions";
 import { cn } from "@/lib/utils";
 import { RutInput } from "@/components/ui/rut-input";
@@ -30,7 +30,7 @@ const professionIcons: Record<ProfessionId, React.ReactNode> = {
 };
 
 export function OnboardingDialog({ open }: OnboardingDialogProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { createProfile } = useProfile();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -73,7 +73,12 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-[540px]" onPointerDownOutside={(e) => e.preventDefault()}>
+      {/* Onboarding obligatorio: sin X ni Escape. La salida es "Usar otra cuenta". */}
+      <DialogContent
+        className="sm:max-w-[540px] [&>button:last-child]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-muted rounded-t-lg overflow-hidden">
           <div
@@ -328,6 +333,17 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             </div>
           </div>
         )}
+        <div className="border-t pt-3 text-center text-xs text-muted-foreground">
+          {user?.email && <span>Sesión iniciada como {user.email}. </span>}
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            <LogOut className="h-3 w-3" />
+            Usar otra cuenta
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );

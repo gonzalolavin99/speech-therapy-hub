@@ -139,6 +139,27 @@ describe("handleMpWebhook", () => {
     expect(events[0]).toMatchObject({ status: "ignored", signature_valid: false });
   });
 
+  it("acepta la firma con cualquiera de varios secretos (modo prueba y productivo)", async () => {
+    const { client, rpc } = createFakeAdmin();
+    mpResponds(mpPayment());
+    const creds = credentials(`secreto-productivo, ${SECRET}`);
+    const response = await handleMpWebhook(await signedRequest("987", "req-multi"), client, config(creds));
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it("guarda un diagnóstico sin el secreto cuando la firma no coincide", async () => {
+    const { client, events } = createFakeAdmin();
+    await handleMpWebhook(await signedRequest("987", "req-diag", undefined, "otro-secreto"), client, config());
+    const result = events[0].result as Record<string, unknown>;
+    expect(result).toMatchObject({
+      reason: "signature_mismatch", data_id_source: "query", has_signature: true, has_request_id: true, secrets_tried: 1,
+    });
+    expect(result.query_keys).toEqual(["uid", "data.id", "type"]);
+    expect(String(result.manifest)).toMatch(/^id:987;request-id:req-diag;ts:\d+;$/);
+    expect(JSON.stringify(result)).not.toContain(SECRET);
+  });
+
   it("rechaza un webhook sin firma cuando hay secreto configurado", async () => {
     const { client, rpc } = createFakeAdmin();
     const request = new Request("https://fn.test/mercadopago-webhook?data.id=987", {

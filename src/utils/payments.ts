@@ -85,3 +85,47 @@ export function latestPaymentByCharge(payments: GatewayPayment[]): Map<string, G
   }
   return byCharge;
 }
+
+// Resultado de payments-verify (al volver del checkout de suscripción)
+export interface VerifyReturnResult {
+  status: 'verified' | 'unverified' | 'not_found' | 'forbidden' | 'error';
+  state?: GatewayPaymentState;
+  fulfillment?: string;
+}
+
+export interface PaymentNotice {
+  kind: 'success' | 'info' | 'warning' | 'error';
+  title: string;
+  description: string;
+}
+
+// Mensaje para el usuario según lo que el backend verificó (nunca según la URL)
+export function describeVerifyResult(result: VerifyReturnResult | null): PaymentNotice {
+  if (!result || result.status !== 'verified') {
+    return {
+      kind: 'info',
+      title: 'Estamos confirmando tu pago',
+      description: 'MercadoPago aún no lo confirma. Tu plan se actualizará automáticamente en unos minutos.',
+    };
+  }
+  if (result.fulfillment === 'kept_existing_plan') {
+    return {
+      kind: 'warning',
+      title: 'Ya tienes un plan activo',
+      description: 'Tu plan actual se mantiene. Revisaremos el pago para devolvértelo.',
+    };
+  }
+  switch (result.state) {
+    case 'succeeded':
+      return { kind: 'success', title: '¡Suscripción activada!', description: 'Tu pago fue confirmado y tu plan ya está activo.' };
+    case 'pending':
+    case 'processing':
+    case 'requires_action':
+    case 'unknown':
+      return { kind: 'info', title: 'Pago en proceso', description: 'Te avisaremos cuando MercadoPago lo confirme.' };
+    case 'under_review':
+      return { kind: 'warning', title: 'Pago en revisión', description: 'El pago no coincide con el plan. Lo revisaremos y te contactaremos.' };
+    default:
+      return { kind: 'error', title: 'Pago no completado', description: 'El pago no fue aprobado. Puedes intentar nuevamente.' };
+  }
+}
