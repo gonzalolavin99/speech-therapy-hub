@@ -460,7 +460,7 @@ export default function AdminInsights() {
               <CardContent>
                 {!isAIConfigured() ? (
                   <p className="text-sm text-muted-foreground">
-                    Configura tu API key de OpenAI (VITE_OPENAI_API_KEY) para habilitar el análisis con IA.
+                    Configura el secreto OPENAI_API_KEY en las Edge Functions de Supabase para habilitar el análisis con IA.
                   </p>
                 ) : !aiInsights ? (
                   <div className="text-center py-8 text-muted-foreground">

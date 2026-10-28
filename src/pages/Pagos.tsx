@@ -27,6 +27,7 @@ import {
   Package,
   CreditCard,
   Banknote,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentFormDialog } from "@/components/forms/PaymentFormDialog";
@@ -47,6 +48,9 @@ import { calculateRetencion } from "@/config/retencion";
 import { exportBoletaPDF, generateBoletaNumber as generateBoletaNumberLegacy } from "@/utils/exportBoleta";
 import { usePortalCharges, PortalChargeFormData } from "@/hooks/usePortalCharges";
 import { PortalChargeFormDialog } from "@/components/portal/PortalChargeFormDialog";
+import { RefundDialog } from "@/components/payments/RefundDialog";
+import { useGatewayPayments } from "@/hooks/useGatewayPayments";
+import { isRefundable, PAYMENT_STATE_LABELS, type GatewayPayment } from "@/utils/payments";
 import { toast } from "sonner";
 
 export default function Pagos() {
@@ -87,6 +91,8 @@ export default function Pagos() {
   const { boletas, createBoleta, updateBoleta, markAsEmitted, voidBoleta, deleteBoleta } = useBoletas();
   const { packs, createPack, useSession: usePackSession, cancelPack, deletePack } = useSessionPacks();
   const { charges, createCharge, confirmCharge, cancelCharge } = usePortalCharges();
+  const { paymentsByCharge, requestRefund } = useGatewayPayments();
+  const [refundTarget, setRefundTarget] = useState<{ payment: GatewayPayment; description: string } | null>(null);
   const { patients } = usePatients();
   const { profile } = useProfile();
   const { hasFeature } = useSubscription();
@@ -711,6 +717,14 @@ export default function Pagos() {
                             {charge.status === 'confirmed' && <><CheckCircle className="h-3 w-3" /> Confirmado</>}
                             {charge.status === 'cancelled' && <><XCircle className="h-3 w-3" /> Anulado</>}
                           </span>
+                          {(() => {
+                            const gatewayPayment = paymentsByCharge.get(charge.id);
+                            return gatewayPayment && gatewayPayment.state !== 'succeeded' ? (
+                              <span className="mt-1 block text-xs text-muted-foreground">
+                                MercadoPago: {PAYMENT_STATE_LABELS[gatewayPayment.state]}
+                              </span>
+                            ) : null;
+                          })()}
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
@@ -724,6 +738,16 @@ export default function Pagos() {
                               <Button size="sm" variant="ghost" onClick={() => cancelCharge.mutate(charge.id)} className="text-destructive hover:text-destructive">
                                 <XCircle className="h-3.5 w-3.5 mr-1" />
                                 Anular
+                              </Button>
+                            )}
+                            {isRefundable(paymentsByCharge.get(charge.id)) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setRefundTarget({ payment: paymentsByCharge.get(charge.id)!, description: charge.description })}
+                              >
+                                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                                Reembolsar
                               </Button>
                             )}
                           </div>
@@ -836,6 +860,20 @@ export default function Pagos() {
         onSubmit={(data) => createCharge.mutate(data)}
         patients={patientOptions}
         isSubmitting={createCharge.isPending}
+      />
+
+      <RefundDialog
+        payment={refundTarget?.payment ?? null}
+        description={refundTarget?.description}
+        isSubmitting={requestRefund.isPending}
+        onOpenChange={(open) => { if (!open) setRefundTarget(null); }}
+        onSubmit={({ amount, reason, idempotencyKey }) => {
+          if (!refundTarget) return;
+          requestRefund.mutate(
+            { gatewayPaymentId: refundTarget.payment.id, amount, reason, idempotencyKey },
+            { onSuccess: () => setRefundTarget(null) }
+          );
+        }}
       />
 
       <UpgradePrompt

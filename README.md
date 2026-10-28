@@ -74,7 +74,7 @@ TherapyHub es una aplicación web moderna diseñada para profesionales de la fon
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/tu-usuario/speech-therapy-hub.git
+git clone https://github.com/gonzalolavin99/speech-therapy-hub.git
 cd speech-therapy-hub
 
 # Instalar dependencias
@@ -93,7 +93,30 @@ bun dev  # o npm run dev
 ```env
 VITE_SUPABASE_URL=tu-url-supabase
 VITE_SUPABASE_ANON_KEY=tu-anon-key
+VITE_AI_ENABLED=true   # opcional
 ```
+
+### Secretos de Edge Functions (Supabase)
+
+Nunca van en `.env` ni en Vercel: se guardan en Supabase.
+
+```bash
+supabase secrets set OPENAI_API_KEY=sk-...        # IA (función ai-completion)
+supabase secrets set OPENAI_MODEL=gpt-4o-mini     # opcional
+supabase secrets set RESEND_API_KEY=re_...        # emails
+supabase secrets set WEBHOOK_SECRET=...           # header x-webhook-secret del Database Webhook
+supabase secrets set MP_WEBHOOK_SECRET=...        # firma de webhooks de MercadoPago (plataforma)
+supabase secrets set CRON_SECRET=...              # pg_cron → payments-reconcile
+supabase secrets set APP_URL=https://tu-app.vercel.app
+supabase functions deploy
+```
+
+---
+
+### Migraciones de pagos
+
+Ejecutar en el SQL Editor, en este orden: `supabase/migrations/secure_payment_rpcs.sql` y
+`supabase/migrations/payments_lifecycle.sql`. Arquitectura completa en [docs/PAGOS.md](docs/PAGOS.md).
 
 ---
 

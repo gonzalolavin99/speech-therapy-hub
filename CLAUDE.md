@@ -19,7 +19,7 @@ TherapyHub es una plataforma SaaS de gestión clínica para fonoaudiólogos y pr
 | Validación | Zod + react-hook-form |
 | PDF | jsPDF + jspdf-autotable |
 | Iconos | Lucide React |
-| AI | OpenAI API (gpt-4o-mini) |
+| AI | OpenAI API (gpt-4o-mini) vía Edge Function `ai-completion` |
 | Deploy | Vercel |
 | Testing | Vitest + Testing Library + jsdom |
 | Package Manager | Bun (compatible con npm) |
@@ -35,6 +35,7 @@ bun run build:dev  # Build modo desarrollo
 bun run lint       # ESLint
 bun run test       # Tests con Vitest (single run)
 bun run test:watch # Tests en modo watch
+bun run test:coverage # Tests con cobertura (v8)
 ```
 
 ---
@@ -229,12 +230,24 @@ export function useEntityName() {
 
 ## Seguridad
 
-- **Nunca** exponer `VITE_OPENAI_API_KEY` ni secrets en el código fuente.
+- **Nunca** poner API keys en variables `VITE_*`: la key de OpenAI vive como secreto `OPENAI_API_KEY` de Supabase y se usa solo desde la Edge Function `ai-completion`.
+- Las RPCs `SECURITY DEFINER` que solo usan las Edge Functions deben revocar `EXECUTE` a `PUBLIC, anon, authenticated` (ver `migrations/secure_payment_rpcs.sql`).
 - Las variables `VITE_*` se exponen al cliente — solo poner claves públicas (anon key de Supabase).
 - Sanitizar inputs con `sanitizeText()`, `sanitizeName()` antes de enviar a la BD.
 - Validar RUT chileno con `validateRUT()`.
 - Content Security Policy y security headers configurados en `vercel.json`.
 - Session timeout por inactividad implementado en `useSessionTimeout`.
+
+---
+
+## Pagos
+
+Ver `docs/PAGOS.md`. Reglas:
+- El frontend nunca confirma pagos; solo webhooks/reconciliación con datos de la API de MercadoPago.
+- Montos siempre desde la BD. Toda operación de pago lleva `Idempotency-Key`.
+- La lógica de Edge Functions va en `supabase/functions/_shared/*.ts` sin imports de Deno/esm.sh
+  para testearla con Vitest (`src/test/payments/`). Las migraciones de pagos se prueban en PGlite.
+- `payment_transition_allowed` (SQL) e `isTransitionAllowed` (TS) deben mantenerse iguales.
 
 ---
 
@@ -271,10 +284,11 @@ Para agregar un nuevo test:
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 
-# Opcionales (para features de AI)
-VITE_OPENAI_API_KEY=sk-...
-VITE_OPENAI_MODEL=gpt-4o-mini
+# Opcional: false oculta las funciones de IA
+VITE_AI_ENABLED=true
 ```
+
+Secretos de Edge Functions (`supabase secrets set ...`): `OPENAI_API_KEY`, `OPENAI_MODEL`, `RESEND_API_KEY`, `WEBHOOK_SECRET`.
 
 ---
 

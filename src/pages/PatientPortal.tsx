@@ -159,7 +159,7 @@ export default function PatientPortal() {
             <PortalMessages
               messages={data.messages}
               professionalName={data.professional?.full_name || 'Profesional'}
-              onSendMessage={(msg) => sendMessage.mutateAsync(msg).then(() => refetch())}
+              onSendMessage={(msg) => sendMessage.mutateAsync(msg).then(() => { refetch(); })}
               isSending={sendMessage.isPending}
             />
           </TabsContent>

@@ -202,7 +202,7 @@ export default function Planificaciones() {
       return;
     }
     if (!isAIConfigured()) {
-      toast.error('IA no configurada', { description: 'Configura VITE_OPENAI_API_KEY en tu archivo .env' });
+      toast.error('IA no configurada', { description: 'Las funciones de IA están desactivadas (VITE_AI_ENABLED=false)' });
       return;
     }
 

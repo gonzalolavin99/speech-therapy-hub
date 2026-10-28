@@ -3,9 +3,12 @@
 // Sends an email to the admin via Resend API
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { escapeHtml } from '../_shared/auth.ts';
 
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') ?? 'admin@therapyhub.cl';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
+// Secreto compartido con el Database Webhook (header x-webhook-secret)
+const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET') ?? '';
 const FROM_EMAIL = Deno.env.get('RESEND_FROM_EMAIL') ?? 'TherapyHub <onboarding@resend.dev>';
 
 Deno.serve(async (req) => {
@@ -18,6 +21,12 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  if (!WEBHOOK_SECRET) {
+    console.warn('WEBHOOK_SECRET no configurado: la función acepta llamadas sin autenticar');
+  } else if (req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   try {
     const payload = await req.json();
 
@@ -28,8 +37,8 @@ Deno.serve(async (req) => {
       return new Response('OK', { status: 200 });
     }
 
-    const userEmail = record.email || record.raw_user_meta_data?.email || 'Sin email';
-    const userId = record.id || 'Sin ID';
+    const userEmail = escapeHtml(String(record.email || record.raw_user_meta_data?.email || 'Sin email'));
+    const userId = escapeHtml(String(record.id || 'Sin ID'));
     const createdAt = record.created_at
       ? new Date(record.created_at).toLocaleString('es-CL', { timeZone: 'America/Santiago' })
       : 'Fecha desconocida';

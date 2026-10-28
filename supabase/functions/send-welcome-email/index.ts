@@ -3,6 +3,7 @@
 // Call with: POST { email, name }
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { escapeHtml, isServiceOrAdmin } from '../_shared/auth.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM_EMAIL = Deno.env.get('RESEND_FROM_EMAIL') ?? 'TherapyHub <onboarding@resend.dev>';
@@ -17,6 +18,11 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  // Solo admins de la plataforma (o service role) pueden enviar este correo
+  if (!(await isServiceOrAdmin(req))) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  }
+
   try {
     const { email, name } = await req.json();
 
@@ -28,7 +34,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'RESEND_API_KEY not configured' }), { status: 500 });
     }
 
-    const displayName = name || email.split('@')[0];
+    const rawName = String(name || email.split('@')[0]).slice(0, 80);
+    const displayName = escapeHtml(rawName);
 
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -39,7 +46,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [email],
-        subject: `¡Tu cuenta en TherapyHub está lista, ${displayName}!`,
+        subject: `¡Tu cuenta en TherapyHub está lista, ${rawName}!`,
         html: `
 <!DOCTYPE html>
 <html>

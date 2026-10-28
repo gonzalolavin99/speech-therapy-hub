@@ -320,7 +320,6 @@ export interface Database {
           updated_at?: string
         }
       }
-    }
       session_packs: {
         Row: {
           id: string

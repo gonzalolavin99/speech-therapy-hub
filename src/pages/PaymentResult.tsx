@@ -22,8 +22,9 @@ export default function PaymentResult() {
         icon: CheckCircle,
         iconColor: "text-green-600 dark:text-green-400",
         bgColor: "bg-green-100 dark:bg-green-900/30",
-        title: "¡Pago exitoso!",
-        description: "Tu pago ha sido procesado correctamente. El profesional será notificado automáticamente.",
+        title: "¡Pago recibido!",
+        // La confirmación real llega por webhook verificado; esta página no cambia ningún estado
+        description: "MercadoPago recibió tu pago. Lo confirmaremos en unos segundos y el profesional será notificado automáticamente.",
         detail: paymentId ? `ID de pago: ${paymentId}` : null,
       };
     }

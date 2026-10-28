@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 export interface AvailableSlot {
@@ -18,33 +18,6 @@ export interface BookingFormData {
 }
 
 export function usePublicBooking(slug: string | undefined) {
-  const getAvailableSlots = (date: string) => {
-    return useQuery({
-      queryKey: ['available-slots', slug, date],
-      queryFn: async () => {
-        if (!slug || !date) return { slots: [], slot_duration: 45 };
-
-        const { data, error } = await supabase
-          .rpc('get_available_slots', {
-            p_slug: slug,
-            p_date: date,
-          });
-
-        if (error) throw error;
-
-        const result = data as { slots?: AvailableSlot[]; slot_duration?: number; error?: string };
-        if (result?.error) throw new Error(result.error);
-
-        return {
-          slots: (result?.slots || []) as AvailableSlot[],
-          slot_duration: result?.slot_duration || 45,
-        };
-      },
-      enabled: !!slug && !!date,
-      staleTime: 30 * 1000, // 30 seconds cache
-    });
-  };
-
   const createBooking = useMutation({
     mutationFn: async (booking: BookingFormData) => {
       const { data, error } = await supabase
@@ -69,7 +42,6 @@ export function usePublicBooking(slug: string | undefined) {
   });
 
   return {
-    getAvailableSlots,
     createBooking,
   };
 }

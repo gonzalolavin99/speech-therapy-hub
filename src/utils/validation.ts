@@ -20,7 +20,7 @@ export function validateRUT(rut: string): { valid: boolean; formatted: string; e
   }
 
   // Limpiar RUT
-  let cleanRut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+  const cleanRut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
   
   if (cleanRut.length < 8 || cleanRut.length > 9) {
     return { valid: false, formatted: rut, error: 'RUT debe tener entre 8 y 9 caracteres' };
@@ -79,10 +79,8 @@ export function validatePhone(phone: string): { valid: boolean; formatted: strin
   // Limpiar teléfono
   let cleanPhone = phone.replace(/[^0-9+]/g, '');
   
-  // Si empieza con +56, mantenerlo
-  if (cleanPhone.startsWith('+56')) {
-    cleanPhone = cleanPhone;
-  } else if (cleanPhone.startsWith('56')) {
+  // Si empieza con +56 se mantiene; si no, se normaliza
+  if (cleanPhone.startsWith('56')) {
     cleanPhone = '+' + cleanPhone;
   } else if (cleanPhone.startsWith('9') && cleanPhone.length === 9) {
     cleanPhone = '+56' + cleanPhone;

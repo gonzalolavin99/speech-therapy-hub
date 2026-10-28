@@ -9,6 +9,18 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "text"],
+      // Módulos con lógica testeable (pagos, IA, validaciones). Las páginas no se miden aún.
+      include: [
+        "supabase/functions/_shared/{payments,mp-webhook,idempotency,refunds,ai,html}.ts",
+        "src/utils/**/*.ts",
+        "src/lib/ai-service.ts",
+        "src/config/**/*.ts",
+        "src/components/payments/**/*.tsx",
+      ],
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

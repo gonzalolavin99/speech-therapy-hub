@@ -101,28 +101,29 @@ export function useMercadoPago() {
   // Create a payment preference via Edge Function
   const createPreference = useMutation({
     mutationFn: async ({ chargeId, token }: { chargeId: string; token?: string }) => {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      // functions.invoke envía el JWT de la sesión: sin token de portal,
+      // la Edge Function exige que el cobro sea del profesional logueado
+      const { data, error } = await supabase.functions.invoke<{ init_point: string; preference_id: string }>(
+        'mercadopago-create-preference',
+        {
+          // Un cobro tiene un solo checkout activo: doble clic o reintento reutilizan el mismo
+          headers: { 'Idempotency-Key': `pref-${chargeId}` },
+          body: {
+            charge_id: chargeId,
+            token,
+            success_url: `${window.location.origin}/portal-pago/success`,
+            failure_url: `${window.location.origin}/portal-pago/failure`,
+          },
+        }
+      );
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/mercadopago-create-preference`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          charge_id: chargeId,
-          token,
-          success_url: `${window.location.origin}/portal-pago/success`,
-          failure_url: `${window.location.origin}/portal-pago/failure`,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Error al crear preferencia');
+      if (error || !data) {
+        const context = (error as { context?: Response } | null)?.context;
+        const body = context ? await context.json().catch(() => null) : null;
+        throw new Error(body?.error || 'Error al crear preferencia');
       }
 
-      return response.json() as Promise<{ init_point: string; preference_id: string }>;
+      return data;
     },
   });
 
@@ -147,6 +148,7 @@ export function usePortalMercadoPago() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Idempotency-Key': `pref-${chargeId}`,
         },
         body: JSON.stringify({
           charge_id: chargeId,

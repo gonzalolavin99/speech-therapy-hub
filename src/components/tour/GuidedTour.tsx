@@ -43,11 +43,11 @@ function getPersistedStep(): number {
 }
 
 function persistStep(step: number) {
-  try { sessionStorage.setItem(TOUR_STEP_KEY, String(step)); } catch {}
+  try { sessionStorage.setItem(TOUR_STEP_KEY, String(step)); } catch { /* sessionStorage no disponible */ }
 }
 
 function clearPersistedStep() {
-  try { sessionStorage.removeItem(TOUR_STEP_KEY); } catch {}
+  try { sessionStorage.removeItem(TOUR_STEP_KEY); } catch { /* sessionStorage no disponible */ }
 }
 
 export function GuidedTour({ open, onComplete }: GuidedTourProps) {

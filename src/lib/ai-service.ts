@@ -1,8 +1,12 @@
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini';
+import { supabase } from '@/lib/supabase';
+
+// Las llamadas a OpenAI pasan por la Edge Function `ai-completion`:
+// la API key vive solo como secreto en Supabase, nunca en el bundle.
+// VITE_AI_ENABLED=false oculta las funciones de IA en la UI.
+const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false';
 
 export function isAIConfigured(): boolean {
-  return !!OPENAI_API_KEY;
+  return AI_ENABLED;
 }
 
 interface AIMessage {
@@ -17,31 +21,22 @@ interface AICompletionOptions {
 }
 
 export async function getAICompletion({ messages, temperature = 0.7, maxTokens = 2000 }: AICompletionOptions): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OpenAI API key not configured. Add VITE_OPENAI_API_KEY to your .env file.');
+  if (!AI_ENABLED) {
+    throw new Error('Las funciones de IA están desactivadas.');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages,
-      temperature,
-      max_completion_tokens: maxTokens,
-    }),
+  const { data, error } = await supabase.functions.invoke<{ content?: string; error?: string }>('ai-completion', {
+    body: { messages, temperature, maxTokens },
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || `AI API error: ${response.status}`);
+  if (error) {
+    // FunctionsHttpError trae la respuesta original con el mensaje del servidor
+    const context = (error as { context?: Response }).context;
+    const body = context ? await context.json().catch(() => null) : null;
+    throw new Error(body?.error || error.message || 'Error del servicio de IA');
   }
 
-  const data = await response.json();
-  return data.choices[0]?.message?.content || '';
+  return data?.content || '';
 }
 
 // ============================================================

@@ -27,11 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Lint informativo: quedan ~108 usos de `any` por tipar (ver docs/MEJORAS.md)
       - name: Run linter
         run: npm run lint || true
 
+      - name: Type check
+        run: npx tsc -p tsconfig.app.json --noEmit
+
       - name: Run tests
-        run: npm test || true
+        run: npm test
 
       - name: Build production
         run: npm run build

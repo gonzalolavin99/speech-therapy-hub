@@ -48,8 +48,10 @@ export function useSubscriptionPayment() {
   // Create checkout and redirect to MercadoPago
   const checkout = useMutation({
     mutationFn: async ({ plan, billingPeriod }: { plan: PlanId; billingPeriod: 'monthly' | 'yearly' }) => {
-      // Use supabase.functions.invoke() which handles auth headers automatically
+      // Use supabase.functions.invoke() which handles auth headers automatically.
+      // Misma clave para el mismo plan y período: un doble clic no crea dos pagos.
       const { data, error } = await supabase.functions.invoke('subscription-checkout', {
+        headers: { 'Idempotency-Key': `sub-${plan}-${billingPeriod}` },
         body: {
           plan,
           billing_period: billingPeriod,

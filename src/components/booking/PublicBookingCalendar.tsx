@@ -92,7 +92,7 @@ export function PublicBookingCalendar({ slug, professionalName }: PublicBookingC
     const lastDay = new Date(year, month + 1, 0);
 
     // Monday-based: getDay() gives 0=Sunday, we want 0=Monday
-    let startDow = (firstDay.getDay() + 6) % 7;
+    const startDow = (firstDay.getDay() + 6) % 7;
     const days: (number | null)[] = [];
 
     // Leading empty cells

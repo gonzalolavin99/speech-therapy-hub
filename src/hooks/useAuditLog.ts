@@ -20,7 +20,8 @@ export type EntityType =
   | 'payment'
   | 'consent'
   | 'user'
-  | 'boleta';
+  | 'boleta'
+  | 'portal_charge';
 
 interface AuditLogEntry {
   action: AuditAction;
